@@ -1,0 +1,13 @@
+*.vsix
+.vscode
+*.suo
+*.dbmdl
+*.user
+examples/DatabaseToPublish/.vs/DatabaseToPublish/v15/.suo
+*.dll
+*.pdb
+*.cache
+examples/DatabaseToPublish/obj/Debug/DatabaseToPublish.sqlproj.FileListAbsolute.txt
+examples/DatabaseToPublish/obj/Debug/Model.xml
+
+media/DatabaseToPublish/obj/Debug/DatabaseToPublish.sqlproj.FileListAbsolute.txt
