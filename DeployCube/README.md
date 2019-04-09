@@ -6,6 +6,7 @@
 
 ## Overview
 
+Deploy-Cube allows you to deploy a tabular or multidimenstional cube to a SQL Server Analysis Services instance.
 **Publish-DacPac** allows you to deploy a SQL Server Database DACPAC to a SQL Server instance using a DAC Publish Profile.
 
 SSDT (SQL Server Data Tools) is Microsoft's tool to design (declare) the entire database model including tables, views, stored procedures, functions, schemas, etc. etc. etc.  SSDT covering **all** aspects of a database design.
