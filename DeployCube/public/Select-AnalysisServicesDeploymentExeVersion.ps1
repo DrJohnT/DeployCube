@@ -23,7 +23,7 @@ function Select-AnalysisServicesDeploymentExeVersion {
         $specificVersion = $PreferredVersion -and $PreferredVersion -ne 'latest'
         $versions = '150', '140', '130', '120', '110' | Where-Object { $_ -ne $PreferredVersion }
 
-        # Look for a specific version of Microsoft SQL Server SqlPackage.exe
+        # Look for a specific version of Microsoft SQL Server SSAS deployment tool
         if ($specificVersion) {
             if ((Get-AnalysisServicesDeploymentExePath -Version $PreferredVersion)) {
                 return $PreferredVersion
@@ -44,7 +44,7 @@ function Select-AnalysisServicesDeploymentExeVersion {
             }
         }
 
-        # Warn that SQLPackage not found.
+        # Warn that Microsoft SQL Server SSAS deployment tool was not found.
         if ($specificVersion) {
             Write-Information "$ExeName version '$PreferredVersion' not found.";
         }

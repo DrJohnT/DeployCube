@@ -11,10 +11,10 @@ function Find-AnalysisServicesDeploymentExeLocations {
 	#>
 
     try {
-        $AnalysisServicesDeploymentWizExe = "Microsoft.AnalysisServices.Deployment.exe";
+        [string]$ExeName = "Microsoft.AnalysisServices.Deployment.exe";
         # Get SQL Server locations
         $AnalysisServicesDeploymentExes = @();
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn\" -Recurse -Include $AnalysisServicesDeploymentWizExe -ErrorAction SilentlyContinue;
+        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn\" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         # list out the locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
