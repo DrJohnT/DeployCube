@@ -4,12 +4,15 @@ function Get-SsasSourceConnectionString {
 	param
 	(
         [String] [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         $SourceServerName,
 
         [String] [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         $SourceDatabaseName,
 
         [String] [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         $ExistingConnectionString
 	)
 

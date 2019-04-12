@@ -13,6 +13,7 @@ function Get-AnalysisServicesDeploymentExePath {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [ValidateSet('150', '140', '130', '120', '110', 'latest')]
         [string]$Version
     )

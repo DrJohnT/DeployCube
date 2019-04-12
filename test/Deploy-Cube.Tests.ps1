@@ -51,7 +51,7 @@ Describe "Deploy-Cube" {
         }
 
         It "Invalid TargetServerName" {
-            { Deploy-Cube -AsDatabasePath $AsDatabasePath -TargetServerName "MyServer" -TargetDatabaseName "MyTabularCubeInvalidServer" -PreferredVersion latest } | Should Throw;
+            { Deploy-Cube -AsDatabasePath $AsDatabasePath -TargetServerName "MyTabularCubeInvalidServer" -TargetDatabaseName "MyDB" -PreferredVersion latest } | Should Throw;
         }
 
         It "Empty TargetServerName" {

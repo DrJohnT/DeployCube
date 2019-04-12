@@ -2,9 +2,11 @@ function Invoke-ExternalCommand {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string]$Command,
 
         [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
         [string[]]$Arguments,
 
         [Parameter(Mandatory = $false)]
