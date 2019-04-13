@@ -26,7 +26,7 @@ Describe "Ping-SsasDatabase" {
 
     Context "Main Tests" {
         It "Invalid server" {
-            ( Ping-SsasDatabase -ServerName "InvalidServer" -DatabaseName "KernelCube" ) | Should -Be $false;
+            ( Ping-SsasDatabase -ServerName "InvalidServer" -DatabaseName "CubeToPublish" ) | Should -Be $false;
         }
 
         It "Valid server and invalid database" {
@@ -34,7 +34,7 @@ Describe "Ping-SsasDatabase" {
         }
 
         It "Valid server and database" {
-            ( Ping-SsasDatabase -ServerName "localhost" -DatabaseName "KernelCube" ) | Should -Be $true;
+            ( Ping-SsasDatabase -ServerName "localhost" -DatabaseName "CubeToPublish" ) | Should -Be $true;
         }
     }
 }

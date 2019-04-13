@@ -47,7 +47,7 @@ Describe "Unpublish-Cube" {
 
     Context "Main Tests" {
         It "Invalid server" {
-            { Unpublish-Cube -ServerName "InvalidServer" -DatabaseName "KernelCube" } | Should Throw;
+            { Unpublish-Cube -ServerName "InvalidServer" -DatabaseName "CubeToPublish" } | Should Throw;
         }
 
         It "Valid server and invalid database" {
