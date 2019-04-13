@@ -1,4 +1,4 @@
-# The Deploy verb was added in PowerShell v6
+# The Deploy verb was added in PowerShell v6 but pester keeps telling me it is invalid, so we call the function Publish-Cube and have an alias of Deploy-Cube
 function Publish-Cube {
     <#
 		.SYNOPSIS
@@ -21,6 +21,9 @@ function Publish-Cube {
 
         .PARAMETER PreferredVersion
         Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter.
+
+        .PARAMETER ProcessingOption
+        Valid processing options are: ProcessFull, ProcessDefault and DoNotProcess.  I strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
 
 		.EXAMPLE
         Publish-Cube -AsDatabasePath "C:\Dev\YourDB\bin\Debug\YourDB.asdatabase" -TargetServerName "YourDBServer"

@@ -1,4 +1,11 @@
 function Invoke-ExternalCommand {
+    <#
+		.SYNOPSIS
+        Invokes (executes) an external executable via the command-line
+
+        .DESCRIPTION
+        Invokes (executes) an external executable via the command-line
+	#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -18,6 +25,7 @@ function Invoke-ExternalCommand {
 
     # We want the command will write to standard output so we can trace progress
     if ($PipeOutNull) {
+        # Piping to Out-Null will stop windows exe programs from forking off in thier own process and allowing powershell to continue
         & $Command $Arguments | Out-Null;
     } else {
         & $Command $Arguments;
