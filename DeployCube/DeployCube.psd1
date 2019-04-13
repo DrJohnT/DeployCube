@@ -34,15 +34,16 @@ PowerShellVersion = '5.0'
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-    'Deploy-Cube',
+    'Publish-Cube',
+    'Unpublish-Cube',
+    'Ping-SsasDatabase',
+    'Ping-SsasServer',
     'Select-AnalysisServicesDeploymentExeVersion',
     'Get-AnalysisServicesDeploymentExePath',
     'Find-AnalysisServicesDeploymentExeLocations',
-    'Invoke-ExternalCommand',
     'Update-AnalysisServicesConfig',
-    'Get-SsasSourceConnectionString',
-    'Ping-SsasDatabase',
-    'Ping-SsasServer'
+    'Invoke-ExternalCommand',
+    'Get-SsasSourceConnectionString'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -52,7 +53,10 @@ CmdletsToExport = @()
 VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = @()
+AliasesToExport = @(
+    'Deploy-Cube',
+    'Drop-Cube'
+)
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{

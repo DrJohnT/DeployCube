@@ -2,10 +2,10 @@
 function Update-AnalysisServicesConfig {
     <#
 		.SYNOPSIS
-        Deploy-Cube deploys a tabular or multidimenstional cube to a SQL Server Analysis Services instance.
+        Updates the various config files generated alongside the asdatabase file so they can be deployed to the correct server with the correct processing options.
 
 		.DESCRIPTION
-        Deploy-Cube deploys a tabular or multidimenstional cube to a SQL Server Analysis Services instance.
+        Updates the various config files generated alongside the asdatabase file so they can be deployed to the correct server with the correct processing options.
 
 		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
 		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
@@ -18,6 +18,9 @@ function Update-AnalysisServicesConfig {
 
         .PARAMETER TargetDatabaseName
         The name of the database to be deployed.
+
+        .PARAMETER ProcessingOption
+        Valid processing options are: ProcessFull, ProcessDefault and DoNotProcess.  I strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
     #>
     [CmdletBinding()]
 	param
@@ -35,7 +38,7 @@ function Update-AnalysisServicesConfig {
         $TargetDatabaseName,
 
         [String] [Parameter(Mandatory = $false)]
-        [ValidateSet('ProcessFull', 'DoNotProcess')]
+        [ValidateSet('ProcessFull', 'ProcessDefault', 'DoNotProcess')]
         $ProcessingOption
     )
 

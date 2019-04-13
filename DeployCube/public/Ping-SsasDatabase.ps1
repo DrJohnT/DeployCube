@@ -9,7 +9,7 @@ function Ping-SsasDatabase {
 		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/PublishDacPac
 		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
     #>
-    #[OutputType([Boolean])]
+    [OutputType([Boolean])]
     [CmdletBinding()]
     param
     (

@@ -22,9 +22,7 @@ Describe "Get-SsasSourceConnectionString" {
 
     Context "Should return correct connection strings" {
         It "Should return correct connection string 1" {
-            $return =  Get-SsasSourceConnectionString -SourceDatabaseName "mydatabase" -SourceServerName "myserver" -ExistingConnectionString $connString1
-            Write-Host $return
-            $return | Should -Be $expectedConnString1;
+            ( Get-SsasSourceConnectionString -SourceDatabaseName "mydatabase" -SourceServerName "myserver" -ExistingConnectionString $connString1 ) | Should -Be $expectedConnString1;
         }
     }
 

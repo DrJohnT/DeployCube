@@ -26,3 +26,5 @@
     }
 
 Export-ModuleMember -Function ($scripts | Select-Object -ExpandProperty Basename);
+Export-ModuleMember -Alias Deploy-Cube -Function Publish-Cube;
+Export-ModuleMember -Alias Drop-Cube -Function Unpublish-Cube;
