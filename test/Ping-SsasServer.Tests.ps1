@@ -4,26 +4,26 @@ import-Module -Name $ModulePath;
 
 Describe "Ping-SsasServer" {
     Context "Testing Inputs" {
-        It "Should have ServerName as a mandatory parameter" {
-            (Get-Command Ping-SsasServer).Parameters['ServerName'].Attributes.mandatory | Should -Be $true
+        It "Should have Server as a mandatory parameter" {
+            (Get-Command Ping-SsasServer).Parameters['Server'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Ping-SsasServer -ServerName "" } | Should Throw;
+            { Ping-SsasServer -Server "" } | Should Throw;
         }
         It "Null server" {
-            { Ping-SsasServer -ServerName $null } | Should Throw;
+            { Ping-SsasServer -Server $null } | Should Throw;
         }
 
     }
 
     Context "Checking Inputs" {
         It "Invalid server" {
-            Ping-SsasServer -ServerName "InvalidServer"
-            #( Ping-SsasServer -ServerName "InvalidServer" ) | Should -Be $false;
+            Ping-SsasServer -Server "InvalidServer"
+            #( Ping-SsasServer -Server "InvalidServer" ) | Should -Be $false;
           }
 
         It "Valid server" {
-            ( Ping-SsasServer -ServerName "localhost" ) | Should -Be $true;
+            ( Ping-SsasServer -Server "localhost" ) | Should -Be $true;
         }
     }
 }

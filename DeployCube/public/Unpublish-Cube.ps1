@@ -8,15 +8,15 @@ function Unpublish-Cube {
 	(
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $ServerName,
+        $Server,
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $DatabaseName
+        $CubeDatabase
     )
 
-    $asCmd = "<Delete xmlns='http://schemas.microsoft.com/analysisservices/2003/engine'><Object><DatabaseID>$DatabaseName</DatabaseID></Object></Delete>";
-    Invoke-ASCmd -Server $ServerName -Query $asCmd;
+    $asCmd = "<Delete xmlns='http://schemas.microsoft.com/analysisservices/2003/engine'><Object><DatabaseID>$CubeDatabase</DatabaseID></Object></Delete>";
+    Invoke-ASCmd -Server $Server -Query $asCmd;
 }
 
 New-Alias -Name Drop-Cube -Value Unpublish-Cube;

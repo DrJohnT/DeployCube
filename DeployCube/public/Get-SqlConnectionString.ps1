@@ -1,15 +1,15 @@
-function Get-SsasSourceConnectionString {
+function Get-SqlConnectionString {
     [OutputType([string])]
     [CmdletBinding()]
 	param
 	(
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $SourceServerName,
+        $SourceSqlServer,
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $SourceDatabaseName,
+        $SourceSqlDatabase,
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -17,7 +17,7 @@ function Get-SsasSourceConnectionString {
 	)
 
     $ConnBuilder = New-Object System.Data.OleDb.OleDbConnectionStringBuilder($ExistingConnectionString);
-    $ConnBuilder["Data Source"] = $SourceServerName;
-    $ConnBuilder["Initial Catalog"] = $SourceDatabaseName;
+    $ConnBuilder["Data Source"] = $SourceServer;
+    $ConnBuilder["Initial Catalog"] = $SourceDatabase;
     return $ConnBuilder.ConnectionString;
 }

@@ -4,54 +4,54 @@ Import-Module -Name $ModulePath;
 
 Describe "Unpublish-Cube" {
     Context "Testing Inputs" {
-        It "Should have ServerName as a mandatory parameter" {
-            (Get-Command Unpublish-Cube).Parameters['ServerName'].Attributes.mandatory | Should -Be $true
+        It "Should have Server as a mandatory parameter" {
+            (Get-Command Unpublish-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true
         }
-        It "Should have DatabaseName as a mandatory parameter" {
-            (Get-Command Unpublish-Cube).Parameters['DatabaseName'].Attributes.mandatory | Should -Be $true
+        It "Should have CubeDatabase as a mandatory parameter" {
+            (Get-Command Unpublish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Unpublish-Cube -ServerName ""  -DatabaseName "master" } | Should Throw;
+            { Unpublish-Cube -Server ""  -CubeDatabase "master" } | Should Throw;
         }
         It "Null server" {
-            { Unpublish-Cube -ServerName $null  -DatabaseName "master" } | Should Throw;
+            { Unpublish-Cube -Server $null  -CubeDatabase "master" } | Should Throw;
         }
         It "Empty database" {
-            { Unpublish-Cube -ServerName "localhost"  -DatabaseName "" } | Should Throw;
+            { Unpublish-Cube -Server "localhost"  -CubeDatabase "" } | Should Throw;
         }
         It "Null database" {
-            { Unpublish-Cube -ServerName "localhost"  -DatabaseName $null } | Should Throw;
+            { Unpublish-Cube -Server "localhost"  -CubeDatabase $null } | Should Throw;
         }
     }
 
     Context "Testing Inputs for Alias Drop-Cube" {
-        It "Should have ServerName as a mandatory parameter" {
-            (Get-Command Drop-Cube).Parameters['ServerName'].Attributes.mandatory | Should -Be $true
+        It "Should have Server as a mandatory parameter" {
+            (Get-Command Drop-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true
         }
-        It "Should have DatabaseName as a mandatory parameter" {
-            (Get-Command Drop-Cube).Parameters['DatabaseName'].Attributes.mandatory | Should -Be $true
+        It "Should have CubeDatabase as a mandatory parameter" {
+            (Get-Command Drop-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Drop-Cube -ServerName ""  -DatabaseName "master" } | Should Throw;
+            { Drop-Cube -Server ""  -CubeDatabase "master" } | Should Throw;
         }
         It "Null server" {
-            { Drop-Cube -ServerName $null  -DatabaseName "master" } | Should Throw;
+            { Drop-Cube -Server $null  -CubeDatabase "master" } | Should Throw;
         }
         It "Empty database" {
-            { Drop-Cube -ServerName "localhost"  -DatabaseName "" } | Should Throw;
+            { Drop-Cube -Server "localhost"  -CubeDatabase "" } | Should Throw;
         }
         It "Null database" {
-            { Drop-Cube -ServerName "localhost"  -DatabaseName $null } | Should Throw;
+            { Drop-Cube -Server "localhost"  -CubeDatabase $null } | Should Throw;
         }
     }
 
     Context "Main Tests" {
         It "Invalid server" {
-            { Unpublish-Cube -ServerName "InvalidServer" -DatabaseName "CubeToPublish" } | Should Throw;
+            { Unpublish-Cube -Server "InvalidServer" -CubeDatabase "CubeToPublish" } | Should Throw;
         }
 
         It "Valid server and invalid database" {
-            { Unpublish-Cube -ServerName "localhost" -DatabaseName "InvalidDatabase" } | Should Not Throw;
+            { Unpublish-Cube -Server "localhost" -CubeDatabase "InvalidDatabase" } | Should Not Throw;
         }
 
 

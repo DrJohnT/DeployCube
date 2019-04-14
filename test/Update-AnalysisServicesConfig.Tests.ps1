@@ -12,11 +12,11 @@ Describe "Update-AnalysisServicesConfig" {
         It "Should have AsDatabasePath as a mandatory parameter" {
             (Get-Command Update-AnalysisServicesConfig).Parameters['AsDatabasePath'].Attributes.mandatory | Should -Be $true;
         }
-        It "Should have TargetServerName as a mandatory parameter" {
-            (Get-Command Update-AnalysisServicesConfig).Parameters['TargetServerName'].Attributes.mandatory | Should -Be $true;
+        It "Should have Server as a mandatory parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['Server'].Attributes.mandatory | Should -Be $true;
         }
-        It "Should have TargetDatabaseName as an optional parameter" {
-            (Get-Command Update-AnalysisServicesConfig).Parameters['TargetDatabaseName'].Attributes.mandatory | Should -Be $true;
+        It "Should have CubeDatabase as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true;
         }
         It "Should have ProcessingOption as an optional parameter" {
             (Get-Command Update-AnalysisServicesConfig).Parameters['ProcessingOption'].Attributes.mandatory | Should -Be $false;
@@ -25,39 +25,39 @@ Describe "Update-AnalysisServicesConfig" {
 
     Context "Invalid Inputs" {
         It "Invalid AsDatabasePath should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath "SomeTrashPath" -TargetServerName "SomeTrashServe" -TargetDatabaseName "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath "SomeTrashPath" -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
         It "Null AsDatabasePath should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $null -TargetServerName "SomeTrashServe" -TargetDatabaseName "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath $null -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
-        It "Null TargetServerName should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName $null -TargetDatabaseName "MyDatabase" } | Should Throw;
+        It "Null Server should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $null -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
-        It "Empty TargetServerName should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName "" -TargetDatabaseName "MyDatabase" } | Should Throw;
+        It "Empty Server should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "" -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
-        It "Null TargetDatabaseName should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName "SomeTrashServe" -TargetDatabaseName $null } | Should Throw;
+        It "Null CubeDatabase should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase $null } | Should Throw;
         }
 
-        It "Empty TargetDatabaseName should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName "SomeTrashServe" -TargetDatabaseName "" } | Should Throw;
+        It "Empty CubeDatabase should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase "" } | Should Throw;
         }
 
         It "Missing DeploymentTargets should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentTargets -TargetServerName "SomeTrashServe" -TargetDatabaseName "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentTargets -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
         It "Missing DeploymentOptions should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentOptions -TargetServerName "SomeTrashServe" -TargetDatabaseName "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentOptions -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
         }
 
         It "Invalid ProcessingOption should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName "MyServer" -TargetDatabaseName "MyDatabase" -ProcessingOption "SomethingSilly" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ProcessingOption "SomethingSilly" } | Should Throw;
         }
     }
 
@@ -67,9 +67,9 @@ Describe "Update-AnalysisServicesConfig" {
 
 
         # generate a unique guid which we can check has been written into the file correctly
-        $TargetServerName = New-Guid;
-        $TargetDatabaseName = New-Guid;
-        Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -TargetServerName $TargetServerName -TargetDatabaseName $TargetDatabaseName;
+        $Server = New-Guid;
+        $CubeDatabase = New-Guid;
+        Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
 
         $configFolder = Split-Path -Path $AsDatabasePath -Parent;
         [string]$ModelName = (Get-Item $AsDatabasePath).Basename;
@@ -78,15 +78,15 @@ Describe "Update-AnalysisServicesConfig" {
         [xml]$deploymentTargets = [xml](Get-Content $deploymentTargetsPath);
 
         It "Check DeploymentTargets Database" {
-            $deploymentTargets.DeploymentTarget.Database | Should -Be $TargetDatabaseName;
+            $deploymentTargets.DeploymentTarget.Database | Should -Be $CubeDatabase;
         }
 
         It "Check DeploymentTargets Server" {
-            $deploymentTargets.DeploymentTarget.Server | Should -Be $TargetServerName;
+            $deploymentTargets.DeploymentTarget.Server | Should -Be $Server;
         }
 
         It "Check DeploymentTargets ConnectionString" {
-            $deploymentTargets.DeploymentTarget.ConnectionString | Should -Be "DataSource=$TargetServerName;Timeout=0"
+            $deploymentTargets.DeploymentTarget.ConnectionString | Should -Be "DataSource=$Server;Timeout=0"
         }
 
         It "Check DeploymentOptions file has DoNotProcess" {

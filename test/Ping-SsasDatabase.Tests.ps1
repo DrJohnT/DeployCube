@@ -4,37 +4,37 @@ import-Module -Name $ModulePath;
 
 Describe "Ping-SsasDatabase" {
     Context "Testing Inputs" {
-        It "Should have ServerName as a mandatory parameter" {
-            (Get-Command Ping-SsasDatabase).Parameters['ServerName'].Attributes.mandatory | Should -Be $true
+        It "Should have Server as a mandatory parameter" {
+            (Get-Command Ping-SsasDatabase).Parameters['Server'].Attributes.mandatory | Should -Be $true
         }
-        It "Should have DatabaseName as a mandatory parameter" {
-            (Get-Command Ping-SsasDatabase).Parameters['DatabaseName'].Attributes.mandatory | Should -Be $true
+        It "Should have CubeDatabase as a mandatory parameter" {
+            (Get-Command Ping-SsasDatabase).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Ping-SsasDatabase -ServerName ""  -DatabaseName "master" } | Should Throw;
+            { Ping-SsasDatabase -Server "" -CubeDatabase "master" } | Should Throw;
         }
         It "Null server" {
-            { Ping-SsasDatabase -ServerName $null  -DatabaseName "master" } | Should Throw;
+            { Ping-SsasDatabase -Server $null  -CubeDatabase "master" } | Should Throw;
         }
         It "Empty database" {
-            { Ping-SsasDatabase -ServerName "localhost"  -DatabaseName "" } | Should Throw;
+            { Ping-SsasDatabase -Server "localhost"  -CubeDatabase "" } | Should Throw;
         }
         It "Null database" {
-            { Ping-SsasDatabase -ServerName "localhost"  -DatabaseName $null } | Should Throw;
+            { Ping-SsasDatabase -Server "localhost"  -CubeDatabase $null } | Should Throw;
         }
     }
 
     Context "Main Tests" {
         It "Invalid server" {
-            ( Ping-SsasDatabase -ServerName "InvalidServer" -DatabaseName "CubeToPublish" ) | Should -Be $false;
+            ( Ping-SsasDatabase -Server "InvalidServer" -CubeDatabase "CubeToPublish" ) | Should -Be $false;
         }
 
         It "Valid server and invalid database" {
-            ( Ping-SsasDatabase -ServerName "localhost" -DatabaseName "InvalidDatabase" ) | Should -Be $false;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "InvalidDatabase" ) | Should -Be $false;
         }
 
         It "Valid server and database" {
-            ( Ping-SsasDatabase -ServerName "localhost" -DatabaseName "CubeToPublish" ) | Should -Be $true;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeToPublish" ) | Should -Be $true;
         }
     }
 }

@@ -15,18 +15,19 @@ function Ping-SsasDatabase {
     (
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $ServerName,
+        $Server,
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $DatabaseName
+        $CubeDatabase
     )
 
     try {
+        Import-Module -Name SqlServer;
         # request a list of databases on the SSAS server. If the server does not exist, it will return an empty string
   		# Annoyingly, Invoke-ASCmd does not generate an error we can capture with try/catch. But it does write output to the error console,
 		# so we have to redirect the error output to the normal output to stop the error been detected by processes monitoring the error output such as the build pipeline
-        $returnResult = Invoke-ASCmd -Server $ServerName -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
+        $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
 
         if ([string]::IsNullOrEmpty($returnResult)) {
 			return $false;
@@ -41,7 +42,7 @@ function Ping-SsasDatabase {
             $rows = $returnXML.SelectNodes("//xmlAnalysis:DiscoverResponse/xmlAnalysis:return/rootNS:root/rootNS:row/rootNS:DATABASE_ID", $nsmgr) ;
             foreach ($row in $rows) {
                $FoundDb = $row.InnerText;
-               if ($FoundDb -eq  $DatabaseName) {
+               if ($FoundDb -eq  $CubeDatabase) {
                     return $true;
                }
             }

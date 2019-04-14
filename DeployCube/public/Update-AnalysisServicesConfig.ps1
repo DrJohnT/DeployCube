@@ -13,10 +13,10 @@ function Update-AnalysisServicesConfig {
         .PARAMETER AsDatabasePath
         Full path to your database XMLA or TMSL file which has a .asdatabase file extension (e.g. C:\Dev\YourDB\bin\Debug\YourDB.asdatabase)
 
-         .PARAMETER TargetServerName
-        Name of the target server, including instance and port if required.
+         .PARAMETER Server
+        Name of the target SSAS server, including instance and port if required.
 
-        .PARAMETER TargetDatabaseName
+        .PARAMETER CubeDatabase
         The name of the database to be deployed.
 
         .PARAMETER ProcessingOption
@@ -31,11 +31,11 @@ function Update-AnalysisServicesConfig {
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $TargetServerName,
+        $Server,
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $TargetDatabaseName,
+        $CubeDatabase,
 
         [String] [Parameter(Mandatory = $false)]
         [ValidateSet('ProcessFull', 'ProcessDefault', 'DoNotProcess')]
@@ -52,9 +52,9 @@ function Update-AnalysisServicesConfig {
         {
             Write-Output "Altering $ModelName.deploymenttargets"
             [xml]$deploymentTargets = [xml](Get-Content $deploymentTargetsPath);
-            $deploymentTargets.DeploymentTarget.Database = $TargetDatabaseName;
-            $deploymentTargets.DeploymentTarget.Server = $TargetServerName;
-            $deploymentTargets.DeploymentTarget.ConnectionString="DataSource=$TargetServerName;Timeout=0"
+            $deploymentTargets.DeploymentTarget.Database = $CubeDatabase;
+            $deploymentTargets.DeploymentTarget.Server = $Server;
+            $deploymentTargets.DeploymentTarget.ConnectionString="DataSource=$Server;Timeout=0"
             $deploymentTargets.Save($deploymentTargetsPath);
         } else {
             throw "Update-AnalysisServicesConfig: $ModelName.deploymenttargets file does not exist in $configFolder";
