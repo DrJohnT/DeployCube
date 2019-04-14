@@ -31,27 +31,27 @@ Install-Module -Name DeployCube
 ## Usage
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer"
+Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Where -AsDatabasePath is the path to your tabular or multidimensional model, and -TargetServerName is the name of the target server (including instance and port if required).  The above is the minimum set of parameters that can be used with **Publish-Cube**.
+Where -AsDatabasePath is the path to your tabular or multidimensional model, and -Server is the name of the target server (including instance and port if required).  The above is the minimum set of parameters that can be used with **Publish-Cube**.
 
-Normally, the database will be named the same as your AsDatabase file (i.e. YourCube in the example above).  However, by adding the -TargetDatabaseName parameter, you can change the name of your deployed cube to be anything you like.
+Normally, the database will be named the same as your AsDatabase file (i.e. YourCube in the example above).  However, by adding the -CubeDatabase parameter, you can change the name of your deployed cube to be anything you like.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer" -TargetDatabaseName "YourNewCubeName"
+Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer" -CubeDatabase "YourNewCubeName"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As part of the deployment you can specify a processing option.  Valid processing options are: ProcessFull, ProcessDefault and DoNotProcess.  However, it is strongly recommended that you use default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer" -ProcessingOption "DoNotProcess"
+Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer" -ProcessingOption "DoNotProcess"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finnally, if there are multiple versions of the Analysis Services Deployment Utility (Microsoft.AnalysisServices.Deployment.exe) are installed on your build agent, you can specify which version should be used with the -PreferredVersion option.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer" -PreferredVersion latest
+Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer" -PreferredVersion latest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Valid values for -PreferredVersion are:
