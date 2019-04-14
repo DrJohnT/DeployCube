@@ -6,7 +6,7 @@ function Ping-SsasDatabase {
         .DESCRIPTION
         Checks that the database exists on the specified SQL Server SSAS instance
 
-		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/PublishDacPac
+		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
 		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
     #>
     [OutputType([Boolean])]

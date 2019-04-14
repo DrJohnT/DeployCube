@@ -6,7 +6,7 @@ function Ping-SsasServer {
         .DESCRIPTION
         Checks that the SQL Server SSAS instance exists
 
-		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/PublishDacPac
+		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
 		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 	#>

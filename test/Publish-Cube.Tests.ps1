@@ -63,7 +63,7 @@ Describe "Publish-Cube" {
         }
 
         It "Invalid AsDatabasePath should Throw" {
-            { Publish-Cube -AsDatabasePath "NoDacPac" -TargetServerName "localhost" -TargetDatabaseName "MyTabularCube" -PreferredVersion latest } | Should Throw;
+            { Publish-Cube -AsDatabasePath "NoAsDatabasePath" -TargetServerName "localhost" -TargetDatabaseName "MyTabularCube" -PreferredVersion latest } | Should Throw;
         }
 
         It "Invalid PreferredVersion Should Throw" {

@@ -6,14 +6,16 @@
 
 ## Overview
 
-**Publish-Cube** allows you to deploy a tabular or multidimensional cube to a SQL Server Analysis Services instance.  Behind the scenes it uses the Analysis Services Deployment Utility in silent mode.
-**Publish-Cube** simplifies the use of [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017).
-The key advantage being that it takes care of updating the various config files that the Deployment Utility uses to understand where to deploy the cube.  This is done for you automatically and makes the entire deployment process simpler.
+**Publish-Cube** allows you to deploy a tabular or multidimensional cube to a SQL Server Analysis Services instance.  Behind the scenes it uses the
+[Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017)
+in silent mode.
+**Publish-Cube** simplifies the use of [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017)
+by automatically updating the various config files that the Deployment Utility uses to deploy the cube.
 
-When you perform a **build** of a Visual Studio tabular or multidimensional project, it creates an **AsDatabase** file which defines the entire model such as dimensions, attributes and measures associated with the cube.
-**Publish-Cube** can therefore be used in CI senarios as part of the build so that you can populate the cube with data and run tests against the cube using DAX or MDX as part of the pipeline.
+When you perform a **build** of a Visual Studio cube project, it creates an **AsDatabase** file which defines the entire model such as dimensions, attributes and measures associated with the cube.
+**Publish-Cube** can be used in CI senarios as part of the pipeline so that you can populate the cube with data and run tests against the cube using DAX or MDX as part of the pipeline.
 
-To automate build and deployment of tabular cube in Azure DevOps, you can use MsBuild to create AsDatabase from your Visual Studio solution.  You can then add a PowerShell task which uses **Publish-Cube** to invoke [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) to deploy each AsDatabase.
+To automate the build and deployment of tabular cube in Azure DevOps, you can use MsBuild to create AsDatabase from your Visual Studio solution.  You can then add a PowerShell task which uses **Publish-Cube** to invoke [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) to deploy each AsDatabase.
 For Multidimensional models you will have to use DevEnv.com (Visual Studio) to generate the AsDatabase file.
 
 **Publish-Cube** can also be used to automate the deployment of cubes as part of a server deployment using [Octopus Deploy](https://octopus.com/) or Azure DevOps Release Manager.
@@ -38,6 +40,12 @@ Normally, the database will be named the same as your AsDatabase file (i.e. Your
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
 Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer" -TargetDatabaseName "YourNewCubeName"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As part of the deployment you can specify a processing option.  Valid processing options are: ProcessFull, ProcessDefault and DoNotProcess.  However, it is strongly recommended that you use default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
+Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -TargetServerName "YourCubeServer" -ProcessingOption "DoNotProcess"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finnally, if there are multiple versions of the Analysis Services Deployment Utility (Microsoft.AnalysisServices.Deployment.exe) are installed on your build agent, you can specify which version should be used with the -PreferredVersion option.
@@ -84,6 +92,12 @@ Microsoft.AnalysisServices.Deployment.exe
 
 Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) which is installed with [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
 
+The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery using:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
+Install-Module -Name SqlServer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ## Azure DevOps Agent
 
 **Publish-Cube** can be run on an in-house hosted Azure DevOps agent when once [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) is installed:
@@ -92,8 +106,10 @@ Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Dep
 
 * By installing [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
 
-Be aware that it is best to install the latest version of Analysis Services Deployment Utility
+Be aware that it is best to install the latest version of Analysis Services Deployment Utility (SSMS)
 as this provides support for all previous versions of SQL Server Analysis Services as well as current versions.
+
+The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery as described above.
 
 ## Example Tabular Model
 
@@ -105,10 +121,10 @@ DACPAC is provided in the .\example folder.  You can use this to test that deplo
 
 |XMLA File|Description|
 |-------|------------------|
-|[project name].asdatabase|Contains the declarative definitions for all SSAS objects|
-|[project name].deploymenttargets|Contains the name of the target SSAS instance and database|
-|[project name].deploymentoptions|Contains options such as whether deployment is transactional and whether objects should be processed.|
-|[project name].configsettings|(Multidimensional only) Contains environment specific settings such as data source connections and object storage locations.  These settings override whats in [project name].asdatabase.|
+|[model name].asdatabase|Contains the declarative definitions for all SSAS objects|
+|[model name].deploymenttargets|Contains the name of the target SSAS instance and database|
+|[model name].deploymentoptions|Contains options such as whether deployment is transactional and whether objects should be processed.|
+|[model name].configsettings|(Multidimensional only) Contains environment specific settings such as data source connections and object storage locations.  These settings override whats in [project name].asdatabase.|
 
 
 ## Issue Reporting
