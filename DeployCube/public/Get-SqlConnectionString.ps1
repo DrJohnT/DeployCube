@@ -17,7 +17,7 @@ function Get-SqlConnectionString {
 	)
 
     $ConnBuilder = New-Object System.Data.OleDb.OleDbConnectionStringBuilder($ExistingConnectionString);
-    $ConnBuilder["Data Source"] = $SourceServer;
-    $ConnBuilder["Initial Catalog"] = $SourceDatabase;
+    $ConnBuilder["Data Source"] = $SourceSqlServer;
+    $ConnBuilder["Initial Catalog"] = $SourceSqlDatabase;
     return $ConnBuilder.ConnectionString;
 }

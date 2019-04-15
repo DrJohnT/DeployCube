@@ -28,32 +28,32 @@ Describe "Update-CubeDataSource" {
 
 
         It "Empty server" {
-            { Update-CubeDataSource -Server ""  -CubeDatabase "MyCube" -SourceSqlServer "localhost" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
+            { Update-CubeDataSource -Server ""  -CubeDatabase "MyCube" -SourceSqlServer "CP0023" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
         }
         It "Null server" {
-            { Update-CubeDataSource -Server $null  -CubeDatabase "MyCube" -SourceSqlServer "localhost" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
+            { Update-CubeDataSource -Server $null  -CubeDatabase "MyCube" -SourceSqlServer "CP0023" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
         }
         It "Empty database" {
-            { Update-CubeDataSource -Server "localhost"  -CubeDatabase "" -SourceSqlServer "localhost" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
+            { Update-CubeDataSource -Server "CP0023"  -CubeDatabase "" -SourceSqlServer "CP0023" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
         }
         It "Null database" {
-            { Update-CubeDataSource -Server 'localhost'  -CubeDatabase $null -SourceSqlServer "localhost" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
+            { Update-CubeDataSource -Server 'CP0023'  -CubeDatabase $null -SourceSqlServer "CP0023" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should Throw;
         }
         It "Empty SourceSqlServer" {
-            { Update-CubeDataSource -Server 'localhost' -CubeDatabase "master" -SourceSqlServer "" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer "" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
         It "Null SourceSqlServer" {
-            { Update-CubeDataSource -Server 'localhost' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
     }
 
     Context "Main Tests" {
         It "Invalid server" {
-            { Update-CubeDataSource -Server 'InvalidServer' -CubeDatabase "CubeToPublish" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
+            { Update-CubeDataSource -Server 'InvalidServer' -CubeDatabase "CubeToPublish" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
 
         It "Valid server and invalid CubeDatabase" {
-            { Update-CubeDataSource -Server 'localhost' -CubeDatabase "TrashInput" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "TrashInput" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
 
 
