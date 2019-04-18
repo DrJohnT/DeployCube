@@ -90,8 +90,12 @@ Describe "Publish-Cube" {
             { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase $null -PreferredVersion latest } | Should Throw;
         }
 
-        It "Invalid ProcessingOption should Throw" {
+        It "Invalid ProcessingOption SomethingSilly should Throw" {
             { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "SomethingSilly" } | Should Throw;
+        }
+
+        It "Invalid ProcessingOption ProcessFull should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "ProcessFull" } | Should Throw;
         }
 
         It "Missing DeploymentTargets should Throw" {
@@ -118,7 +122,7 @@ Describe "Publish-Cube" {
         }
 
         It "Adding ProcessingOption should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -ProcessingOption "ProcessFull" } | Should Not Throw;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -ProcessingOption "Full" } | Should Not Throw;
         }
     }
 
