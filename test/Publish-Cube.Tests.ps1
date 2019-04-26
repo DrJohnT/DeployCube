@@ -16,8 +16,8 @@ Describe "Publish-Cube" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Publish-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true;
         }
-        It "Should have CubeDatabase as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $false;
+        It "Should have CubeDatabase as an mandatory parameter" {
+            (Get-Command Publish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true;
         }
         It "Should have PreferredVersion as an optional parameter" {
             (Get-Command Publish-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -Be $false;
@@ -52,8 +52,8 @@ Describe "Publish-Cube" {
         It "Should have Server as a mandatory parameter" {
             (Get-Alias Deploy-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true;
         }
-        It "Should have CubeDatabase as an optional parameter" {
-            (Get-Alias Deploy-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $false;
+        It "Should have CubeDatabase as an mandatory parameter" {
+            (Get-Alias Deploy-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true;
         }
         It "Should have PreferredVersion as an optional parameter" {
             (Get-Alias Deploy-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -Be $false;
@@ -142,11 +142,11 @@ Describe "Publish-Cube" {
     Context "Valid Parameters with mocked Invoke-ExternalCommand" {
         Mock -ModuleName DeployCube Invoke-ExternalCommand;
         It "Miniumal valid Parameters" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" } | Should Not Throw;;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" } | Should Not Throw;;
         }
 
         It "Specific PreferredVersion should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -PreferredVersion 150 } | Should Not Throw;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion 150 } | Should Not Throw;
         }
 
         It "Missing PreferredVersion should not Throw" {
@@ -154,7 +154,7 @@ Describe "Publish-Cube" {
         }
 
         It "Adding ProcessingOption should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -ProcessingOption "Full" } | Should Not Throw;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -ProcessingOption "Full" } | Should Not Throw;
         }
     }
 
