@@ -21,6 +21,25 @@ Describe "Update-AnalysisServicesConfig" {
         It "Should have ProcessingOption as an optional parameter" {
             (Get-Command Update-AnalysisServicesConfig).Parameters['ProcessingOption'].Attributes.mandatory | Should -Be $false;
         }
+
+        It "Should have TransactionalDeployment as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['TransactionalDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have PartitionDeployment as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['PartitionDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have RoleDeployment as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['RoleDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have ConfigurationSettingsDeployment as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['ConfigurationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have OptimizationSettingsDeployment as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['OptimizationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have WriteBackTableCreation as an optional parameter" {
+            (Get-Command Update-AnalysisServicesConfig).Parameters['WriteBackTableCreation'].Attributes.mandatory | Should -Be $false;
+        }
     }
 
     Context "Invalid Inputs" {
@@ -58,6 +77,32 @@ Describe "Update-AnalysisServicesConfig" {
 
         It "Invalid ProcessingOption should Throw" {
             { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ProcessingOption "SomethingSilly" } | Should Throw;
+        }
+
+        It "Invalid TransactionalDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid PartitionDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -PartitionDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid RoleDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -RoleDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid ConfigurationSettingsDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ConfigurationSettingsDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid OptimizationSettingsDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -OptimizationSettingsDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid WriteBackTableCreation should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -WriteBackTableCreation "SomethingSilly" } | Should Throw;
+        }
+
+        It "Empty TransactionalDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "" } | Should Throw;
+        }
+        It "Null TransactionalDeployment should Throw" {
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment $null } | Should Throw;
         }
     }
 

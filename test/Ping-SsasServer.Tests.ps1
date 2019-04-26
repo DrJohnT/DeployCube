@@ -18,9 +18,8 @@ Describe "Ping-SsasServer" {
 
     Context "Checking Inputs" {
         It "Invalid server" {
-            Ping-SsasServer -Server "InvalidServer"
-            #( Ping-SsasServer -Server "InvalidServer" ) | Should -Be $false;
-          }
+            ( Ping-SsasServer -Server "InvalidServer" ) | Should -Be $false;
+        }
 
         It "Valid server" {
             ( Ping-SsasServer -Server "localhost" ) | Should -Be $true;

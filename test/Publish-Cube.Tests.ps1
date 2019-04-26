@@ -25,7 +25,24 @@ Describe "Publish-Cube" {
         It "Should have ProcessingOption as an optional parameter" {
             (Get-Command Publish-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -Be $false;
         }
-
+        It "Should have TransactionalDeployment as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['TransactionalDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have PartitionDeployment as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['PartitionDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have RoleDeployment as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['RoleDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have ConfigurationSettingsDeployment as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['ConfigurationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have OptimizationSettingsDeployment as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['OptimizationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+        }
+        It "Should have WriteBackTableCreation as an optional parameter" {
+            (Get-Command Publish-Cube).Parameters['WriteBackTableCreation'].Attributes.mandatory | Should -Be $false;
+        }
     }
 
     Context "Testing Inputs for alias Deploy-Cube" {
@@ -56,7 +73,7 @@ Describe "Publish-Cube" {
         }
     }
 
-    Context "Invalid Parameters" {
+    Context "Invalid Inputs" {
         Mock -ModuleName DeployCube Invoke-ExternalCommand;
         It "Invalid ProcessingOption should Throw" {
             { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest $ProcessingOption "fsadsa" } | Should Throw;
@@ -94,8 +111,23 @@ Describe "Publish-Cube" {
             { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "SomethingSilly" } | Should Throw;
         }
 
-        It "Invalid ProcessingOption ProcessFull should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "ProcessFull" } | Should Throw;
+        It "Invalid TransactionalDeployment should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -TransactionalDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid PartitionDeployment should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PartitionDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid RoleDeployment should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -RoleDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid ConfigurationSettingsDeployment should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -ConfigurationSettingsDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid OptimizationSettingsDeployment should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -OptimizationSettingsDeployment "SomethingSilly" } | Should Throw;
+        }
+        It "Invalid WriteBackTableCreation should Throw" {
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -WriteBackTableCreation "SomethingSilly" } | Should Throw;
         }
 
         It "Missing DeploymentTargets should Throw" {
