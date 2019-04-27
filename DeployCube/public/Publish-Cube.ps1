@@ -99,11 +99,6 @@ function Publish-Cube {
 
         $AsDatabaseName = Split-Path -Path $AsDatabasePath -Leaf;
 	    $AsDatabaseFolder = Split-Path -Path $AsDatabasePath -Parent;
-        [string]$OriginalDbName = (Get-Item $AsDatabasePath).Basename;
-
-        if ([string]::IsNullOrEmpty($CubeDatabase)) {
-		    $CubeDatabase = $OriginalDbName;
-        }
 
         if (Ping-SsasServer -Server $Server) {
 
@@ -135,9 +130,19 @@ function Publish-Cube {
 
             $ArgList = @(
                 "$AsDatabasePath",
-                "/s"
+                "/s:$AsDatabaseFolder\AnalysisServicesDeploymentExeLog.txt"
             );
-            Invoke-ExternalCommand -Command "$AnalysisServicesDeploymentExePath" -Arguments $ArgList -PipeOutNull $true;
+            Invoke-ExternalCommand -Command $AnalysisServicesDeploymentExePath -Arguments $ArgList -PipeOutNull $true;
+
+            $log = Get-Content "$AsDatabaseFolder\AnalysisServicesDeploymentExeLog.txt";
+	        foreach ($line in $log) {
+                if ($line -like '*error*') {
+                    Write-Error $line;
+                } else {
+                    Write-Output $line;
+                }
+            }
+
         } else {
             throw "Invalid SSAS Server: $Server";
         }
