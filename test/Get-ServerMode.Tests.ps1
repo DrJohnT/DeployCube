@@ -26,7 +26,7 @@ Describe "Get-ServerMode" {
         }
 
         It "Valid Tabular server" {
-            ( Get-ServerMode -Server "build02" ) | Should -Be "Tabular";
+            ( Get-ServerMode -Server "SZRH3012.qregroup.net" ) | Should -Be "Tabular";
         }
 
         It "Valid Multidimentional server" {
