@@ -5,7 +5,7 @@ $PublicPath = Resolve-Path "$PublicPath\..\DeployCube\public\";
 Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' {
     Context 'PSScriptAnalyzer Standard Rules' {
 		Import-Module PSScriptAnalyzer;
-        $ExcludeRules = @('PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions');
+        $ExcludeRules = @('PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions','PSAvoidUsingPlainTextForPassword');
 
 		$includeScripts = Get-ChildItem "$PublicPath" -Recurse -Include *.ps1 -Exclude *Tests.ps1;
 
@@ -28,16 +28,14 @@ Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' {
 				        ($Failures | Measure-Object).Count | Should Be 0
 			        }
 		        }
-<#
-				else
+			<#	else
 		        {
 			        # We still want it in the tests, but since it doesn't actually get tested we will skip
 			        It "Should pass $Rule" -Skip {
 				        $Failures = $AnalyzerIssues | Where-Object -Property RuleName -EQ -Value $rule
 				        ($Failures | Measure-Object).Count | Should Be 0
 			        }
-		        }
-#>
+		        } #>
 	        }
 	    }
 

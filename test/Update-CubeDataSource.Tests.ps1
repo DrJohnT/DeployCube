@@ -45,9 +45,21 @@ Describe "Update-CubeDataSource" {
         It "Null SourceSqlServer" {
             { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
+
+        It "Null SourceSqlServer" {
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
+        }
+
+        It "Null ImpersonationAccount when ImpersonationMode=ImpersonateAccount" {
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount $null -ImpersonationPassword 'test' } | Should Throw;
+        }
+
+        It "Null ImpersonationPassword when ImpersonationMode=ImpersonateAccount" {
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'test' -ImpersonationPassword $null } | Should Throw;
+        }
     }
 
-    Context "Main Tests" {
+    Context "Invalid inputs" {
         It "Invalid server" {
             { Update-CubeDataSource -Server 'InvalidServer' -CubeDatabase "CubeToPublish" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
@@ -55,8 +67,16 @@ Describe "Update-CubeDataSource" {
         It "Valid server and invalid CubeDatabase" {
             { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "TrashInput" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Throw;
         }
+    }
 
+    Context "Valid inputs" {
+        It "Valid inputs - ImpersonateServiceAccount" {
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "CubeToPublish" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Not Throw;
+        }
 
+        It "Valid inputs - ImpersonateAccount" {
+            { Update-CubeDataSource -Server 'CP0023' -CubeDatabase "CubeToPublish" -SourceSqlServer "CP0023" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword 'OSzkzmvdVC-n9+BT' } | Should not Throw;
+        }
     }
 }
 

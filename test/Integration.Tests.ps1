@@ -20,10 +20,8 @@ Describe "Publish-Cube Integration Tests" {
             ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should Be $true;
         }
 
-        It "Update cube connection string" {
-            #$password = ConvertTo-SecureString -String '13Lilac!' -AsPlainText -Force
-            $password = '13Lilac!'
-            ( Update-CubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\jtunnicliffe' -ImpersonationPassword $password ) | Should Be $true;
+        It "Update cube connection string ImpersonationMode " {
+            ( Update-CubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount' ) | Should Be $true;
         }
 
         It "Process cube should not throw" {

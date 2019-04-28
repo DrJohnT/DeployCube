@@ -26,7 +26,7 @@ Describe "Ping-SsasDatabase" {
 
     Context "Main Tests" {
         It "Invalid server" {
-            ( Ping-SsasDatabase -Server "InvalidServer" -CubeDatabase "CubeToPublish" ) | Should -Be $false;
+            { Ping-SsasDatabase -Server "InvalidServer" -CubeDatabase "CubeToPublish" } | Should Throw;
         }
 
         It "Valid server and invalid database" {

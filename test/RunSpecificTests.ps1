@@ -30,10 +30,10 @@ $AsDatabasePath = Resolve-Path "$exampleFolder\CubeToPublish\MyTabularProject\bi
 
 $Server = 'localhost';
 $CubeDatabase = "WillFailToDeploy";
-$password = '13Lilac!'
+$password = 'OSzkzmvdVC-n9+BT'
 
 Publish-Cube -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase -PreferredVersion latest -ProcessingOption Full -TransactionalDeployment true;
-#Update-CubeDataSource -Server $Server -CubeDatabase 'CubeToPublish' -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\jtunnicliffe' -ImpersonationPassword $password
+#Update-CubeDataSource -Server $Server -CubeDatabase 'CubeToPublish' -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword $password
 
 Remove-Module -Name DeployCube
 #>
