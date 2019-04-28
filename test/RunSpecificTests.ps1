@@ -8,6 +8,7 @@ Invoke-Pester -Script .\Get-AnalysisServicesDeploymentExePath.Tests.ps1
 Invoke-Pester -Script .\Get-ServerMode.Tests.ps1
 Invoke-Pester -Script .\Get-SqlConnectionString.Tests.ps1
 
+Invoke-Pester -Script .\Invoke-ProcessSsasDatabase.Tests.ps1
 Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1
 Invoke-Pester -Script .\Ping-SsasServer.Tests.ps1
 

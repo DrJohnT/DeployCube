@@ -25,19 +25,23 @@ function Invoke-ProcessSsasDatabase {
         $RefreshType = 'Full'
     )
 
-    try {
-        # ensure SqlServer module is installed
-        Get-ModuleByName -Name SqlServer;
+    if (Ping-SsasServer -Server $Server) {
+        try {
+            # ensure SqlServer module is installed
+            Get-ModuleByName -Name SqlServer;
 
-        if ( Ping-SsasDatabase -Server $Server -CubeDatabase $CubeDatabase ) {
-            Write-Output "Processing tabular cube database $Server.$CubeDatabase using $RefreshType";
-            $ModelOperationResults = Invoke-ProcessASDatabase -Server $Server -DatabaseName $CubeDatabase -RefreshType $RefreshType;
-            Get-SsasProcessingMessages $ModelOperationResults;
-        } else {
-            Write-Error "Tabular cube database $CubeDatabase does not exist on server $Server";
+            if ( Ping-SsasDatabase -Server $Server -CubeDatabase $CubeDatabase ) {
+                Write-Output "Processing tabular cube database $Server.$CubeDatabase using $RefreshType";
+                $ModelOperationResults = Invoke-ProcessASDatabase -Server $Server -DatabaseName $CubeDatabase -RefreshType $RefreshType;
+                Get-SsasProcessingMessages $ModelOperationResults;
+            } else {
+                Write-Error "Tabular cube database $CubeDatabase does not exist on server $Server";
+            }
         }
-    }
-    catch {
-        Write-Error "$_";
+        catch {
+            Write-Error "$_";
+        }
+    } else {
+        throw "Invalid SSAS Server: $Server";
     }
 }
