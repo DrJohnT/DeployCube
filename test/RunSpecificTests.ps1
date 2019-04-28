@@ -34,7 +34,7 @@ $CubeDatabase = "WillFailToDeploy";
 $password = 'OSzkzmvdVC-n9+BT'
 
 Publish-Cube -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase -PreferredVersion latest -ProcessingOption Full -TransactionalDeployment true;
-#Update-CubeDataSource -Server $Server -CubeDatabase 'CubeToPublish' -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword $password
+#Update-CubeDataSource -Server $Server -CubeDatabase $CubeDatabase -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword $password
 
 Remove-Module -Name DeployCube
 #>
