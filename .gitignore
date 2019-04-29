@@ -17,3 +17,5 @@ examples/CubeToPublish/MyTabularProject/Model.bim.layout
 examples/CubeToPublish/MyTabularProject/Model.bim.layout
 examples/CubeToPublish/MyTabularProject/bin/AnalysisServicesDeploymentExeLog.txt
 examples/CubeToPublish/ForTests/InvalidDataSourceConnection/AnalysisServicesDeploymentExeLog.txt
+test/tmsl_examples.txt
+test/GenerateJson.ps1
