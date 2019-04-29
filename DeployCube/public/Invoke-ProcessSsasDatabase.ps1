@@ -28,9 +28,21 @@ function Invoke-ProcessSsasDatabase {
     if ( Ping-SsasDatabase -Server $Server -CubeDatabase $CubeDatabase ) {
         Write-Output "Processing tabular cube $Server.$CubeDatabase using Refresh Type: $RefreshType";
 
-        $ModelOperationResults = Invoke-ProcessASDatabase -Server $Server -DatabaseName $CubeDatabase -RefreshType $RefreshType;
+        $tmslStructure = [pscustomobject]@{
+            refresh = [pscustomobject]@{
+                type = $RefreshType
+                objects = @( [pscustomobject]@{ database = $CubeDatabase } )
+            }
+        }
 
-        Get-SsasProcessingMessages $ModelOperationResults;
+        $tmsl = $tmslStructure | ConvertTo-Json;
+        $tmsl = $tmsl -replace '\"@{', '{ "'
+        $tmsl = $tmsl -replace '=', '": "'
+        $tmsl = $tmsl -replace '}"', '" }'
+#        Write-Output $tmsl;
+
+        $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query $tmsl;
+        Get-SsasProcessingMessages -ASCmdReturnString $returnResult;
     } else {
         throw "Cube database $CubeDatabase not found on SSAS Server: $Server";
     }

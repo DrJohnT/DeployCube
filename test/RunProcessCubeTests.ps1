@@ -10,8 +10,9 @@ $Server = 'localhost';
 $CubeDatabase = "TestProcessing";
 $password = 'OSzkzmvdVC-n9+BT'
 
-#Publish-Cube -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
-#Update-CubeDataSource -Server $Server -CubeDatabase $CubeDatabase -SourceSqlServer $Server -SourceSqlDatabase 'InvalidDatabase' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword $password
+Publish-Cube -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
+#Update-CubeDataSource -Server $Server -CubeDatabase $CubeDatabase -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword $password
+Update-CubeDataSource -Server $Server -CubeDatabase $CubeDatabase -SourceSqlServer $Server -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode ImpersonateServiceAccount
 Invoke-ProcessSsasDatabase -Server $Server -CubeDatabase $CubeDatabase -RefreshType Full
 
 Remove-Module -Name DeployCube
