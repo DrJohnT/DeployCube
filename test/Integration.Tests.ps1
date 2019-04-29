@@ -37,7 +37,7 @@ Describe "Publish-Cube Integration Tests" {
             ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should Be $false;
         }
     }
-
+<#
     Context "Deploy Cube with ProcessFull" {
         $CubeDatabase = New-Guid;  # this ensures we cannot fake the test result
         $ServerName = 'localhost';
@@ -49,6 +49,7 @@ Describe "Publish-Cube Integration Tests" {
             ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should Be $false;
         }
     }
+#>
 }
 
 Remove-Module -Name DeployCube
