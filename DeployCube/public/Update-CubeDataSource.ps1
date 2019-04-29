@@ -150,11 +150,13 @@ function Update-CubeDataSource
 
         $tmsl = $tmslStructure | ConvertTo-Json -Depth 5;
 
-        #Write-Host "CompatibilityLevel: $CompatibilityLevel"
-        #Write-Host $tmsl
-        #Write-Host
+        #Write-Output "CompatibilityLevel: $CompatibilityLevel"
+        #Write-Output $tmsl
+        #Write-Output
 
         # now send the createOrReplace command to the cube
+        Write-Output "Updating SQL data source $DataSourceName with a connection to $SourceSqlServer.$SourceSqlDatabase using cube compatibility level $CompatibilityLevel";
+
         $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query $tmsl;
 
         return ($returnResult -like '*urn:schemas-microsoft-com:xml-analysis:empty*');
