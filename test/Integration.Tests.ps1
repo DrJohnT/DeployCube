@@ -6,7 +6,7 @@ $exampleFolder =  Resolve-Path "$CurrentFolder\..\examples";
 $AsDatabasePath = Resolve-Path "$exampleFolder\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
 #$MissingDeploymentTargets = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
 #$MissingDeploymentOptions = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
-$InvalidDataSourceConnection = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\InvalidDataSourceConnection\Model.asdatabase";
+#$InvalidDataSourceConnection = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\InvalidDataSourceConnection\Model.asdatabase";
 
 Describe "Publish-Cube Integration Tests" {
     Context "Deploy Cube, update connection and process" {
@@ -20,12 +20,12 @@ Describe "Publish-Cube Integration Tests" {
             ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should Be $true;
         }
 
-        It "Update cube connection string ImpersonationMode " {
-            ( Update-CubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount' ) | Should Be $true;
+        It "Update cube connection string with ImpersonateServiceAccount" {
+            ( Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount' ) | Should Be $true;
         }
 
         It "Process cube should not throw" {
-            { Invoke-ProcessASDatabase -Server $ServerName -DatabaseName $CubeDatabase -RefreshType Full }  | Should Not Throw;
+            { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full }  | Should Not Throw;
         }
 
         It "Drop cube should not throw" {

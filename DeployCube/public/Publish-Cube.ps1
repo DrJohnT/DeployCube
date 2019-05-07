@@ -1,37 +1,73 @@
-# The Deploy verb was added in PowerShell v6 but pester keeps telling me it is invalid, so we call the function Publish-Cube and have an alias of Deploy-Cube
+# The Deploy verb was added in PowerShell v6 but pester keeps saying it is invalid, so we call the function Publish-Cube and have an alias of Deploy-Cube
 function Publish-Cube {
-    <#
-		.SYNOPSIS
-        Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis Services instance.
+<#
+    .SYNOPSIS
+    Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis Services instance.
 
-		.DESCRIPTION
-        Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis Services instance.
+    .DESCRIPTION
+    Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis Services instance.
 
-        Note that you can call Update-AnalysisServicesConfig before calling this to get more deployment options.
-        However, use the same -AsDatabasePath, -Server, -CubeDatabase and -ProcessingOption options!
+    .PARAMETER AsDatabasePath
+    Full path to your database XMLA or TMSL file which has a .asdatabase file extension.
 
-		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
-		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
+    .PARAMETER Server
+    Name of the target SSAS server, including instance and port if required.
 
-        .PARAMETER AsDatabasePath
-        Full path to your database XMLA or TMSL file which has a .asdatabase file extension (e.g. C:\Dev\YourDB\bin\Debug\YourDB.asdatabase)
+    .PARAMETER CubeDatabase
+    The name of the cube database to be deployed.
 
-        .PARAMETER Server
-        Name of the target SSAS server, including instance and port if required.
+    .PARAMETER PreferredVersion
+    Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
 
-        .PARAMETER CubeDatabase
-        Normally, the database will be named the same as your AsDatabase file. However, by adding the -CubeDatabase parameter, you can name the database anything you like.
+    .PARAMETER ProcessingOption
+    Valid options are: Full, Default and DoNotProcess.
+    Default value: 'DoNotProcess'.
+    'Full': processes all the objects in the cube database. When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object.
+    'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.
+    'DoNotProcess': means no processing is performed.
+    Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
 
-        .PARAMETER PreferredVersion
-        Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter.
+    .PARAMETER TransactionalDeployment
+    Determines if the cube is deployed within one transaction for both metadata changes and processing commands.
+    If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.
+    If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.
 
-        .PARAMETER ProcessingOption
-        Valid processing options are: Full, Default and DoNotProcess.  Strongly recommended to use the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
+    .PARAMETER PartitionDeployment
+    'DeployPartitions': New partitions are deployed.  Existing partitions are removed.
+    'RetainPartitions': Existing partitions are retained.  New partitions are not deployed.
+    Valid options are: 'DeployPartitions' and 'RetainPartitions'.
+    Default value: 'DeployPartitions'.
 
-		.EXAMPLE
-        Publish-Cube -AsDatabasePath "C:\Dev\YourDB\bin\Debug\YourDB.asdatabase" -Server "YourDBServer"
-    #>
+    .PARAMETER RoleDeployment
+    Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.
+    Default value: 'DeployRolesRetainMembers'.
+    'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.
+    'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.
+    'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.
 
+    .PARAMETER ConfigurationSettingsDeployment
+    Valid options are: 'Retain' and 'Deploy'.
+    Default value: 'Deploy'.
+
+    .PARAMETER OptimizationSettingsDeployment
+    Valid options are: 'Retain' and 'Deploy'.
+    Default value: 'Deploy'.
+
+    .PARAMETER WriteBackTableCreation
+    Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table.
+    Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.
+    Default value: 'UseExisting'.
+
+    .EXAMPLE
+    Publish-Cube -AsDatabasePath 'C:\Dev\YourDB\bin\Debug\YourDB.asdatabase' -Server YourDBServer -CubeDatabase MyTabularCube
+
+    .LINK
+    https://github.com/DrJohnT/DeployCube
+
+    .NOTES
+    Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+    This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
+#>
 	[CmdletBinding()]
 	param
 	(

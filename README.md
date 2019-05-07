@@ -30,6 +30,46 @@ Install from PowerShell gallery using:
 Install-Module -Name DeployCube
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+## Pre-requisites
+
+The following pre-requisites need to be installed for **Publish-Cube** to work properly.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
+Microsoft.AnalysisServices.Deployment.exe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) which is installed with [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
+
+The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery using:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
+Install-Module -Name SqlServer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## List of commands
+
+The following is a list of commands provided by this module once you have installed the package (see *Installation* above)
+
+| **Function**             | **Description**                                                             |
+|--------------------------|-----------------------------------------------------------------------------|
+| Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
+| Unpublish-Cube                              | Drops a Tabular or Multidimensional cube from the specified server |
+| Get-AnalysisServicesDeploymentExePath       | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
+| Get-CubeDatabaseCompatibilityLevel          | Returns the CompatibilityLevel of a deployed cube database |
+| Get-ModuleByName                            | Loads the named PowerShell module, installing it if required |
+| Get-ServerMode                              | Returns the mode of the server: Tabular or Multidimensional |
+| Get-SqlAsPath                               | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
+| Get-SsasProcessingMessages                  | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
+| Get-SqlConnectionString                     | Helper function to create valid SQL Server database connection strings |
+| Ping-SsasServer                             | Returns true if the specified SSAS server exists |
+| Ping-SsasDatabase                           | Returns true if the specified SSAS database exists on the server |
+| Find-AnalysisServicesDeploymentExeLocations | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
+| Select-AnalysisServicesDeploymentExeVersion | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
+| Invoke-ProcessSsasDatabase                  | Processes an SSAS database on a SQL Server SSAS instance |
+| Invoke-ExternalCommand                      | Helper function to run command-line programs |
+| Update-AnalysisServicesConfig               | Updates the various config files (listed below) which are needed to deploy the cube |
+| Update-CubeDataSource                       | Updates the cube's connection to the source SQL database. |
+
 ## Usage
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
@@ -66,39 +106,6 @@ Valid values for -PreferredVersion are:
 |130|SQL Server 2016|
 |120|SQL Server 2014|
 
-## List of commands
-
-The following is a list of commands provided by this module once you have installed the package (see *Installation* above)
-
-| **Function**             | **Description**                                                             |
-|--------------------------|-----------------------------------------------------------------------------|
-| Publish-Cube                  | Publishes a Tabular or Multidimensional cube to the specified server        |
-| Unpublish-Cube                | Drops a Tabular or Multidimensional cube from the specified server          |
-| Select-AnalysisServicesDeploymentExeVersion | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
-| Get-AnalysisServicesDeploymentExePath       | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
-| Ping-SsasServer               | Returns true if the specified SSAS server exists                            |
-| Ping-SsasDatabase             | Returns true if the specified SSAS database exists on the server            |
-| Find-AnalysisServicesDeploymentExeLocations | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
-| Invoke-ExternalCommand        | Helper function to run command-line programs                                        |
-| Get-SsasSourceConnectionString | Helper function to create valid connection strings                                 |
-| Update-AnalysisServicesConfig | Updates the various config files (listed below) which are needed to deploy the cube |
-
-
-## Pre-requisites
-
-The following pre-requisites need to be installed for **Publish-Cube** to work properly.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Microsoft.AnalysisServices.Deployment.exe
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) which is installed with [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
-
-The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery using:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Install-Module -Name SqlServer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Azure DevOps Agent
 

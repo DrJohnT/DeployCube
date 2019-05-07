@@ -1,14 +1,26 @@
 function Get-ModuleByName {
-    <#
-        .SYNOPSIS
-        Loads the named PowerShell module, installing it if needbe
+<#
+    .SYNOPSIS
+    Loads the named PowerShell module, installing it if needed
 
-        .DESCRIPTION
-        Loads the named PowerShell module, installing it if needbe
+    .DESCRIPTION
+    Loads the named PowerShell module, installing it if needed.
 
-		Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
-		This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
-    #>
+    .PARAMETER Name
+    Name of the PowerShell module to load.
+
+    .EXAMPLE
+    Get-ModuleByName -Name SqlServer;
+
+    Will load the SqlServer module, or install it if not present on the host machine.
+
+    .LINK
+    https://github.com/DrJohnT/DeployCube
+
+    .NOTES
+    Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+    This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
+#>
     [CmdletBinding()]
     param
     (
@@ -23,7 +35,7 @@ function Get-ModuleByName {
             # if module is not installed
             Write-Output "Installing PowerShell module $Name for current user"
             Install-PackageProvider -Name NuGet -Force -Scope CurrentUser;
-            Install-Module -Name $Name -Force -Scope CurrentUser -Repository PSGallery -SkipPublisherCheck;
+            Install-Module -Name $Name -Force -AllowClobber -Scope CurrentUser -Repository PSGallery -SkipPublisherCheck;
         }
         if (-not (Get-Module -Name $Name)) {
             # if module is not loaded
