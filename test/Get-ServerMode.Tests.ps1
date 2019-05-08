@@ -25,13 +25,7 @@ Describe "Get-ServerMode" {
             ( Get-ServerMode -Server "localhost" ) | Should -Be "Tabular";
         }
 
-        It "Valid Tabular server" {
-            ( Get-ServerMode -Server "SZRH3012.qregroup.net" ) | Should -Be "Tabular";
-        }
 
-        It "Valid Multidimentional server" {
-            ( Get-ServerMode -Server "01-dev.db.qregroup.net" ) | Should -Be "Multidimensional";
-        }
     }
 }
 
