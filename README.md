@@ -52,18 +52,18 @@ The following is a list of commands provided by this module once you have instal
 
 | **Function**             | **Description**                                                             |
 |--------------------------|-----------------------------------------------------------------------------|
+| [Find-AnalysisServicesDeploymentExeLocations](https://github.com/DrJohnT/DeployCube/blob/master/docs/Find-AnalysisServicesDeploymentExeLocations.md) | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
+| [Get-AnalysisServicesDeploymentExePath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-AnalysisServicesDeploymentExePath.md) | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
+| [Get-CubeDatabaseCompatibilityLevel](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-CubeDatabaseCompatibilityLevel.md) | Returns the CompatibilityLevel of a deployed cube database |
+| [Get-ServerMode](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ServerMode.md) | Returns the mode of the server: Tabular or Multidimensional |
+| [Get-SqlAsPath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlAsPath.md) | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
 | Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
 | Unpublish-Cube                              | Drops a Tabular or Multidimensional cube from the specified server |
-| Get-AnalysisServicesDeploymentExePath       | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
-| Get-CubeDatabaseCompatibilityLevel          | Returns the CompatibilityLevel of a deployed cube database |
 | Get-ModuleByName                            | Loads the named PowerShell module, installing it if required |
-| Get-ServerMode                              | Returns the mode of the server: Tabular or Multidimensional |
-| Get-SqlAsPath                               | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
 | Get-SsasProcessingMessages                  | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
 | Get-SqlConnectionString                     | Helper function to create valid SQL Server database connection strings |
 | Ping-SsasServer                             | Returns true if the specified SSAS server exists |
 | Ping-SsasDatabase                           | Returns true if the specified SSAS database exists on the server |
-| Find-AnalysisServicesDeploymentExeLocations | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
 | Select-AnalysisServicesDeploymentExeVersion | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
 | Invoke-ProcessSsasDatabase                  | Processes an SSAS database on a SQL Server SSAS instance |
 | Invoke-ExternalCommand                      | Helper function to run command-line programs |
