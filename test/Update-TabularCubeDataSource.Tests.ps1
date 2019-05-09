@@ -78,13 +78,7 @@ Describe "Update-TabularCubeDataSource" {
             { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "CubeToPublish" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Not Throw;
         }
 
-        It "Valid inputs - CompatibilityLevel >= 1400 - ImpersonateAccount" {
-            { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "KernelCube" -SourceSqlServer "localhost" -SourceSqlDatabase 'KernelDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword 'OSzkzmvdVC-n9+BT' } | Should not Throw;
-        }
 
-        It "Valid inputs - CompatibilityLevel >= 1400 - ImpersonateServiceAccount" {
-            { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "KernelCube" -SourceSqlServer "localhost" -SourceSqlDatabase 'KernelDB' -ImpersonationMode 'ImpersonateServiceAccount'} | Should Not Throw;
-        }
     }
 }
 

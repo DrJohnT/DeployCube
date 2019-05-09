@@ -40,11 +40,6 @@ Describe "Get-CubeDatabaseCompatibilityLevel" {
         It "Valid server and cube CompatibilityLevel=1200" {
             ( Get-CubeDatabaseCompatibilityLevel -Server "localhost" -CubeDatabase "CubeToPublish" ) | Should -Be 1200;
         }
-
-        It "Valid server and cube CompatibilityLevel=1400" {
-            ( Get-CubeDatabaseCompatibilityLevel -Server "localhost" -CubeDatabase "KernelCube" ) | Should -Be 1400;
-        }
-
     }
 }
 
