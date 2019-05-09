@@ -57,18 +57,17 @@ The following is a list of commands provided by this module once you have instal
 | [Get-CubeDatabaseCompatibilityLevel](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-CubeDatabaseCompatibilityLevel.md) | Returns the CompatibilityLevel of a deployed cube database |
 | [Get-ServerMode](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ServerMode.md) | Returns the mode of the server: Tabular or Multidimensional |
 | [Get-SqlAsPath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlAsPath.md) | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
-| Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
-| Unpublish-Cube                              | Drops a Tabular or Multidimensional cube from the specified server |
-| Get-ModuleByName                            | Loads the named PowerShell module, installing it if required |
-| Get-SsasProcessingMessages                  | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
-| Get-SqlConnectionString                     | Helper function to create valid SQL Server database connection strings |
-| Ping-SsasServer                             | Returns true if the specified SSAS server exists |
-| Ping-SsasDatabase                           | Returns true if the specified SSAS database exists on the server |
-| Select-AnalysisServicesDeploymentExeVersion | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
-| Invoke-ProcessSsasDatabase                  | Processes an SSAS database on a SQL Server SSAS instance |
-| Invoke-ExternalCommand                      | Helper function to run command-line programs |
-| Update-AnalysisServicesConfig               | Updates the various config files (listed below) which are needed to deploy the cube |
-| Update-CubeDataSource                       | Updates the cube's connection to the source SQL database. |
+| [Get-ModuleByName](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ModuleByName.md) | Loads the named PowerShell module, installing it if required || Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
+| [Get-SqlConnectionString](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Helper function to create valid SQL Server database connection strings |
+| [Get-SsasProcessingMessages](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
+| [Invoke-ProcessTabularCubeDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ProcessTabularCubeDatabase.md) | Processes an SSAS database on a SQL Server SSAS instance |
+| [Invoke-ExternalCommand](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ExternalCommand.md) | Helper function to run command-line programs |
+| [Ping-SsasDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasDatabase.md) | Returns true if the specified SSAS database exists on the server |
+| [Ping-SsasServer](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasServer.md) | Returns true if the specified SSAS server exists |
+| [Select-AnalysisServicesDeploymentExeVersion](https://github.com/DrJohnT/DeployCube/blob/master/docs/Select-AnalysisServicesDeploymentExeVersion.md) | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
+| [Unpublish-Cube](https://github.com/DrJohnT/DeployCube/blob/master/docs/Unpublish-Cube.md) | Drops a Tabular or Multidimensional cube from the specified server |
+| [Update-AnalysisServicesConfig](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-AnalysisServicesConfig.md) | Updates the various config files (listed below) which are needed to deploy the cube |
+| [Update-TabularCubeDataSource](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-TabularCubeDataSource.md)                       | Updates the cube's connection to the source SQL database. |
 
 ## Usage
 
