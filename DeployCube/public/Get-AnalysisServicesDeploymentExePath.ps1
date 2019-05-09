@@ -7,15 +7,13 @@ function Get-AnalysisServicesDeploymentExePath {
     Finds the path to specific version of Microsoft.AnalysisServices.Deployment.exe
 
     .PARAMETER Version
-    The version of Microsoft.AnalysisServices.Deployment.exe to find.  Valid values for -Version are:
-    |**Version**|**SQL Server Release**|
-    |-------|------------------|
-    |latest|Latest SQL Server version found on the machine|
-    |150|SQL Server 2019|
-    |140|SQL Server 2017|
-    |130|SQL Server 2016|
-    |120|SQL Server 2014|
-    |110|SQL Server 2012|
+    The version of Microsoft.AnalysisServices.Deployment.exe to find.
+    Valid values for -Version are:
+    * latest: Latest SQL Server version found on agent
+    * 150: SQL Server 2019
+    * 140: SQL Server 2017
+    * 130: SQL Server 2016
+    * 120: SQL Server 2014
 
     .EXAMPLE
     Get-AnalysisServicesDeploymentExePath -Version latest

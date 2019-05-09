@@ -3,5 +3,5 @@ if (Get-Module -Name DeployCube) {
 }
 Import-Module .\DeployCube -Force
 New-MarkdownHelp -Module DeployCube -OutputFolder .\docs -Force -FwLink https://github.com/DrJohnT/DeployCube/docs
-
-#New-ExternalHelp .\docs -OutputPath .\DeployCube\en-US\ -Force;
+#-WithModulePage -ConvertDoubleDashLists
+New-ExternalHelp .\docs -OutputPath .\DeployCube\en-US\ -Force;

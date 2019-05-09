@@ -40,36 +40,11 @@ Microsoft.AnalysisServices.Deployment.exe
 
 Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) which is installed with [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
 
-The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery using:
+The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which is installed automatically.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
-Install-Module -Name SqlServer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Getting Started
 
-## List of commands
-
-The following is a list of commands provided by this module once you have installed the package (see *Installation* above)
-
-| **Function**             | **Description**                                                             |
-|--------------------------|-----------------------------------------------------------------------------|
-| [Find-AnalysisServicesDeploymentExeLocations](https://github.com/DrJohnT/DeployCube/blob/master/docs/Find-AnalysisServicesDeploymentExeLocations.md) | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
-| [Get-AnalysisServicesDeploymentExePath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-AnalysisServicesDeploymentExePath.md) | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
-| [Get-CubeDatabaseCompatibilityLevel](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-CubeDatabaseCompatibilityLevel.md) | Returns the CompatibilityLevel of a deployed cube database |
-| [Get-ServerMode](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ServerMode.md) | Returns the mode of the server: Tabular or Multidimensional |
-| [Get-SqlAsPath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlAsPath.md) | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
-| [Get-ModuleByName](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ModuleByName.md) | Loads the named PowerShell module, installing it if required || Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
-| [Get-SqlConnectionString](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Helper function to create valid SQL Server database connection strings |
-| [Get-SsasProcessingMessages](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
-| [Invoke-ProcessTabularCubeDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ProcessTabularCubeDatabase.md) | Processes an SSAS database on a SQL Server SSAS instance |
-| [Invoke-ExternalCommand](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ExternalCommand.md) | Helper function to run command-line programs |
-| [Ping-SsasDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasDatabase.md) | Returns true if the specified SSAS database exists on the server |
-| [Ping-SsasServer](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasServer.md) | Returns true if the specified SSAS server exists |
-| [Select-AnalysisServicesDeploymentExeVersion](https://github.com/DrJohnT/DeployCube/blob/master/docs/Select-AnalysisServicesDeploymentExeVersion.md) | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
-| [Unpublish-Cube](https://github.com/DrJohnT/DeployCube/blob/master/docs/Unpublish-Cube.md) | Drops a Tabular or Multidimensional cube from the specified server |
-| [Update-AnalysisServicesConfig](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-AnalysisServicesConfig.md) | Updates the various config files (listed below) which are needed to deploy the cube |
-| [Update-TabularCubeDataSource](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-TabularCubeDataSource.md)                       | Updates the cube's connection to the source SQL database. |
-
-## Usage
+Full documentation for all the functions in this module are provided below.  Here's a quick start guide.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ powershell
 Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer"
@@ -95,45 +70,39 @@ Finnally, if there are multiple versions of the Analysis Services Deployment Uti
 Publish-Cube -AsDatabasePath "C:\Dev\YourCube\bin\Debug\YourCube.asdatabase" -Server "YourCubeServer" -PreferredVersion latest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Valid values for -PreferredVersion are:
+## List of commands
 
-|**Version**|**SQL Server Release**|
-|-------|------------------|
-|latest|Latest SQL Server version found on agent|
-|150|SQL Server 2019|
-|140|SQL Server 2017|
-|130|SQL Server 2016|
-|120|SQL Server 2014|
+The following is a list of commands provided by this module once you have installed the package (see *Installation* above)
 
+| **Function**             | **Description**                                                             |
+|--------------------------|-----------------------------------------------------------------------------|
+| [Find-AnalysisServicesDeploymentExeLocations](https://github.com/DrJohnT/DeployCube/blob/master/docs/Find-AnalysisServicesDeploymentExeLocations.md) | Lists all locations of Microsoft.AnalysisServices.Deployment.exe on the host |
+| [Get-AnalysisServicesDeploymentExePath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-AnalysisServicesDeploymentExePath.md) | Returns the path of a specific version of Microsoft.AnalysisServices.Deployment.exe |
+| [Get-CubeDatabaseCompatibilityLevel](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-CubeDatabaseCompatibilityLevel.md) | Returns the CompatibilityLevel of a deployed cube database |
+| [Get-ServerMode](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ServerMode.md) | Returns the mode of the server: Tabular or Multidimensional |
+| [Get-SqlAsPath](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlAsPath.md) | Returns the path to a specific cube database SQLSERVER:\SQLAS\YourServer\DEFAULT\Databases\YourCubeDatabase |
+| [Get-ModuleByName](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-ModuleByName.md) | Loads the named PowerShell module, installing it if required || Publish-Cube                                | Publishes a Tabular or Multidimensional cube to the specified server |
+| [Get-SqlConnectionString](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Helper function to create valid SQL Server database connection strings |
+| [Get-SsasProcessingMessages](https://github.com/DrJohnT/DeployCube/blob/master/docs/Get-SqlConnectionString.md) | Examines the XML returned by the Invoke-AsCmd function to find errors.  Writes error message if errors are found |
+| [Invoke-ProcessTabularCubeDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ProcessTabularCubeDatabase.md) | Processes an SSAS database on a SQL Server SSAS instance |
+| [Invoke-ExternalCommand](https://github.com/DrJohnT/DeployCube/blob/master/docs/Invoke-ExternalCommand.md) | Helper function to run command-line programs |
+| [Ping-SsasDatabase](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasDatabase.md) | Returns true if the specified SSAS database exists on the server |
+| [Ping-SsasServer](https://github.com/DrJohnT/DeployCube/blob/master/docs/Ping-SsasServer.md) | Returns true if the specified SSAS server exists |
+| [Publish-Cube](https://github.com/DrJohnT/DeployCube/blob/master/docs/Publish-Cube.md) | Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis Services instance |
+| [Select-AnalysisServicesDeploymentExeVersion](https://github.com/DrJohnT/DeployCube/blob/master/docs/Select-AnalysisServicesDeploymentExeVersion.md) | Finds a specific version of the Microsoft.AnalysisServices.Deployment.exe if more than one present on the host |
+| [Unpublish-Cube](https://github.com/DrJohnT/DeployCube/blob/master/docs/Unpublish-Cube.md) | Drops a Tabular or Multidimensional cube from the specified server |
+| [Update-AnalysisServicesConfig](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-AnalysisServicesConfig.md) | Updates the various config files (listed below) which are needed to deploy the cube |
+| [Update-TabularCubeDataSource](https://github.com/DrJohnT/DeployCube/blob/master/docs/Update-TabularCubeDataSource.md) | Updates the cube's connection to the source SQL database. |
 
 ## Azure DevOps Agent
 
-**Publish-Cube** can be run on an in-house hosted Azure DevOps agent when once [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility?view=sql-server-2017) is installed:
-
-* By installing SQL Server 2012 or later
-
-* By installing [SQL Server Managment Studio](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-2017) (SSMS).
-
-Be aware that it is best to install the latest version of Analysis Services Deployment Utility (SSMS)
-as this provides support for all previous versions of SQL Server Analysis Services as well as current versions.
-
-The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which can be installed from the PowerShell Gallery as described above.
+For CI senarios, **Publish-Cube** has been packaged as an extension for Azure DevOps Pipelines available from the marketplace here:
+[Deployment tools for SSAS Tabular Cube Models](https://marketplace.visualstudio.com/items?itemName=DrJohnExtensions.DeployTabularModel)
 
 ## Example Tabular Model
 
 An example tabular model is provided as a Visual Studio solution alongside a SQL database which acts as the cubes source.  Th
 DACPAC is provided in the .\example folder.  You can use this to test that deployments work correctly.  Note that the SSDT Visual Studio solution is configured to deploy to SQL Server 2016.  Open the Visual Studio solution and change the target version and rebuild the solution if you have a different version of SQL Server installed.
-
- ## Update-AnalysisServicesConfig
- This PowerShell function updates the various config files (listed below) which are needed to deploy the cube:
-
-|XMLA File|Description|
-|-------|------------------|
-|[model name].asdatabase|Contains the declarative definitions for all SSAS objects|
-|[model name].deploymenttargets|Contains the name of the target SSAS instance and database|
-|[model name].deploymentoptions|Contains options such as whether deployment is transactional and whether objects should be processed.|
-|[model name].configsettings|(Multidimensional only) Contains environment specific settings such as data source connections and object storage locations.  These settings override whats in [project name].asdatabase.|
-
 
 ## Issue Reporting
 

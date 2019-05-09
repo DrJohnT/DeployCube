@@ -77,7 +77,11 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>Version</maml:name>
           <maml:Description>
-            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find.  Valid values for -Version are: | Version | SQL Server Release | |-------|------------------| |latest|Latest SQL Server version found on the machine| |150|SQL Server 2019| |140|SQL Server 2017| |130|SQL Server 2016| |120|SQL Server 2014| |110|SQL Server 2012|</maml:para>
+            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 150: SQL Server 2019</maml:para>
+            <maml:para>* 140: SQL Server 2017</maml:para>
+            <maml:para>* 130: SQL Server 2016</maml:para>
+            <maml:para>* 120: SQL Server 2014</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -92,7 +96,11 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Version</maml:name>
         <maml:Description>
-          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find.  Valid values for -Version are: | Version | SQL Server Release | |-------|------------------| |latest|Latest SQL Server version found on the machine| |150|SQL Server 2019| |140|SQL Server 2017| |130|SQL Server 2016| |120|SQL Server 2014| |110|SQL Server 2012|</maml:para>
+          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 150: SQL Server 2019</maml:para>
+          <maml:para>* 140: SQL Server 2017</maml:para>
+          <maml:para>* 130: SQL Server 2016</maml:para>
+          <maml:para>* 120: SQL Server 2014</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1103,7 +1111,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="10" aliases="none">
           <maml:name>OptimizationSettingsDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+            <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+            <maml:para>* Default value: 'Deploy'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1115,7 +1124,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="11" aliases="none">
           <maml:name>WriteBackTableCreation</maml:name>
           <maml:Description>
-            <maml:para>Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. Valid options are: 'Create', 'CreateAlways' and 'UseExisting'. Default value: 'UseExisting'.</maml:para>
+            <maml:para>Determines if a write back table is created * Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. * Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.</maml:para>
+            <maml:para>* Default value: 'UseExisting'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1151,7 +1161,11 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.</maml:para>
+            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 150: SQL Server 2019</maml:para>
+            <maml:para>* 140: SQL Server 2017</maml:para>
+            <maml:para>*  130: SQL Server 2016</maml:para>
+            <maml:para>* 120: SQL Server 2014</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1163,7 +1177,11 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
           <maml:name>ProcessingOption</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: Full, Default and DoNotProcess. Default value: 'DoNotProcess'. 'Full': processes all the objects in the cube database. When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state. 'DoNotProcess': means no processing is performed. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.</maml:para>
+            <maml:para>Determines how the newely deployed cube is processed after deployment. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment. * Valid options are: Full, Default and DoNotProcess.</maml:para>
+            <maml:para>* Default value: 'DoNotProcess'.</maml:para>
+            <maml:para>* 'Full': processes all the objects in the cube database.</maml:para>
+            <maml:para>When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. * 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.</maml:para>
+            <maml:para>* 'DoNotProcess': means no processing is performed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1175,7 +1193,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="6" aliases="none">
           <maml:name>TransactionalDeployment</maml:name>
           <maml:Description>
-            <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction. If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
+            <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
+            <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1187,7 +1206,10 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="7" aliases="none">
           <maml:name>PartitionDeployment</maml:name>
           <maml:Description>
-            <maml:para>'DeployPartitions': New partitions are deployed.  Existing partitions are removed. 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed. Valid options are: 'DeployPartitions' and 'RetainPartitions'. Default value: 'DeployPartitions'.</maml:para>
+            <maml:para>Determines if partitions are deployed. * Valid options are: 'DeployPartitions' and 'RetainPartitions'.</maml:para>
+            <maml:para>* Default value: 'DeployPartitions'.</maml:para>
+            <maml:para>* 'DeployPartitions': New partitions are deployed.</maml:para>
+            <maml:para>Existing partitions are removed. * 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1199,7 +1221,11 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="8" aliases="none">
           <maml:name>RoleDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'. Default value: 'DeployRolesRetainMembers'. 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed. 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed. 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
+            <maml:para>Determines if the roles and members are deployed. * Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.</maml:para>
+            <maml:para>* Default value: 'DeployRolesRetainMembers'.</maml:para>
+            <maml:para>* 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.</maml:para>
+            <maml:para>* 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.</maml:para>
+            <maml:para>* 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1211,7 +1237,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="9" aliases="none">
           <maml:name>ConfigurationSettingsDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+            <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+            <maml:para>* Default value: 'Deploy'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1262,7 +1289,11 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.</maml:para>
+          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 150: SQL Server 2019</maml:para>
+          <maml:para>* 140: SQL Server 2017</maml:para>
+          <maml:para>*  130: SQL Server 2016</maml:para>
+          <maml:para>* 120: SQL Server 2014</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1274,7 +1305,11 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
         <maml:name>ProcessingOption</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: Full, Default and DoNotProcess. Default value: 'DoNotProcess'. 'Full': processes all the objects in the cube database. When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state. 'DoNotProcess': means no processing is performed. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.</maml:para>
+          <maml:para>Determines how the newely deployed cube is processed after deployment. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment. * Valid options are: Full, Default and DoNotProcess.</maml:para>
+          <maml:para>* Default value: 'DoNotProcess'.</maml:para>
+          <maml:para>* 'Full': processes all the objects in the cube database.</maml:para>
+          <maml:para>When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. * 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.</maml:para>
+          <maml:para>* 'DoNotProcess': means no processing is performed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1286,7 +1321,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="6" aliases="none">
         <maml:name>TransactionalDeployment</maml:name>
         <maml:Description>
-          <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction. If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
+          <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
+          <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1298,7 +1334,10 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="7" aliases="none">
         <maml:name>PartitionDeployment</maml:name>
         <maml:Description>
-          <maml:para>'DeployPartitions': New partitions are deployed.  Existing partitions are removed. 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed. Valid options are: 'DeployPartitions' and 'RetainPartitions'. Default value: 'DeployPartitions'.</maml:para>
+          <maml:para>Determines if partitions are deployed. * Valid options are: 'DeployPartitions' and 'RetainPartitions'.</maml:para>
+          <maml:para>* Default value: 'DeployPartitions'.</maml:para>
+          <maml:para>* 'DeployPartitions': New partitions are deployed.</maml:para>
+          <maml:para>Existing partitions are removed. * 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1310,7 +1349,11 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="8" aliases="none">
         <maml:name>RoleDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'. Default value: 'DeployRolesRetainMembers'. 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed. 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed. 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
+          <maml:para>Determines if the roles and members are deployed. * Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.</maml:para>
+          <maml:para>* Default value: 'DeployRolesRetainMembers'.</maml:para>
+          <maml:para>* 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.</maml:para>
+          <maml:para>* 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.</maml:para>
+          <maml:para>* 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1322,7 +1365,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="9" aliases="none">
         <maml:name>ConfigurationSettingsDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+          <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+          <maml:para>* Default value: 'Deploy'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1334,7 +1378,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="10" aliases="none">
         <maml:name>OptimizationSettingsDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+          <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+          <maml:para>* Default value: 'Deploy'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1346,7 +1391,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="11" aliases="none">
         <maml:name>WriteBackTableCreation</maml:name>
         <maml:Description>
-          <maml:para>Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. Valid options are: 'Create', 'CreateAlways' and 'UseExisting'. Default value: 'UseExisting'.</maml:para>
+          <maml:para>Determines if a write back table is created * Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. * Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.</maml:para>
+          <maml:para>* Default value: 'UseExisting'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1397,7 +1443,11 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: | Version | SQL Server Release | |-------|------------------| |latest|Latest SQL Server version found on the machine| |150|SQL Server 2019| |140|SQL Server 2017| |130|SQL Server 2016| |120|SQL Server 2014| |110|SQL Server 2012|</maml:para>
+            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 150: SQL Server 2019</maml:para>
+            <maml:para>* 140: SQL Server 2017</maml:para>
+            <maml:para>* 130: SQL Server 2016</maml:para>
+            <maml:para>* 120: SQL Server 2014</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1412,7 +1462,11 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: | Version | SQL Server Release | |-------|------------------| |latest|Latest SQL Server version found on the machine| |150|SQL Server 2019| |140|SQL Server 2017| |130|SQL Server 2016| |120|SQL Server 2014| |110|SQL Server 2012|</maml:para>
+          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 150: SQL Server 2019</maml:para>
+          <maml:para>* 140: SQL Server 2017</maml:para>
+          <maml:para>* 130: SQL Server 2016</maml:para>
+          <maml:para>* 120: SQL Server 2014</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1555,6 +1609,11 @@
     </command:details>
     <maml:description>
       <maml:para>Updates the various config files generated alongside the asdatabase file so they can be deployed to the correct server with the correct processing options.</maml:para>
+      <maml:para>This PowerShell function updates the various config files (listed below) which are needed to deploy the cube: * [model name].asdatabase which contains the declarative definitions for all SSAS objects.</maml:para>
+      <maml:para>* [model name].deploymenttargets whcih Contains the name of the target SSAS instance and database.</maml:para>
+      <maml:para>* [model name].deploymentoptions which contains options such as whether deployment is transactional and whether objects should be processed.</maml:para>
+      <maml:para>* [model name].configsettings which is for Multidimensional only and contains environment specific settings such as data source connections and object storage locations.</maml:para>
+      <maml:para>These settings override whats in [model name].asdatabase.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -1574,7 +1633,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="10" aliases="none">
           <maml:name>WriteBackTableCreation</maml:name>
           <maml:Description>
-            <maml:para>Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. Valid options are: 'Create', 'CreateAlways' and 'UseExisting'. Default value: 'UseExisting'.</maml:para>
+            <maml:para>Determines if a write back table is created * Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. * Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.</maml:para>
+            <maml:para>* Default value: 'UseExisting'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1610,7 +1670,11 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
           <maml:name>ProcessingOption</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: Full, Default and DoNotProcess. Default value: 'DoNotProcess'. 'Full': processes all the objects in the cube database. When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state. 'DoNotProcess': means no processing is performed. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.</maml:para>
+            <maml:para>Determines how the newely deployed cube is processed after deployment. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment. * Valid options are: Full, Default and DoNotProcess.</maml:para>
+            <maml:para>* Default value: 'DoNotProcess'.</maml:para>
+            <maml:para>* 'Full': processes all the objects in the cube database.</maml:para>
+            <maml:para>When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. * 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.</maml:para>
+            <maml:para>* 'DoNotProcess': means no processing is performed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1622,7 +1686,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
           <maml:name>TransactionalDeployment</maml:name>
           <maml:Description>
-            <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction. If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
+            <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
+            <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1634,7 +1699,10 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="6" aliases="none">
           <maml:name>PartitionDeployment</maml:name>
           <maml:Description>
-            <maml:para>'DeployPartitions': New partitions are deployed.  Existing partitions are removed. 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed. Valid options are: 'DeployPartitions' and 'RetainPartitions'. Default value: 'DeployPartitions'.</maml:para>
+            <maml:para>Determines if partitions are deployed. * Valid options are: 'DeployPartitions' and 'RetainPartitions'.</maml:para>
+            <maml:para>* Default value: 'DeployPartitions'.</maml:para>
+            <maml:para>* 'DeployPartitions': New partitions are deployed.</maml:para>
+            <maml:para>Existing partitions are removed. * 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1646,7 +1714,11 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="7" aliases="none">
           <maml:name>RoleDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'. Default value: 'DeployRolesRetainMembers'. 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed. 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed. 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
+            <maml:para>Determines if the roles and members are deployed. * Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.</maml:para>
+            <maml:para>* Default value: 'DeployRolesRetainMembers'.</maml:para>
+            <maml:para>* 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.</maml:para>
+            <maml:para>* 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.</maml:para>
+            <maml:para>* 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1658,7 +1730,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="8" aliases="none">
           <maml:name>ConfigurationSettingsDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+            <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+            <maml:para>* Default value: 'Deploy'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1670,7 +1743,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="9" aliases="none">
           <maml:name>OptimizationSettingsDeployment</maml:name>
           <maml:Description>
-            <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+            <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+            <maml:para>* Default value: 'Deploy'.</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1721,7 +1795,11 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
         <maml:name>ProcessingOption</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: Full, Default and DoNotProcess. Default value: 'DoNotProcess'. 'Full': processes all the objects in the cube database. When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state. 'DoNotProcess': means no processing is performed. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.</maml:para>
+          <maml:para>Determines how the newely deployed cube is processed after deployment. Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment. * Valid options are: Full, Default and DoNotProcess.</maml:para>
+          <maml:para>* Default value: 'DoNotProcess'.</maml:para>
+          <maml:para>* 'Full': processes all the objects in the cube database.</maml:para>
+          <maml:para>When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object. * 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.</maml:para>
+          <maml:para>* 'DoNotProcess': means no processing is performed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1733,7 +1811,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="5" aliases="none">
         <maml:name>TransactionalDeployment</maml:name>
         <maml:Description>
-          <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction. If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
+          <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
+          <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1745,7 +1824,10 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="6" aliases="none">
         <maml:name>PartitionDeployment</maml:name>
         <maml:Description>
-          <maml:para>'DeployPartitions': New partitions are deployed.  Existing partitions are removed. 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed. Valid options are: 'DeployPartitions' and 'RetainPartitions'. Default value: 'DeployPartitions'.</maml:para>
+          <maml:para>Determines if partitions are deployed. * Valid options are: 'DeployPartitions' and 'RetainPartitions'.</maml:para>
+          <maml:para>* Default value: 'DeployPartitions'.</maml:para>
+          <maml:para>* 'DeployPartitions': New partitions are deployed.</maml:para>
+          <maml:para>Existing partitions are removed. * 'RetainPartitions': Existing partitions are retained.  New partitions are not deployed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1757,7 +1839,11 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="7" aliases="none">
         <maml:name>RoleDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'. Default value: 'DeployRolesRetainMembers'. 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed. 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed. 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
+          <maml:para>Determines if the roles and members are deployed. * Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.</maml:para>
+          <maml:para>* Default value: 'DeployRolesRetainMembers'.</maml:para>
+          <maml:para>* 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.</maml:para>
+          <maml:para>* 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.</maml:para>
+          <maml:para>* 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1769,7 +1855,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="8" aliases="none">
         <maml:name>ConfigurationSettingsDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+          <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+          <maml:para>* Default value: 'Deploy'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1781,7 +1868,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="9" aliases="none">
         <maml:name>OptimizationSettingsDeployment</maml:name>
         <maml:Description>
-          <maml:para>Valid options are: 'Retain' and 'Deploy'. Default value: 'Deploy'.</maml:para>
+          <maml:para>* Valid options are: 'Retain' and 'Deploy'.</maml:para>
+          <maml:para>* Default value: 'Deploy'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1793,7 +1881,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="10" aliases="none">
         <maml:name>WriteBackTableCreation</maml:name>
         <maml:Description>
-          <maml:para>Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. Valid options are: 'Create', 'CreateAlways' and 'UseExisting'. Default value: 'UseExisting'.</maml:para>
+          <maml:para>Determines if a write back table is created * Valid only for multidimensional cubes.  Determines if the deployment should create the writeback table. * Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.</maml:para>
+          <maml:para>* Default value: 'UseExisting'.</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>

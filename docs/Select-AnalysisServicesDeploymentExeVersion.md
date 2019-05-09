@@ -31,14 +31,11 @@ Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 140;
 ### -PreferredVersion
 The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find.
 Valid values for -PreferredVersion are:
-|**Version**|**SQL Server Release**|
-|-------|------------------|
-|latest|Latest SQL Server version found on the machine|
-|150|SQL Server 2019|
-|140|SQL Server 2017|
-|130|SQL Server 2016|
-|120|SQL Server 2014|
-|110|SQL Server 2012|
+* latest: Latest SQL Server version found on agent
+* 150: SQL Server 2019
+* 140: SQL Server 2017
+* 130: SQL Server 2016
+* 120: SQL Server 2014
 
 ```yaml
 Type: String

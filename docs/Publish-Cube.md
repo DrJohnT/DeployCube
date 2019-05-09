@@ -79,6 +79,12 @@ Accept wildcard characters: False
 ### -PreferredVersion
 Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use. 
 Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
+Valid values for -PreferredVersion are:
+* latest: Latest SQL Server version found on agent
+* 150: SQL Server 2019
+* 140: SQL Server 2017
+*  130: SQL Server 2016
+* 120: SQL Server 2014
 
 ```yaml
 Type: String
@@ -93,13 +99,14 @@ Accept wildcard characters: False
 ```
 
 ### -ProcessingOption
-Valid options are: Full, Default and DoNotProcess.
-Default value: 'DoNotProcess'.
-'Full': processes all the objects in the cube database.
-When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object.
-'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.
-'DoNotProcess': means no processing is performed.
+Determines how the newely deployed cube is processed after deployment.
 Strongly recommend using the default "DoNotProcess" option as the connection to your source database may not be correct and need adjustment post-deployment.
+* Valid options are: Full, Default and DoNotProcess.
+* Default value: 'DoNotProcess'.
+* 'Full': processes all the objects in the cube database.
+When Full processing is executed against an object that has already been processed, Analysis Services drops all data in the object and then processes the object.
+* 'Default': detects the process state of cube database objects, and performs the processing necessary to deliver unprocessed or partially processed objects to a fully processed state.
+* 'DoNotProcess': means no processing is performed.
 
 ```yaml
 Type: String
@@ -115,8 +122,8 @@ Accept wildcard characters: False
 
 ### -TransactionalDeployment
 Determines if the cube is deployed within one transaction for both metadata changes and processing commands.
-If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.
-If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.
+* If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.
+* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.
 
 ```yaml
 Type: String
@@ -131,12 +138,13 @@ Accept wildcard characters: False
 ```
 
 ### -PartitionDeployment
-'DeployPartitions': New partitions are deployed. 
+Determines if partitions are deployed.
+* Valid options are: 'DeployPartitions' and 'RetainPartitions'.
+* Default value: 'DeployPartitions'.
+* 'DeployPartitions': New partitions are deployed. 
 Existing partitions are removed.
-'RetainPartitions': Existing partitions are retained. 
+* 'RetainPartitions': Existing partitions are retained. 
 New partitions are not deployed.
-Valid options are: 'DeployPartitions' and 'RetainPartitions'.
-Default value: 'DeployPartitions'.
 
 ```yaml
 Type: String
@@ -151,11 +159,12 @@ Accept wildcard characters: False
 ```
 
 ### -RoleDeployment
-Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.
-Default value: 'DeployRolesRetainMembers'.
-'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.
-'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.
-'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.
+Determines if the roles and members are deployed.
+* Valid options are: 'DeployRolesAndMembers', 'DeployRolesRetainMembers' and 'RetainRoles'.
+* Default value: 'DeployRolesRetainMembers'.
+* 'DeployRolesRetainMembers': Existing roles and role members in the destination database are retained, and only new roles and role members are deployed.
+* 'DeployRolesAndMembers': All existing roles and members in the destination database are replaced by the roles and members being deployed.
+* 'RetainRoles': Existing roles and role members in the destination database are retained, and no new roles are deployed.
 
 ```yaml
 Type: String
@@ -170,8 +179,8 @@ Accept wildcard characters: False
 ```
 
 ### -ConfigurationSettingsDeployment
-Valid options are: 'Retain' and 'Deploy'.
-Default value: 'Deploy'.
+* Valid options are: 'Retain' and 'Deploy'.
+* Default value: 'Deploy'.
 
 ```yaml
 Type: String
@@ -186,8 +195,8 @@ Accept wildcard characters: False
 ```
 
 ### -OptimizationSettingsDeployment
-Valid options are: 'Retain' and 'Deploy'.
-Default value: 'Deploy'.
+* Valid options are: 'Retain' and 'Deploy'.
+* Default value: 'Deploy'.
 
 ```yaml
 Type: String
@@ -202,10 +211,11 @@ Accept wildcard characters: False
 ```
 
 ### -WriteBackTableCreation
-Valid only for multidimensional cubes. 
+Determines if a write back table is created
+* Valid only for multidimensional cubes. 
 Determines if the deployment should create the writeback table.
-Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.
-Default value: 'UseExisting'.
+* Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.
+* Default value: 'UseExisting'.
 
 ```yaml
 Type: String
