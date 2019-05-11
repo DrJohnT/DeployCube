@@ -42,6 +42,10 @@ Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Dep
 
 The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which is installed automatically.
 
+### Admin privileges required for deployment
+
+In order to successfully deploy a tabular cube, the process running **Publish-Cube** needs to run under a service account that has admin privileges on your target SQL Server Analysis Services instance.
+
 ## Getting Started
 
 Full documentation for all the functions in this module are provided below.  Here's a quick start guide.
@@ -96,8 +100,7 @@ The following is a list of commands provided by this module once you have instal
 
 ## Azure DevOps Agent
 
-For CI senarios, **Publish-Cube** has been packaged as an extension for Azure DevOps Pipelines available from the marketplace here:
-[Deployment tools for SSAS Tabular Cube Models](https://marketplace.visualstudio.com/items?itemName=DrJohnExtensions.DeployTabularModel)
+For CI senarios, **Publish-Cube** has been packaged as an extension for Azure Pipelines available from the marketplace here: [Deployment tools for SSAS Tabular Cube Models](https://marketplace.visualstudio.com/items?itemName=DrJohnExtensions.DeployTabularModel)
 
 ## Example Tabular Model
 
