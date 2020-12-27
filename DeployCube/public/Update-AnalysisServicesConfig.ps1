@@ -117,7 +117,13 @@ function Update-AnalysisServicesConfig {
 
         [String] [Parameter(Mandatory = $false)]
         [ValidateSet('Create','CreateAlways','UseExisting')]
-        $WriteBackTableCreation = 'UseExisting'
+        $WriteBackTableCreation = 'UseExisting',
+
+        [String] [Parameter(Mandatory = $false)]
+        $UserID,
+
+        [String] [Parameter(Mandatory = $false)]
+        $Password
     )
 
     if (Test-Path $AsDatabasePath) {
@@ -132,7 +138,12 @@ function Update-AnalysisServicesConfig {
             [xml]$deploymentTargets = [xml](Get-Content $deploymentTargetsPath);
             $deploymentTargets.DeploymentTarget.Database = $CubeDatabase;
             $deploymentTargets.DeploymentTarget.Server = $Server;
-            $deploymentTargets.DeploymentTarget.ConnectionString="DataSource=$Server;Timeout=0"
+            $ConnectionString = "Data Source=$Server;Timeout=0;";
+            if ($null -ne $UserID) {                
+                $ConnectionString += "UID=$UserID;PWD=$Password;"
+            }            
+            #$ConnectionString += "Integrated Security=SSPI;ProtectionLevel=Connect;SSPI=Negotiate;";            
+            $deploymentTargets.DeploymentTarget.ConnectionString = $ConnectionString;
             $deploymentTargets.Save($deploymentTargetsPath);
         } else {
             throw "Update-AnalysisServicesConfig: $ModelName.deploymenttargets file does not exist in $configFolder";
