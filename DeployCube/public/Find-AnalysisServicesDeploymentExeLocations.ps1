@@ -29,18 +29,19 @@ function Find-AnalysisServicesDeploymentExeLocations {
         $AnalysisServicesDeploymentExes = @();
 
         #Up to v17 (140)
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn\" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         #V18 (SSMS - 150)
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\\Microsoft SQL Server Management Studio 18\Common7" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
-        # list out the locations found
+        # list all the locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
-            [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion;
+            [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);
             Write-Output "$ProductVersion  $AnalysisServicesDeploymentExe";
         }
     }
     catch {
-        Write-Error "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
+        #Write-Error "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
+        Write-Host "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
     }
 }

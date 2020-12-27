@@ -1,6 +1,8 @@
-$ModulePath = Split-Path -Parent $MyInvocation.MyCommand.Path;
-$ModulePath = Resolve-Path "$ModulePath\..\DeployCube\DeployCube.psd1";
-import-Module -Name $ModulePath;
+BeforeAll { 
+    $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+    $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
+    import-Module -Name $ModulePath;
+}
 
 Describe "Ping-SsasServer" {
     Context "Testing Inputs" {
@@ -8,10 +10,10 @@ Describe "Ping-SsasServer" {
             (Get-Command Ping-SsasServer).Parameters['Server'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Ping-SsasServer -Server "" } | Should Throw;
+            { Ping-SsasServer -Server "" } | Should -Throw;
         }
         It "Null server" {
-            { Ping-SsasServer -Server $null } | Should Throw;
+            { Ping-SsasServer -Server $null } | Should -Throw;
         }
 
     }
@@ -27,4 +29,6 @@ Describe "Ping-SsasServer" {
     }
 }
 
-Remove-Module -Name DeployCube
+AfterAll {
+    Remove-Module -Name DeployCube
+}

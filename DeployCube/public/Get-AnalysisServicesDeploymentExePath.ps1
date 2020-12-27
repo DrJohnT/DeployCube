@@ -8,12 +8,12 @@ function Get-AnalysisServicesDeploymentExePath {
 
     .PARAMETER Version
     The version of Microsoft.AnalysisServices.Deployment.exe to find.
-    Valid values for -Version are:
-    * latest: Latest SQL Server version found on agent
-    * 150: SQL Server 2019
-    * 140: SQL Server 2017
-    * 130: SQL Server 2016
-    * 120: SQL Server 2014
+    Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows:
+    * 15: SQL Server 2019
+    * 14: SQL Server 2017
+    * 13: SQL Server 2016
+    * 12: SQL Server 2014
+    * 11: SQL Server 2012
 
     .EXAMPLE
     Get-AnalysisServicesDeploymentExePath -Version latest
@@ -35,28 +35,34 @@ function Get-AnalysisServicesDeploymentExePath {
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('150', '140', '130', '120', '110', 'latest')]
+        [ValidateSet('15', '14', '13', '12', '11')]
         [string]$Version
     )
 
     try {
         $AnalysisServicesDeploymentExes = @();
 
-	[string]$ExeName = "Microsoft.AnalysisServices.Deployment.exe";
+	    [string] $ExeName = "Microsoft.AnalysisServices.Deployment.exe";
+        [string] $AnalysisServicesDeploymentExePath = $null;
+        
+	    # Location SQL Server 2017 and prior
+        $AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
-	#Up to v17
-        $AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\$Version" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
-
-	#V18 (SSMS)
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\\Microsoft SQL Server Management Studio 18\Common7" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+	    # Location SQL Server 2019 and greater (i.e. installed with SSMS) 
+        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
-            $AnalysisServicesDeploymentExePath = $AnalysisServicesDeploymentExe.FullName;
-            $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo | Select-Object ProductVersion;
-            break;
+            $ExePath = $AnalysisServicesDeploymentExe.FullName;
+            [string] $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion;            
+            $ProductVersionNumber = $ProductVersion.SubString(0,2);
+            
+            if ($ProductVersionNumber -eq $Version) {
+                $AnalysisServicesDeploymentExePath = $ExePath;
+                Write-Verbose "$ExeName version $Version found here: $AnalysisServicesDeploymentExePath";       
+                break;
+            }            
         }
-
-        Write-Verbose "$ExeName $ProductVersion found here $AnalysisServicesDeploymentExePath";
+        
     }
     catch {
         Write-Error "Get-AnalysisServicesDeploymentExePath failed with error $Error";

@@ -32,12 +32,12 @@ Returns the latest version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -Version
 The version of Microsoft.AnalysisServices.Deployment.exe to find.
-Valid values for -Version are:
-* latest: Latest SQL Server version found on agent
-* 150: SQL Server 2019
-* 140: SQL Server 2017
-* 130: SQL Server 2016
-* 120: SQL Server 2014
+Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows:
+* 15: SQL Server 2019
+* 14: SQL Server 2017
+* 13: SQL Server 2016
+* 12: SQL Server 2014
+* 11: SQL Server 2012
 
 ```yaml
 Type: String

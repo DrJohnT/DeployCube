@@ -7,13 +7,14 @@ function Select-AnalysisServicesDeploymentExeVersion {
     Selects a version of Microsoft.AnalysisServices.Deployment.exe to use
 
     .PARAMETER PreferredVersion
-    The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find.
-    Valid values for -PreferredVersion are:
+    The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find.
+    Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows:
     * latest: Latest SQL Server version found on agent
-    * 150: SQL Server 2019
-    * 140: SQL Server 2017
-    * 130: SQL Server 2016
-    * 120: SQL Server 2014
+    * 15: SQL Server 2019
+    * 14: SQL Server 2017
+    * 13: SQL Server 2016
+    * 12: SQL Server 2014
+    * 11: SQL Server 2012
 
     .EXAMPLE
     Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 140;
@@ -32,14 +33,14 @@ function Select-AnalysisServicesDeploymentExeVersion {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [ValidateSet('150', '140', '130', '120', '110', 'latest')]
+        [ValidateSet('15', '14', '13', '12', '11', 'latest')]
         [string] $PreferredVersion
     )
 
     try {
         [string]$ExeName = "Microsoft.AnalysisServices.Deployment.exe";
         $specificVersion = $PreferredVersion -and $PreferredVersion -ne 'latest'
-        $versions = '150', '140', '130', '120', '110' | Where-Object { $_ -ne $PreferredVersion }
+        $versions = '15', '14', '13', '12', '11' | Where-Object { $_ -ne $PreferredVersion }
 
         # Look for a specific version of Microsoft SQL Server SSAS deployment tool
         if ($specificVersion) {

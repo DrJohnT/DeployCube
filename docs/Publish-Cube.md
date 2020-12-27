@@ -14,7 +14,7 @@ Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis
 
 ```
 Publish-Cube [-AsDatabasePath] <String> [-Server] <String> [-CubeDatabase] <String>
- [[-PreferredVersion] <String>] [[-ProcessingOption] <String>] [[-TransactionalDeployment] <String>]
+ [[-PreferredVersion] <String>] [[-ProcessingOption] <String>] [[-TransactionalDeployment] <Boolean>]
  [[-PartitionDeployment] <String>] [[-RoleDeployment] <String>] [[-ConfigurationSettingsDeployment] <String>]
  [[-OptimizationSettingsDeployment] <String>] [[-WriteBackTableCreation] <String>] [<CommonParameters>]
 ```
@@ -79,12 +79,13 @@ Accept wildcard characters: False
 ### -PreferredVersion
 Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use. 
 Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
-Valid values for -PreferredVersion are:
+Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11') which translate as follows:
 * latest: Latest SQL Server version found on agent
-* 150: SQL Server 2019
-* 140: SQL Server 2017
-*  130: SQL Server 2016
-* 120: SQL Server 2014
+* 15: SQL Server 2019
+* 14: SQL Server 2017
+* 13: SQL Server 2016
+* 12: SQL Server 2014
+* 11: SQL Server 2012
 
 ```yaml
 Type: String
@@ -126,7 +127,7 @@ Determines if the cube is deployed within one transaction for both metadata chan
 * If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.
 
 ```yaml
-Type: String
+Type: Boolean
 Parameter Sets: (All)
 Aliases:
 

@@ -1,11 +1,14 @@
-﻿$PublicPath = Split-Path -Parent $MyInvocation.MyCommand.Path
-$PublicPath = Resolve-Path "$PublicPath\..\DeployCube\public\";
+﻿$CurrentFolder = Split-Path -Parent $PSScriptRoot;
+$PublicPath = Resolve-Path "$CurrentFolder\DeployCube\public";
 
 #region PSScriptAnalyzer Testing
+
+# How to format results https://devblogs.microsoft.com/scripting/psscriptanalyzer-deep-dive-part-3-of-4/
+
 Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' {
     Context 'PSScriptAnalyzer Standard Rules' {
 		Import-Module PSScriptAnalyzer;
-        $ExcludeRules = @('PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions','PSAvoidUsingPlainTextForPassword');
+        $ExcludeRules = @('PSAlignAssignmentStatement','PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions','PSAvoidUsingPlainTextForPassword');
 
 		$includeScripts = Get-ChildItem "$PublicPath" -Recurse -Include *.ps1 -Exclude *Tests.ps1;
 
@@ -25,7 +28,7 @@ Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' {
 		        {
 			        It "Should pass $Rule" {
 				        $Failures = $AnalyzerIssues | Where-Object -Property RuleName -EQ -Value $rule
-				        ($Failures | Measure-Object).Count | Should Be 0
+				        ($Failures | Measure-Object).Count | Should -Be 0
 			        }
 		        }
 			<#	else

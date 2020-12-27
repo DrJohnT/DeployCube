@@ -1,11 +1,32 @@
-$CurrentFolder = Split-Path -Parent $MyInvocation.MyCommand.Path;
-$ModulePath = Resolve-Path "$CurrentFolder\..\DeployCube\DeployCube.psd1";
-import-Module -Name $ModulePath;
+BeforeAll { 
+    $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+    $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
+    import-Module -Name $ModulePath;
 
-$exampleFolder =  Resolve-Path "$CurrentFolder\..\examples";
-$AsDatabasePath = Resolve-Path "$exampleFolder\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
-$MissingDeploymentTargets = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
-$MissingDeploymentOptions = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
+    function Get-PathToCubeProject {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
+    }
+    function Get-MissingDeploymentTargets {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
+    }
+
+    function Get-MissingDeploymentOptions {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
+    }
+
+    function Get-DeploymentTargets {
+        $AsDatabasePath = Get-PathToCubeProject;
+        $configFolder = Split-Path -Path $AsDatabasePath -Parent;
+        [string]$ModelName = (Get-Item $AsDatabasePath).Basename;
+
+        $deploymentTargetsPath = Join-Path $configFolder "$ModelName.deploymenttargets";
+        [xml]$deploymentTargets = [xml](Get-Content $deploymentTargetsPath);
+        return $deploymentTargets;
+    }
+}
 
 Describe "Update-AnalysisServicesConfig" {
     Context "Testing Inputs" {
@@ -44,102 +65,127 @@ Describe "Update-AnalysisServicesConfig" {
 
     Context "Invalid Inputs" {
         It "Invalid AsDatabasePath should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath "SomeTrashPath" -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath "SomeTrashPath" -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Null AsDatabasePath should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $null -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
+            { Update-AnalysisServicesConfig -AsDatabasePath $null -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Null Server should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $null -CubeDatabase "MyDatabase" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $null -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Empty Server should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "" -CubeDatabase "MyDatabase" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "" -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Null CubeDatabase should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase $null } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase $null } | Should -Throw;
         }
 
         It "Empty CubeDatabase should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase "" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "SomeTrashServe" -CubeDatabase "" } | Should -Throw;
         }
 
         It "Missing DeploymentTargets should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentTargets -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
+            $MissingDeploymentTargets = Get-MissingDeploymentTargets;
+            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentTargets -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Missing DeploymentOptions should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentOptions -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should Throw;
+            $MissingDeploymentOptions = Get-MissingDeploymentOptions;
+            { Update-AnalysisServicesConfig -AsDatabasePath $MissingDeploymentOptions -Server "SomeTrashServe" -CubeDatabase "MyDatabase" } | Should -Throw;
         }
 
         It "Invalid ProcessingOption should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ProcessingOption "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ProcessingOption "SomethingSilly" } | Should -Throw;
         }
 
         It "Invalid TransactionalDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid PartitionDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -PartitionDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -PartitionDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid RoleDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -RoleDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -RoleDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid ConfigurationSettingsDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ConfigurationSettingsDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -ConfigurationSettingsDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid OptimizationSettingsDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -OptimizationSettingsDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -OptimizationSettingsDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid WriteBackTableCreation should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -WriteBackTableCreation "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -WriteBackTableCreation "SomethingSilly" } | Should -Throw;
         }
 
         It "Empty TransactionalDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment "" } | Should -Throw;
         }
         It "Null TransactionalDeployment should Throw" {
-            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment $null } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            { Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyDatabase" -TransactionalDeployment $null } | Should -Throw;
         }
     }
 
-
-
     Context "Updated DeploymentTargets and DeploymentOptions" {
-
-
-        # generate a unique guid which we can check has been written into the file correctly
-        $Server = New-Guid;
-        $CubeDatabase = New-Guid;
-        Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
-
-        $configFolder = Split-Path -Path $AsDatabasePath -Parent;
-        [string]$ModelName = (Get-Item $AsDatabasePath).Basename;
-
-        $deploymentTargetsPath = Join-Path $configFolder "$ModelName.deploymenttargets";
-        [xml]$deploymentTargets = [xml](Get-Content $deploymentTargetsPath);
-
+        
         It "Check DeploymentTargets Database" {
+            # generate a unique guid which we can check has been written into the file correctly
+            $Server = "localhost";
+            $CubeDatabase = New-Guid;
+            $AsDatabasePath = Get-PathToCubeProject; 
+            Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
+            $deploymentTargets = Get-DeploymentTargets;
             $deploymentTargets.DeploymentTarget.Database | Should -Be $CubeDatabase;
         }
 
         It "Check DeploymentTargets Server" {
+            $Server = New-Guid;
+            $CubeDatabase = "MyCube";
+            $AsDatabasePath = Get-PathToCubeProject; 
+            Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
+
+            $deploymentTargets = Get-DeploymentTargets;
             $deploymentTargets.DeploymentTarget.Server | Should -Be $Server;
         }
 
-        It "Check DeploymentTargets ConnectionString" {
+        It "Check DeploymentTargets ConnectionString" -TestCases @{ Server = $Server }  {
+            $Server = New-Guid;
+            $CubeDatabase = "MyCube";
+            $AsDatabasePath = Get-PathToCubeProject; 
+            Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
+
+            $deploymentTargets = Get-DeploymentTargets;
             $deploymentTargets.DeploymentTarget.ConnectionString | Should -Be "DataSource=$Server;Timeout=0"
         }
 
         It "Check DeploymentOptions file has DoNotProcess" {
+            $AsDatabasePath = Get-PathToCubeProject;
+            $configFolder = Split-Path -Path $AsDatabasePath -Parent;
+            [string]$ModelName = (Get-Item $AsDatabasePath).Basename;
             $deploymentOptionsPath = Join-Path $configFolder "$ModelName.deploymentoptions";
             [xml]$deploymentOptions = [xml](Get-Content $deploymentOptionsPath);
             $deploymentOptions.DeploymentOptions.ProcessingOption | Should -Be "DoNotProcess";
         }
 
     }
+
 }
-Remove-Module -Name DeployCube
+AfterAll {
+    Remove-Module -Name DeployCube;
+}

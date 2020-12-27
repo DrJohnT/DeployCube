@@ -1,9 +1,8 @@
-$CurrentFolder = Split-Path -Parent $MyInvocation.MyCommand.Path;
-$ModulePath = Resolve-Path "$CurrentFolder\..\DeployCube\DeployCube.psd1";
-import-Module -Name $ModulePath;
-
-[string]$connString1 = "Provider=SQLNCLI11;Data Source=localhost;Initial Catalog=DatabaseToPublish;Integrated Security=SSPI;Persist Security Info=false";
-[string]$expectedConnString1 = "Provider=SQLNCLI11;Data Source=myserver;Persist Security Info=False;Integrated Security=SSPI;Initial Catalog=mydatabase";
+BeforeAll { 
+    $ModulePath = Split-Path -Parent $PSScriptRoot;
+    $ModulePath = Resolve-Path "$ModulePath\DeployCube\DeployCube.psd1";
+    import-Module -Name $ModulePath;
+}
 
 Describe "Get-SqlConnectionString" {
 
@@ -22,10 +21,16 @@ Describe "Get-SqlConnectionString" {
 
     Context "Should return correct connection strings" {
         It "Should return correct connection string 1" {
+            
+            [string]$connString1 = "Provider=SQLNCLI11;Data Source=localhost;Initial Catalog=DatabaseToPublish;Integrated Security=SSPI;Persist Security Info=false";
+            [string]$expectedConnString1 = "Provider=SQLNCLI11;Data Source=myserver;Persist Security Info=False;Integrated Security=SSPI;Initial Catalog=mydatabase";
+
             ( Get-SqlConnectionString -SourceSqlServer "myserver" -SourceSqlDatabase "mydatabase" -ExistingConnectionString $connString1 ) | Should -Be $expectedConnString1;
         }
     }
 
 }
 
-Remove-Module -Name DeployCube
+AfterAll {
+    Remove-Module -Name DeployCube
+}

@@ -14,7 +14,7 @@ Updates the various config files generated alongside the asdatabase file so they
 
 ```
 Update-AnalysisServicesConfig [-AsDatabasePath] <String> [-Server] <String> [-CubeDatabase] <String>
- [[-ProcessingOption] <String>] [[-TransactionalDeployment] <String>] [[-PartitionDeployment] <String>]
+ [[-ProcessingOption] <String>] [[-TransactionalDeployment] <Boolean>] [[-PartitionDeployment] <String>]
  [[-RoleDeployment] <String>] [[-ConfigurationSettingsDeployment] <String>]
  [[-OptimizationSettingsDeployment] <String>] [[-WriteBackTableCreation] <String>] [<CommonParameters>]
 ```
@@ -117,7 +117,7 @@ Determines if the cube is deployed within one transaction for both metadata chan
 * If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.
 
 ```yaml
-Type: String
+Type: Boolean
 Parameter Sets: (All)
 Aliases:
 

@@ -43,7 +43,7 @@ function Invoke-ProcessTabularCubeDatabase {
         $RefreshType = 'Full'
     )
 
-    if ( Ping-SsasDatabase -Server $Server -CubeDatabase $CubeDatabase ) {
+    try {
 
         Write-Output "Processing tabular cube $Server.$CubeDatabase using Refresh Type: $RefreshType";
 
@@ -59,7 +59,8 @@ function Invoke-ProcessTabularCubeDatabase {
 
         $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query $tmsl;
         Get-SsasProcessingMessages -ASCmdReturnString $returnResult;
-    } else {
-        throw "Cube database $CubeDatabase not found on SSAS Server: $Server";
+    } 
+    catch {
+        throw "Invoke-ProcessTabularCubeDatabase: Error processing $CubeDatabase on SSAS Server: $Server $err";
     }
 }

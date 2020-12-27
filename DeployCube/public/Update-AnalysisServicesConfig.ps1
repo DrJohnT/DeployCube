@@ -96,9 +96,8 @@ function Update-AnalysisServicesConfig {
         [ValidateSet('Full', 'Default', 'DoNotProcess')]
         $ProcessingOption = 'DoNotProcess',
 
-        [String] [Parameter(Mandatory = $false)]
-        [ValidateSet('false','true')]
-        $TransactionalDeployment = 'false',
+        [bool] [Parameter(Mandatory = $false)]
+        $TransactionalDeployment = $false,
 
         [String] [Parameter(Mandatory = $false)]
         [ValidateSet('DeployPartitions','RetainPartitions')]
@@ -144,10 +143,14 @@ function Update-AnalysisServicesConfig {
         if (Test-Path($deploymentOptionsPath))
         {
             Write-Output "Altering $ModelName.deploymentoptions"
-
+                
             [xml]$deploymentOptions = [xml](Get-Content $deploymentOptionsPath);
             $deploymentOptions.DeploymentOptions.ProcessingOption = $ProcessingOption;
-            $deploymentOptions.DeploymentOptions.TransactionalDeployment = $TransactionalDeployment;
+            if ($TransactionalDeployment) {
+                $deploymentOptions.DeploymentOptions.TransactionalDeployment = "true";
+            } else {
+                $deploymentOptions.DeploymentOptions.TransactionalDeployment = "false";
+            }
             $deploymentOptions.DeploymentOptions.PartitionDeployment = $PartitionDeployment;
             $deploymentOptions.DeploymentOptions.RoleDeployment = $RoleDeployment;
             $deploymentOptions.DeploymentOptions.ConfigurationSettingsDeployment = $ConfigurationSettingsDeployment;

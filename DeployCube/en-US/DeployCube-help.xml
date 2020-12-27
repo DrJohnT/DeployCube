@@ -77,11 +77,11 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>Version</maml:name>
           <maml:Description>
-            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: * latest: Latest SQL Server version found on agent</maml:para>
-            <maml:para>* 150: SQL Server 2019</maml:para>
-            <maml:para>* 140: SQL Server 2017</maml:para>
-            <maml:para>* 130: SQL Server 2016</maml:para>
-            <maml:para>* 120: SQL Server 2014</maml:para>
+            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows: * 15: SQL Server 2019</maml:para>
+            <maml:para>* 14: SQL Server 2017</maml:para>
+            <maml:para>* 13: SQL Server 2016</maml:para>
+            <maml:para>* 12: SQL Server 2014</maml:para>
+            <maml:para>* 11: SQL Server 2012</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -96,11 +96,11 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Version</maml:name>
         <maml:Description>
-          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: * latest: Latest SQL Server version found on agent</maml:para>
-          <maml:para>* 150: SQL Server 2019</maml:para>
-          <maml:para>* 140: SQL Server 2017</maml:para>
-          <maml:para>* 130: SQL Server 2016</maml:para>
-          <maml:para>* 120: SQL Server 2014</maml:para>
+          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows: * 15: SQL Server 2019</maml:para>
+          <maml:para>* 14: SQL Server 2017</maml:para>
+          <maml:para>* 13: SQL Server 2016</maml:para>
+          <maml:para>* 12: SQL Server 2014</maml:para>
+          <maml:para>* 11: SQL Server 2012</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1161,11 +1161,12 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
-            <maml:para>* 150: SQL Server 2019</maml:para>
-            <maml:para>* 140: SQL Server 2017</maml:para>
-            <maml:para>*  130: SQL Server 2016</maml:para>
-            <maml:para>* 120: SQL Server 2014</maml:para>
+            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 15: SQL Server 2019</maml:para>
+            <maml:para>* 14: SQL Server 2017</maml:para>
+            <maml:para>* 13: SQL Server 2016</maml:para>
+            <maml:para>* 12: SQL Server 2014</maml:para>
+            <maml:para>* 11: SQL Server 2012</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1196,9 +1197,9 @@
             <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
             <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
           </maml:Description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <command:parameterValue required="true" variableLength="false">Boolean</command:parameterValue>
           <dev:type>
-            <maml:name>String</maml:name>
+            <maml:name>Boolean</maml:name>
             <maml:uri />
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
@@ -1289,11 +1290,12 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
-          <maml:para>* 150: SQL Server 2019</maml:para>
-          <maml:para>* 140: SQL Server 2017</maml:para>
-          <maml:para>*  130: SQL Server 2016</maml:para>
-          <maml:para>* 120: SQL Server 2014</maml:para>
+          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 15: SQL Server 2019</maml:para>
+          <maml:para>* 14: SQL Server 2017</maml:para>
+          <maml:para>* 13: SQL Server 2016</maml:para>
+          <maml:para>* 12: SQL Server 2014</maml:para>
+          <maml:para>* 11: SQL Server 2012</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1324,9 +1326,9 @@
           <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
           <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
         </maml:Description>
-        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="true" variableLength="false">Boolean</command:parameterValue>
         <dev:type>
-          <maml:name>String</maml:name>
+          <maml:name>Boolean</maml:name>
           <maml:uri />
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
@@ -1443,11 +1445,12 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
-            <maml:para>* 150: SQL Server 2019</maml:para>
-            <maml:para>* 140: SQL Server 2017</maml:para>
-            <maml:para>* 130: SQL Server 2016</maml:para>
-            <maml:para>* 120: SQL Server 2014</maml:para>
+            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 15: SQL Server 2019</maml:para>
+            <maml:para>* 14: SQL Server 2017</maml:para>
+            <maml:para>* 13: SQL Server 2016</maml:para>
+            <maml:para>* 12: SQL Server 2014</maml:para>
+            <maml:para>* 11: SQL Server 2012</maml:para>
           </maml:Description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1462,11 +1465,12 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempte to find. Valid values for -PreferredVersion are: * latest: Latest SQL Server version found on agent</maml:para>
-          <maml:para>* 150: SQL Server 2019</maml:para>
-          <maml:para>* 140: SQL Server 2017</maml:para>
-          <maml:para>* 130: SQL Server 2016</maml:para>
-          <maml:para>* 120: SQL Server 2014</maml:para>
+          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 15: SQL Server 2019</maml:para>
+          <maml:para>* 14: SQL Server 2017</maml:para>
+          <maml:para>* 13: SQL Server 2016</maml:para>
+          <maml:para>* 12: SQL Server 2014</maml:para>
+          <maml:para>* 11: SQL Server 2012</maml:para>
         </maml:Description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1689,9 +1693,9 @@
             <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
             <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
           </maml:Description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <command:parameterValue required="true" variableLength="false">Boolean</command:parameterValue>
           <dev:type>
-            <maml:name>String</maml:name>
+            <maml:name>Boolean</maml:name>
             <maml:uri />
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
@@ -1814,9 +1818,9 @@
           <maml:para>Determines if the cube is deployed within one transaction for both metadata changes and processing commands. * If this option is True, Analysis Services deploys all metadata changes and all process commands within a single transaction.</maml:para>
           <maml:para>* If this option is False (default), Analysis Services deploys the metadata changes in a single transaction, and deploys each processing command in its own transaction.</maml:para>
         </maml:Description>
-        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="true" variableLength="false">Boolean</command:parameterValue>
         <dev:type>
-          <maml:name>String</maml:name>
+          <maml:name>Boolean</maml:name>
           <maml:uri />
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>

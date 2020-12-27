@@ -1,12 +1,23 @@
-﻿$CurrentFolder = Split-Path -Parent $MyInvocation.MyCommand.Path;
-$ModulePath = Resolve-Path "$CurrentFolder\..\DeployCube\DeployCube.psd1";
-import-Module -Name $ModulePath;
+﻿BeforeAll { 
+    $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+    $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
+    import-Module -Name $ModulePath;
 
-$exampleFolder =  Resolve-Path "$CurrentFolder\..\examples";
-$AsDatabasePath = Resolve-Path "$exampleFolder\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
-$MissingDeploymentTargets = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
-$MissingDeploymentOptions = Resolve-Path "$exampleFolder\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
+    function Get-PathToCubeProject {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
+    }
 
+    function Get-MissingDeploymentTargets {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
+    }
+
+    function Get-MissingDeploymentOptions {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
+    }
+}
 
 Describe "Publish-Cube" {
     Context "Testing Inputs" {
@@ -67,106 +78,130 @@ Describe "Publish-Cube" {
 
     Context "Invalid AnalysisServicesDeploymentExe" {
         It "Invalid AnalysisServicesDeploymentExe path" {
+            $AsDatabasePath = Get-PathToCubeProject;
             Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExePath { return "NoSqlPackage" };
             Mock -ModuleName DeployCube Select-AnalysisServicesDeploymentExeVersion { return 150 };
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should Throw;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should -Throw;
         }
     }
 
     Context "Invalid Inputs" {
         Mock -ModuleName DeployCube Invoke-ExternalCommand;
         It "Invalid ProcessingOption should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest $ProcessingOption "fsadsa" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest $ProcessingOption "fsadsa" } | Should -Throw;
         }
 
         It "Invalid AsDatabasePath should Throw" {
-            { Publish-Cube -AsDatabasePath "NoAsDatabasePath" -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should Throw;
+            { Publish-Cube -AsDatabasePath "NoAsDatabasePath" -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Invalid PreferredVersion Should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCubePreferredVersion" -PreferredVersion "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCubePreferredVersion" -PreferredVersion "SomethingSilly" } | Should -Throw;
         }
 
         It "Invalid Server should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyTabularCubeInvalidServer" -CubeDatabase "MyDB" -PreferredVersion latest } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyTabularCubeInvalidServer" -CubeDatabase "MyDB" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Empty Server" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "" -CubeDatabase "MyTabularCubeInvalidServer" -PreferredVersion latest } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "" -CubeDatabase "MyTabularCubeInvalidServer" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Null Server" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server $null -CubeDatabase "MyTabularCubeInvalidServer" -PreferredVersion latest } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server $null -CubeDatabase "MyTabularCubeInvalidServer" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Empty CubeDatabase" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "" -PreferredVersion latest } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Empty CubeDatabase" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase $null -PreferredVersion latest } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase $null -PreferredVersion latest } | Should -Throw;
         }
 
         It "Invalid ProcessingOption SomethingSilly should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest -ProcessingOption "SomethingSilly" } | Should -Throw;
         }
 
         It "Invalid TransactionalDeployment should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -TransactionalDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -TransactionalDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid PartitionDeployment should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PartitionDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -PartitionDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid RoleDeployment should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -RoleDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -RoleDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid ConfigurationSettingsDeployment should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -ConfigurationSettingsDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -ConfigurationSettingsDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid OptimizationSettingsDeployment should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -OptimizationSettingsDeployment "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -OptimizationSettingsDeployment "SomethingSilly" } | Should -Throw;
         }
         It "Invalid WriteBackTableCreation should Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -WriteBackTableCreation "SomethingSilly" } | Should Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "MyServer" -CubeDatabase "MyTabularCube" -WriteBackTableCreation "SomethingSilly" } | Should -Throw;
         }
 
         It "Missing DeploymentTargets should Throw" {
-            { Publish-Cube -AsDatabasePath $MissingDeploymentTargets -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should Throw;
+            $MissingDeploymentTargets = Get-MissingDeploymentTargets;
+            { Publish-Cube -AsDatabasePath $MissingDeploymentTargets -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should -Throw;
         }
 
         It "Missing DeploymentOptions should Throw" {
-            { Publish-Cube -AsDatabasePath $MissingDeploymentOptions -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should Throw;
+            $MissingDeploymentOptions = Get-MissingDeploymentOptions;
+            { Publish-Cube -AsDatabasePath $MissingDeploymentOptions -Server "MyServer" -CubeDatabase "MyTabularCube" -PreferredVersion latest } | Should -Throw;
         }
     }
 
     Context "Valid Parameters with mocked Invoke-ExternalCommand" {
         Mock -ModuleName DeployCube Invoke-ExternalCommand;
         It "Miniumal valid Parameters" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" } | Should Not Throw;;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" } | Should -Not -Throw;
         }
 
         It "Specific PreferredVersion should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion 150 } | Should Not Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -PreferredVersion 15 } | Should -Not -Throw;
         }
 
         It "Missing PreferredVersion should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" } | Should Not Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" } | Should -Not -Throw;
         }
 
         It "Adding ProcessingOption should not Throw" {
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -ProcessingOption "Full" } | Should Not Throw;
+            $AsDatabasePath = Get-PathToCubeProject;
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase "MyTabularCube" -ProcessingOption "Full" } | Should -Not -Throw;
         }
     }
 
     Context "Valid parameters so deploy" {
         It "Valid parameters so deploy a cube and test it is present" {
             $CubeDatabase = New-Guid;  # this ensures we cannot fake the test result
+            $AsDatabasePath = Get-PathToCubeProject;
             Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase $CubeDatabase;
-            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase $CubeDatabase ) | Should Be $true;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase $CubeDatabase ) | Should -Be $true;
             # clean up
             Unpublish-Cube -Server "localhost" -CubeDatabase $CubeDatabase;
         }
     }
 }
 
-Remove-Module -Name DeployCube
+AfterAll {
+    Remove-Module -Name DeployCube
+}

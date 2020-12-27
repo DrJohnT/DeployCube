@@ -1,6 +1,8 @@
-$ModulePath = Split-Path -Parent $MyInvocation.MyCommand.Path;
-$ModulePath = Resolve-Path "$ModulePath\..\DeployCube\DeployCube.psd1";
-import-Module -Name $ModulePath;
+BeforeAll { 
+    $ModulePath = Split-Path -Parent $PSScriptRoot;
+    $ModulePath = Resolve-Path "$ModulePath\DeployCube\DeployCube.psd1";
+    import-Module -Name $ModulePath;
+}
 
 Describe "Get-SqlAsPath" {
     Context "Testing Inputs" {
@@ -11,16 +13,16 @@ Describe "Get-SqlAsPath" {
             (Get-Command Get-SqlAsPath).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
         }
         It "Empty server" {
-            { Get-SqlAsPath -Server "" -CubeDatabase MyCube } | Should Throw;
+            { Get-SqlAsPath -Server "" -CubeDatabase MyCube } | Should -Throw;
         }
         It "Null server" {
-            { Get-SqlAsPath -Server $null -CubeDatabase MyCube } | Should Throw;
+            { Get-SqlAsPath -Server $null -CubeDatabase MyCube } | Should -Throw;
         }
         It "Empty CubeDatabase" {
-            { Get-SqlAsPath -Server localhost -CubeDatabase "" } | Should Throw;
+            { Get-SqlAsPath -Server localhost -CubeDatabase "" } | Should -Throw;
         }
         It "Null CubeDatabase" {
-            { Get-SqlAsPath -Server localhost -CubeDatabase $null } | Should Throw;
+            { Get-SqlAsPath -Server localhost -CubeDatabase $null } | Should -Throw;
         }
     }
 
@@ -39,4 +41,6 @@ Describe "Get-SqlAsPath" {
     }
 }
 
-Remove-Module -Name DeployCube
+AfterAll {
+    Remove-Module -Name DeployCube
+}

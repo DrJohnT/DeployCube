@@ -5,3 +5,10 @@ C:\MyDev\GitHub\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Developme
 C:\MyDev\GitHub\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.asdatabase
 C:\MyDev\GitHub\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.deploymentoptions
 C:\MyDev\GitHub\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.deploymenttargets
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\bin\Model.deploymenttargets
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\bin\Model.deploymentoptions
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\MyTabularProject.smproj.CoreCompileInputs.cache
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.asdatabase
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.deploymenttargets
+C:\Dev\DeployCube\examples\CubeToPublish\MyTabularProject\obj\Development\Model.deploymentoptions

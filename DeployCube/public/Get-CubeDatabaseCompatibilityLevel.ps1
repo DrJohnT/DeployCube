@@ -37,7 +37,7 @@ function Get-CubeDatabaseCompatibilityLevel {
         $CubeDatabase
     )
 
-    if (Ping-SsasServer -Server $Server) {
+    try {
         # ensure SqlServer module is installed
         Get-ModuleByName -Name SqlServer;
 
@@ -57,14 +57,15 @@ function Get-CubeDatabaseCompatibilityLevel {
             $nsmgr.AddNamespace('rootNS', 		'urn:schemas-microsoft-com:xml-analysis:rowset');
 
             $rows = $returnXML.SelectNodes("//xmlAnalysis:return/rootNS:root/rootNS:row", $nsmgr) ;
-            foreach ($row in $rows) {
+            foreach ($row in $rows) {                
                 if ($row.DATABASE_ID -eq $CubeDatabase) {
                     return $row.COMPATIBILITY_LEVEL -as [int];
                 }
             }
             throw "Failed to find cube database $CubeDatabase on server $Server";
         }
-    } else {
-        throw "SSAS Server $Server not found";
+    } 
+    catch {
+        throw "SSAS Server $Server not found $error";
     }
 }

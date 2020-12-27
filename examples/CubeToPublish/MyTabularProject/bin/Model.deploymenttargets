@@ -1,5 +1,5 @@
 <DeploymentTarget xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ddl2="http://schemas.microsoft.com/analysisservices/2003/engine/2" xmlns:ddl2_2="http://schemas.microsoft.com/analysisservices/2003/engine/2/2" xmlns:ddl100_100="http://schemas.microsoft.com/analysisservices/2008/engine/100/100" xmlns:ddl200="http://schemas.microsoft.com/analysisservices/2010/engine/200" xmlns:ddl200_200="http://schemas.microsoft.com/analysisservices/2010/engine/200/200">
-  <Database>098d4eca-3b53-4209-a12b-102b633474f6</Database>
+  <Database>TestProcessing</Database>
   <Server>localhost</Server>
   <ConnectionString>DataSource=localhost;Timeout=0</ConnectionString>
 </DeploymentTarget>
