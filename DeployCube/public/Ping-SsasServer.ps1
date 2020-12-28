@@ -1,9 +1,11 @@
 function Ping-SsasServer {
 <#
 	.SYNOPSIS
+	For on-premise SSAS instances only!
 	Checks that the SQL Server SSAS instance exists.
 
 	.DESCRIPTION
+	For on-premise SSAS instances only!
 	Checks that the SQL Server SSAS instance exists.
 
     .PARAMETER Server
@@ -30,6 +32,9 @@ function Ping-SsasServer {
         	$Server
 	)
 
+	if ($Server -like "asazure*") {
+		throw "Azure Analysis Services not supported.  Only on-premise servers are supported by Ping-SsasServer";
+	}
 	try {
 		[System.Reflection.Assembly]::LoadWithPartialName("Microsoft.AnalysisServices") | Out-Null;
         $ssasServer = New-Object Microsoft.AnalysisServices.Server;

@@ -68,6 +68,12 @@ function Publish-Cube {
     * Valid options are: 'Create', 'CreateAlways' and 'UseExisting'.
     * Default value: 'UseExisting'.
 
+    .PARAMETER UserID
+    [Optional] The user name used to connect to the AAS server.
+
+    .PARAMETER Password
+    [Optional] The password of the above user (in plain text unfortunately).
+
     .EXAMPLE
     Publish-Cube -AsDatabasePath 'C:\Dev\YourDB\bin\Debug\YourDB.asdatabase' -Server YourDBServer -CubeDatabase MyTabularCube
 

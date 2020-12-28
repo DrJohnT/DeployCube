@@ -26,6 +26,10 @@ Describe "Ping-SsasServer" -Tag "Round1" {
         It "Valid server" {
             ( Ping-SsasServer -Server "localhost" ) | Should -Be $true;
         }
+
+        It "Azure servers are unsupported" {
+            { Ping-SsasServer -Server "asazure://uksouth.asazure.windows.net/xxx" } | Should -Throw;
+        }
     }
 }
 

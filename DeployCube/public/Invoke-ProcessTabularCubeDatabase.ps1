@@ -12,6 +12,9 @@ function Invoke-ProcessTabularCubeDatabase {
     .PARAMETER CubeDatabase
     The name of the tabular cube database on the SSAS server.
 
+    .PARAMETER Credential
+    [Optional] A PSCredential object containing the credentials to connect to the AAS server.
+
     .PARAMETER RefreshType
     Valid options are: 'Full', 'Automatic', 'ClearValues', 'Calculate'.
     Default value: 'Full'.
@@ -37,6 +40,9 @@ function Invoke-ProcessTabularCubeDatabase {
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         $CubeDatabase,
+        
+        [PSCredential] [Parameter(Mandatory = $false)]
+        $Credential = $null,
 
         [String] [Parameter(Mandatory = $false)]
         [ValidateSet('Full', 'Automatic', 'ClearValues', 'Calculate')]
@@ -57,7 +63,11 @@ function Invoke-ProcessTabularCubeDatabase {
         $tmsl = $tmslStructure | ConvertTo-Json -Depth 3;
         #Write-Output $tmsl;
 
-        $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query $tmsl;
+        if ($null -eq $Credential) {
+            $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query $tmsl;
+        } else {
+            $returnResult = Invoke-ASCmd -Server $Server -Credential $Credential -ConnectionTimeout 1 -Query $tmsl;
+        }
         Get-SsasProcessingMessages -ASCmdReturnString $returnResult;
     } 
     catch {

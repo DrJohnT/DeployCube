@@ -11,6 +11,9 @@ function Get-CubeDatabaseCompatibilityLevel {
 
     .PARAMETER CubeDatabase
     The name of the cube database to be deployed.
+    
+    .PARAMETER Credential
+    [Optional] A PSCredential object containing the credentials to connect to the AAS server.
 
     .EXAMPLE
     Get-CubeDatabaseCompatibilityLevel -Server localhost -CubeDatabase MyTabularCube;
@@ -34,7 +37,10 @@ function Get-CubeDatabaseCompatibilityLevel {
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $CubeDatabase
+        $CubeDatabase,
+
+        [PSCredential] [Parameter(Mandatory = $false)]
+        $Credential = $null
     )
 
     try {
@@ -44,7 +50,11 @@ function Get-CubeDatabaseCompatibilityLevel {
         # Request a list of databases on the SSAS server
         # Annoyingly, Invoke-ASCmd does not generate an error we can capture with try/catch. But it does write output to the error console,
         # so we have to redirect the error output to the normal output to stop the error been detected by processes monitoring the error output such as the Azure DevOps build pipeline
-        $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
+        if ($null -eq $Credential) {
+            $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
+         } else {
+            $returnResult = Invoke-ASCmd -Server $Server -Credential $Credential -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
+        }
 
         if ([string]::IsNullOrEmpty($returnResult)) {
             throw "Invoke-ASCmd failed to return a list of databases on the server $Server";

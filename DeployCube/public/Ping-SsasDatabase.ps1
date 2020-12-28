@@ -12,6 +12,9 @@ function Ping-SsasDatabase {
     .PARAMETER CubeDatabase
     The name of the cube database to be deployed.
 
+    .PARAMETER Credential
+    [Optional] A PSCredential object containing the credentials to connect to the AAS server.
+
     .EXAMPLE
     Ping-SsasDatabase -Server build02 -CubeDatabase 'MyTabularCube'
 
@@ -34,44 +37,48 @@ function Ping-SsasDatabase {
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $CubeDatabase
+        $CubeDatabase,
+
+        [PSCredential] [Parameter(Mandatory = $false)]
+        $Credential = $null
     )
 
-    if (Ping-SsasServer -Server $Server) {
-        try {
-            # ensure SqlServer module is installed
-            Get-ModuleByName -Name SqlServer;
+    try {
+        # ensure SqlServer module is installed
+        Get-ModuleByName -Name SqlServer;
 
-            # Request a list of databases on the SSAS server
-            # Annoyingly, Invoke-ASCmd does not generate an error we can capture with try/catch. But it does write output to the error console,
-            # so we have to redirect the error output to the normal output to stop the error been detected by processes monitoring the error output such as the build pipeline
+        # Request a list of databases on the SSAS server
+        # Annoyingly, Invoke-ASCmd does not generate an error we can capture with try/catch. But it does write output to the error console,
+        # so we have to redirect the error output to the normal output to stop the error been detected by processes monitoring the error output such as the build pipeline
+        if ($null -eq $Credential) {
             $returnResult = Invoke-ASCmd -Server $Server -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
-
-            if ([string]::IsNullOrEmpty($returnResult)) {
-                return $false;
-            } else {
-                $returnXml = New-Object -TypeName System.Xml.XmlDocument;
-                $returnXml.LoadXml($returnResult);
-
-                [System.Xml.XmlNamespaceManager] $nsmgr = $returnXml.NameTable;
-                $nsmgr.AddNamespace('xmlAnalysis', 	'urn:schemas-microsoft-com:xml-analysis');
-                $nsmgr.AddNamespace('rootNS', 		'urn:schemas-microsoft-com:xml-analysis:rowset');
-
-                $rows = $returnXML.SelectNodes("//xmlAnalysis:DiscoverResponse/xmlAnalysis:return/rootNS:root/rootNS:row/rootNS:DATABASE_ID", $nsmgr) ;
-                foreach ($row in $rows) {
-                    $FoundDb = $row.InnerText;
-                    if ($FoundDb -eq  $CubeDatabase) {
-                        return $true;
-                    }
-                }
-                return $false;
-            }
+        } else {
+            $returnResult = Invoke-ASCmd -Server $Server -Credential $Credential -ConnectionTimeout 1 -Query "<Discover xmlns='urn:schemas-microsoft-com:xml-analysis'><RequestType>DBSCHEMA_CATALOGS</RequestType><Restrictions /><Properties /></Discover>" 2>&1;
         }
-        catch {
-            Write-Error "Error $_";
+    
+
+        if ([string]::IsNullOrEmpty($returnResult)) {
+            return $false;
+        } else {
+            $returnXml = New-Object -TypeName System.Xml.XmlDocument;
+            $returnXml.LoadXml($returnResult);
+
+            [System.Xml.XmlNamespaceManager] $nsmgr = $returnXml.NameTable;
+            $nsmgr.AddNamespace('xmlAnalysis', 	'urn:schemas-microsoft-com:xml-analysis');
+            $nsmgr.AddNamespace('rootNS', 		'urn:schemas-microsoft-com:xml-analysis:rowset');
+
+            $rows = $returnXML.SelectNodes("//xmlAnalysis:DiscoverResponse/xmlAnalysis:return/rootNS:root/rootNS:row/rootNS:DATABASE_ID", $nsmgr) ;
+            foreach ($row in $rows) {
+                $FoundDb = $row.InnerText;
+                if ($FoundDb -eq  $CubeDatabase) {
+                    return $true;
+                }
+            }
             return $false;
         }
-    } else {
-        throw "SSAS Server $Server not found";
+    }
+    catch {
+        Write-Error "Error $_";
+        return $false;
     }
 }

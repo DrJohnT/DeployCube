@@ -15,6 +15,11 @@ function Get-SqlConnectionString {
     .PARAMETER ExistingConnectionString
     The existing SQL connection string obtained from the cube definition or config file.
 
+    .PARAMETER SqlUserID
+     $SqlUserID 
+     
+    .PARAMETER SqlUserPassword $SqlUserPassword;
+
     .EXAMPLE
     Get-SqlConnectionString -SourceSqlServer myserver -SourceSqlDatabase mydatabase -ExistingConnectionString 'Provider=SQLNCLI11;Data Source=localhost;Initial Catalog=DatabaseToPublish;Integrated Security=SSPI;Persist Security Info=false';
 
@@ -42,11 +47,39 @@ function Get-SqlConnectionString {
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $ExistingConnectionString
+        $ExistingConnectionString,
+
+        [String] [Parameter(Mandatory = $false)]
+        $SqlUserID = $null, 
+        
+        [String] [Parameter(Mandatory = $false)]
+        $SqlUserPwd = $null
 	)
 
-    $ConnBuilder = New-Object System.Data.OleDb.OleDbConnectionStringBuilder($ExistingConnectionString);
-    $ConnBuilder["Data Source"] = $SourceSqlServer;
-    $ConnBuilder["Initial Catalog"] = $SourceSqlDatabase;
+    if ($SourceSqlServer -like "*windows.net*") {
+        
+        # Azure SQL Server
+        $ConnBuilder = New-Object System.Data.OleDb.OleDbConnectionStringBuilder;
+        $ConnBuilder["Provider"] = "SQLNCLI11";
+        $ConnBuilder["Data Source"] = $SourceSqlServer;
+        $ConnBuilder["Initial Catalog"] = $SourceSqlDatabase;
+        $ConnBuilder["MultipleActiveResultSets"] = "False";
+        $ConnBuilder["Encrypt"] = "True";
+        #$ConnBuilder["TrustServerCertificate"] = "False";
+
+        if ("" -ne "$SqlUserID") {
+            $ConnBuilder["Persist Security Info"] = "True";
+            $ConnBuilder["User ID"] = $SqlUserID;
+            $ConnBuilder["Password"] = $SqlUserPwd;
+        }
+
+    } else {
+        # on-prem SQL Server instance
+        $ConnBuilder = New-Object System.Data.OleDb.OleDbConnectionStringBuilder($ExistingConnectionString);
+        $ConnBuilder["Data Source"] = $SourceSqlServer;
+        $ConnBuilder["Initial Catalog"] = $SourceSqlDatabase;
+        
+    }
+        
     return $ConnBuilder.ConnectionString;
 }

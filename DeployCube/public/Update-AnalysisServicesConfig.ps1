@@ -140,7 +140,7 @@ function Update-AnalysisServicesConfig {
             $deploymentTargets.DeploymentTarget.Server = $Server;
             $ConnectionString = "Data Source=$Server;Timeout=0;";
             if ("" -ne "$UserID") {                
-                $ConnectionString += "UID=$UserID;PWD=$Password;"
+                $ConnectionString += "User ID=$UserID;Password=$Password;Persist Security Info=True;Impersonation Level=Impersonate;"
             }            
             #$ConnectionString += "Integrated Security=SSPI;ProtectionLevel=Connect;SSPI=Negotiate;";            
             $deploymentTargets.DeploymentTarget.ConnectionString = $ConnectionString;

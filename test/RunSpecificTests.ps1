@@ -4,7 +4,8 @@
 #Invoke-Pester -Tag "Round3";
 
 #Invoke-Pester -Script .\AnalyzePSScripts.Tests.ps1
-#Invoke-Pester -Script .\AzureAS.Tests.ps1
+
+Invoke-Pester -Script .\AzureAS.Tests.ps1
 
 #Invoke-Pester -Script .\Find-AnalysisServicesDeploymentExeLocations.Tests.ps1 -Tag 'Round1'
 #Invoke-Pester -Script .\Get-AnalysisServicesDeploymentExePath.Tests.ps1 -Tag Round1
@@ -18,7 +19,7 @@
 
 #Invoke-Pester -Script .\Integration.Tests.ps1
 
-Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
+#Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
 
 
 #Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1

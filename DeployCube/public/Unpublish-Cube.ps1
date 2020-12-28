@@ -12,6 +12,9 @@ function Unpublish-Cube {
     .PARAMETER CubeDatabase
     The name of the cube database to be dropped.
 
+    .PARAMETER Credential
+    [Optional] A PSCredential object containing the credentials to connect to the AAS server.
+
     .EXAMPLE
     Unpublish-Cube -Server $ServerName -CubeDatabase $CubeName;
 
@@ -31,11 +34,19 @@ function Unpublish-Cube {
 
         [String] [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        $CubeDatabase
+        $CubeDatabase,
+
+        [PSCredential] [Parameter(Mandatory = $false)]
+        $Credential = $null
     )
 
     $asCmd = "<Delete xmlns='http://schemas.microsoft.com/analysisservices/2003/engine'><Object><DatabaseID>$CubeDatabase</DatabaseID></Object></Delete>";
-    $returnResult = Invoke-ASCmd -Server $Server -Query $asCmd;
+    if ($null -eq $Credential) {
+        $returnResult = Invoke-ASCmd -Server $Server -Query $asCmd;
+    } else {
+        $returnResult = Invoke-ASCmd -Server $Server -Credential $Credential -Query $asCmd;
+    }
+    
     if (-not ($returnResult -like '*urn:schemas-microsoft-com:xml-analysis:empty*')) {
         throw "Failed to drop cube $CubeDatabase";
     }
