@@ -8,11 +8,11 @@
 
 #Invoke-Pester -Script .\Find-AnalysisServicesDeploymentExeLocations.Tests.ps1 -Tag 'Round1'
 #Invoke-Pester -Script .\Get-AnalysisServicesDeploymentExePath.Tests.ps1 -Tag Round1
-<#
 
-Invoke-Pester -Script .\Get-CubeDatabaseCompatibilityLevel.Tests.ps1
-Invoke-Pester -Script .\Get-ServerMode.Tests.ps1
-#>
+
+#Invoke-Pester -Script .\Get-CubeDatabaseCompatibilityLevel.Tests.ps1
+#Invoke-Pester -Script .\Get-ServerMode.Tests.ps1
+
 #Invoke-Pester -Script .\Get-SqlAsPath.Tests.ps1
 #Invoke-Pester -Script .\Get-SqlConnectionString.Tests.ps1
 
@@ -20,11 +20,12 @@ Invoke-Pester -Script .\Get-ServerMode.Tests.ps1
 
 #Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
 
+
 #Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1
 #Invoke-Pester -Script .\Ping-SsasServer.Tests.ps1
 
 #Invoke-Pester -Script .\ProcessCube.Tests.ps1
-#Invoke-Pester -Script .\Publish-Cube.Tests.ps1
+Invoke-Pester -Script .\Publish-Cube.Tests.ps1
 
 #Invoke-Pester -Script .\Select-AnalysisServicesDeploymentExeVersion.Tests.ps1
 

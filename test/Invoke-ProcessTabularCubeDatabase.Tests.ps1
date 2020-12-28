@@ -70,7 +70,7 @@ Describe "Invoke-ProcessTabularCubeDatabase" -Tag "Round2" {
             $AsDatabasePath = Get-PathToCubeProject;
             Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase;
             Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount';
-            { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full } | Should Not Throw;
+            { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full } | Should -Not -Throw;
             Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase;
         }
 

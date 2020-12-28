@@ -170,8 +170,8 @@ Describe "Update-AnalysisServicesConfig" -Tag "Round2" {
             $AsDatabasePath = Get-PathToCubeProject; 
             Update-AnalysisServicesConfig -AsDatabasePath $AsDatabasePath -Server $Server -CubeDatabase $CubeDatabase;
 
-            $deploymentTargets = Get-DeploymentTargets;
-            $deploymentTargets.DeploymentTarget.ConnectionString | Should -Be "DataSource=$Server;Timeout=0"
+            [xml] $deploymentTargets = Get-DeploymentTargets;
+            $deploymentTargets.DeploymentTarget.ConnectionString | Should -Be "Data Source=$Server;Timeout=0;"
         }
 
         It "Check DeploymentOptions file has DoNotProcess" {

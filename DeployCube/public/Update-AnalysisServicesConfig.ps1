@@ -120,10 +120,10 @@ function Update-AnalysisServicesConfig {
         $WriteBackTableCreation = 'UseExisting',
 
         [String] [Parameter(Mandatory = $false)]
-        $UserID,
+        $UserID = $null,
 
         [String] [Parameter(Mandatory = $false)]
-        $Password
+        $Password = $null
     )
 
     if (Test-Path $AsDatabasePath) {
@@ -139,7 +139,7 @@ function Update-AnalysisServicesConfig {
             $deploymentTargets.DeploymentTarget.Database = $CubeDatabase;
             $deploymentTargets.DeploymentTarget.Server = $Server;
             $ConnectionString = "Data Source=$Server;Timeout=0;";
-            if ($null -ne $UserID) {                
+            if ("" -ne "$UserID") {                
                 $ConnectionString += "UID=$UserID;PWD=$Password;"
             }            
             #$ConnectionString += "Integrated Security=SSPI;ProtectionLevel=Connect;SSPI=Negotiate;";            
