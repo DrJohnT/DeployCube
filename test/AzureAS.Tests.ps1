@@ -16,11 +16,11 @@ BeforeAll {
 
         $data = @{};
         $data.PathToCubeProject = "$CurrentFolder\examples\Azure\CubeToPublish\bin\Model.asdatabase";
-        $data.AzureAsServer = "asazure://uksouth.asazure.windows.net/bovi1kenobi";
+        $data.AzureAsServer = "asazure://uksouth.asazure.windows.net/xxx";
         $data.CubeDatabase = "AzureTestCube";  
 
-        $data.UserID = "john@bovi.co.uk";
-        $data.Password = "g]H-bP)%Y5Gc";
+        $data.UserID = "xxx";
+        $data.Password = "xxx";
         [SecureString] $SecurePassword = ConvertTo-SecureString $data.Password -AsPlainText -Force;
         [PsCredential] $data.Credential = New-Object System.Management.Automation.PSCredential($data.UserID, $SecurePassword);
 
@@ -30,15 +30,15 @@ BeforeAll {
 
     function Get-AzureSqlServer {
         $data = @{};
-        $data.AzureSqlServer = "bovi1kenobi.database.windows.net,1433";
+        $data.AzureSqlServer = "xxx.database.windows.net,1433";
         $data.SqlServerDatabase = 'DatabaseToPublish';
-        $data.SqlUserID = "bovi";
-        $data.SqlUserPwd = "LetMeSql!";
+        $data.SqlUserID = "XXX";
+        $data.SqlUserPwd = "XXX!";
         return  $data;
     }
 }
 
-Describe "Publish-Cube Integration Tests" -Tag "Round3" {
+Describe "Publish-Cube Integration Tests" -Tag "Ignore" {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {
@@ -63,7 +63,7 @@ Describe "Publish-Cube Integration Tests" -Tag "Round3" {
             $aasData = Get-AzureAsServer
             { Invoke-ProcessTabularCubeDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential -RefreshType Full }  | Should -Not -Throw;
         }
-<#
+
         It "Drop cube should not throw" {
             # clean up
             $aasData = Get-AzureAsServer
@@ -75,7 +75,7 @@ Describe "Publish-Cube Integration Tests" -Tag "Round3" {
             ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -Be $false;
         }
         
-    #>
+
     }
 }
 
