@@ -2,16 +2,15 @@
     $CurrentFolder = Split-Path -Parent $PSScriptRoot;
     $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
     import-Module -Name $ModulePath;
-    Write-Host "CurrentFolder: $CurrentFolder ModulePath: $ModulePath";
 }
 
 
 Describe "Find-AnalysisServicesDeploymentExeLocations" -Tag "Round1" {
-
-    It "Finds some version" {
-        ( Find-AnalysisServicesDeploymentExeLocations ) | Should -Not -Be $null
+    Context "Should return output" {
+        It "Finds some version" {
+            ( Find-AnalysisServicesDeploymentExeLocations ) | Should -Not -Be $null
+        }
     }
-
 }
 
 AfterAll {
