@@ -38,11 +38,6 @@ Describe "Ping-SsasDatabase" -Tag "Round1" {
         It "Valid server and database" {
             ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeToPublish" ) | Should -Be $true;
         }
-
-        It "Azure servers are unsupported" {
-            { Ping-SsasDatabase -Server "asazure://uksouth.asazure.windows.net/xxx" -CubeDatabase "CubeToPublish" } | Should -Not -Throw;
-        }
-
     }
 }
 
