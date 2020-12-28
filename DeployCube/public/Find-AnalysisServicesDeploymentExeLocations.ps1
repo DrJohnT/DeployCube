@@ -41,7 +41,6 @@ function Find-AnalysisServicesDeploymentExeLocations {
         }
     }
     catch {
-        #Write-Error "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
-        Write-Host "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
+        Write-Error "Find-AnalysisServicesDeploymentExeLocations failed with error $Error";
     }
 }

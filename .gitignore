@@ -19,3 +19,15 @@ examples/CubeToPublish/MyTabularProject/bin/AnalysisServicesDeploymentExeLog.txt
 examples/CubeToPublish/ForTests/InvalidDataSourceConnection/AnalysisServicesDeploymentExeLog.txt
 test/tmsl_examples.txt
 test/GenerateJson.ps1
+/examples/DatabaseToPublish/bin/Debug/DeploymentReport_1.txt
+/examples/DatabaseToPublish/bin/Debug/DatabaseToPublish_1.publish.sql
+/examples/Azure/CubeToPublish/obj/Development/Model.deploymenttargets
+/examples/Azure/CubeToPublish/obj/Development/Model.deploymentoptions
+/examples/Azure/CubeToPublish/obj/Development/Model.asdatabase
+/examples/Azure/CubeToPublish/obj/Development/CubeToPublish.smproj.FileListAbsolute.txt
+/examples/Azure/CubeToPublish/Model.bim_LJ227PH.settings
+/examples/Azure/CubeToPublish/Model.bim.layout
+/examples/Azure/DatabaseToPublish/obj/Debug/DatabaseToPublish.sqlproj.FileListAbsolute.txt
+*.jfm
+/examples/Azure/DatabaseToPublish/bin/Debug/DatabaseToPublish.Azure.publish.xml
+/examples/Azure/CubeToPublish/bin/AnalysisServicesDeploymentExeLog.txt

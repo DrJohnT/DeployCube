@@ -24,8 +24,8 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
         It "Should have ImpersonationAccount as a optional parameter" {
             (Get-Command Update-TabularCubeDataSource).Parameters['ImpersonationAccount'].Attributes.mandatory | Should -Be $false
         }
-        It "Should have ImpersonationPassword as a optional parameter" {
-            (Get-Command Update-TabularCubeDataSource).Parameters['ImpersonationPassword'].Attributes.mandatory | Should -Be $false
+        It "Should have ImpersonationPwd as a optional parameter" {
+            (Get-Command Update-TabularCubeDataSource).Parameters['ImpersonationPwd'].Attributes.mandatory | Should -Be $false
         }
 
 
@@ -56,8 +56,8 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
             { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount $null -ImpersonationPassword 'test' } | Should -Throw;
         }
 
-        It "Null ImpersonationPassword when ImpersonationMode=ImpersonateAccount" {
-            { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'test' -ImpersonationPassword $null } | Should -Throw;
+        It "Null ImpersonationPwd when ImpersonationMode=ImpersonateAccount" {
+            { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "master" -SourceSqlServer $null -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'test' -ImpersonationPwd $null } | Should -Throw;
         }
     }
 
@@ -73,7 +73,7 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
 
     Context "Valid inputs" {
         It "Valid inputs - CompatibilityLevel < 1400 - ImpersonateAccount" {
-            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeToPublish" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'qregroup\QReSvcSWBuild' -ImpersonationPassword 'OSzkzmvdVC-n9+BT' } | Should -Not -Throw;
+            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeToPublish" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\sd' -ImpersonationPwd 'OSzkzmdT' } | Should -Not -Throw;
         }
 
         It "Valid inputs - CompatibilityLevel < 1400 - ImpersonateServiceAccount" {

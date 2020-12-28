@@ -1,5 +1,5 @@
 <DeploymentTarget xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ddl2="http://schemas.microsoft.com/analysisservices/2003/engine/2" xmlns:ddl2_2="http://schemas.microsoft.com/analysisservices/2003/engine/2/2" xmlns:ddl100_100="http://schemas.microsoft.com/analysisservices/2008/engine/100/100" xmlns:ddl200="http://schemas.microsoft.com/analysisservices/2010/engine/200" xmlns:ddl200_200="http://schemas.microsoft.com/analysisservices/2010/engine/200/200">
-  <Database>MyCube</Database>
-  <Server>555ded22-e4c2-4658-993a-80ca20c95707</Server>
-  <ConnectionString>Data Source=555ded22-e4c2-4658-993a-80ca20c95707;Timeout=0;</ConnectionString>
+  <Database>AzureTestCube</Database>
+  <Server>asazure://uksouth.asazure.windows.net/bovi1kenobi</Server>
+  <ConnectionString>Data Source=asazure://uksouth.asazure.windows.net/bovi1kenobi;Timeout=0;User ID=john@bovi.co.uk;Password=g]H-bP)%Y5Gc;Persist Security Info=True;Impersonation Level=Impersonate;</ConnectionString>
 </DeploymentTarget>

@@ -8,74 +8,75 @@ How to: Use Azure PowerShell to create a service principal with a certificate
 BeforeAll { 
     $CurrentFolder = Split-Path -Parent $PSScriptRoot;
     $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
-    import-Module -Name $ModulePath;
-
-    function Get-PathToCubeProject {
-        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
-    }    
+    import-Module -Name $ModulePath; 
 
     function Get-AzureAsServer {
-        return "???";
+        
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+
+        $data = @{};
+        $data.PathToCubeProject = "$CurrentFolder\examples\Azure\CubeToPublish\bin\Model.asdatabase";
+        $data.AzureAsServer = "asazure://uksouth.asazure.windows.net/bovi1kenobi";
+        $data.CubeDatabase = "AzureTestCube";  
+
+        $data.UserID = "john@bovi.co.uk";
+        $data.Password = "g]H-bP)%Y5Gc";
+        [SecureString] $SecurePassword = ConvertTo-SecureString $data.Password -AsPlainText -Force;
+        [PsCredential] $data.Credential = New-Object System.Management.Automation.PSCredential($data.UserID, $SecurePassword);
+
+        return $data;
+    }
+
+
+    function Get-AzureSqlServer {
+        $data = @{};
+        $data.AzureSqlServer = "bovi1kenobi.database.windows.net,1433";
+        $data.SqlServerDatabase = 'DatabaseToPublish';
+        $data.SqlUserID = "bovi";
+        $data.SqlUserPwd = "LetMeSql!";
+        return  $data;
     }
 }
 
-Describe "Publish-Cube Integration Tests" {
+Describe "Publish-Cube Integration Tests" -Tag "Round3" {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {
-            $AsDatabasePath = Get-PathToCubeProject;
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
+            $aasData = Get-AzureAsServer;
             # Unable to obtain authentication token using the credentials provided. If your Active Directory tenant administrator has configured Multi-Factor Authentication 
             # or if your account is a Microsoft Account, please remove the user name and password from the connection string, and then retry. You should then be prompted to enter your credentials.
-            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase  } | Should -Not -Throw
-            
-
-        }
-<#
-        It "Check the cube deployed OK" {
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
-            ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should -Be $true;
+            { Publish-Cube -AsDatabasePath $aasData.PathToCubeProject -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -UserID $aasData.UserID -Password $aasData.Password } | Should -Not -Throw
         }
 
-        It "Update cube connection string with ImpersonateServiceAccount" {
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
-            ( Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount' ) | Should -Be $true;
+        It "Check the cube is deployed" {
+            $aasData = Get-AzureAsServer;
+            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -Be $true;
+        }
+
+        It "Update cube data source connection string" {
+            $aasData = Get-AzureAsServer
+            $sqlData = Get-AzureSqlServer;            
+            ( Update-TabularCubeDataSource -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential -SourceSqlServer $sqlData.AzureSqlServer -SourceSqlDatabase $sqlData.SqlServerDatabase -SqlUserID $sqlData.SqlUserID -SqlUserPwd $sqlData.SqlUserPwd -ImpersonationMode 'ImpersonateServiceAccount' ) | Should -Be $true;
         }
 
         It "Process cube should not throw" {
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
-            { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full }  | Should -Not -Throw;
+            $aasData = Get-AzureAsServer
+            { Invoke-ProcessTabularCubeDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential -RefreshType Full }  | Should -Not -Throw;
         }
-
+<#
         It "Drop cube should not throw" {
             # clean up
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
-            { Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase } | Should -Not -Throw;
+            $aasData = Get-AzureAsServer
+            { Unpublish-Cube -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential } | Should -Not -Throw;
         }
 
         It "Check the cube dropped" {
-            $ServerName = Get-AzureAsServer;
-            $CubeDatabase = "AzureTestCube";  
-            ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should -Be $false;
+            $aasData = Get-AzureAsServer
+            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -Be $false;
         }
+        
+    #>
     }
-
-    Context "Deploy Cube with ProcessFull" {
-        It "Deploy cube should throw" {
-            $CubeDatabase = New-Guid;  # this ensures we cannot fake the test result
-            $ServerName = Get-AzureAsServer;
-            { Publish-Cube -AsDatabasePath $InvalidDataSourceConnection -Server $ServerName -CubeDatabase $CubeDatabase -ProcessingOption "Full" -TransactionalDeployment true } | Should -Throw;
-            ( Ping-SsasDatabase -Server $ServerName -CubeDatabase $CubeDatabase ) | Should -Be $false;
-        }
-#>
-    }
-
 }
 
 AfterAll {

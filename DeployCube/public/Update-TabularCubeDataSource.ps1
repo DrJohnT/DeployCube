@@ -171,7 +171,7 @@ function Update-TabularCubeDataSource
             # $CompatibilityLevel -lt 1400
             $ExistingConnectionString = $rows[0].ConnectionString;
             $ConnectionString  = Get-SqlConnectionString -SourceSqlServer $SourceSqlServer -SourceSqlDatabase $SourceSqlDatabase -ExistingConnectionString $ExistingConnectionString -SqlUserID $SqlUserID -SqlUserPwd $SqlUserPwd;
-Write-Host $ConnectionString ;
+
             if ($ImpersonationMode -eq 'ImpersonateAccount') {
                 $dataSource = [pscustomobject]@{
                     name = $DataSourceName
