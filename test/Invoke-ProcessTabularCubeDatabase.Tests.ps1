@@ -56,10 +56,10 @@ Describe "Invoke-ProcessTabularCubeDatabase" -Tag "Round2" {
             $ServerName = 'localhost';
             $CubeDatabase = 'CubeWithInvalidDataSource';
             $AsDatabasePath = Get-PathToCubeProject;
-            Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase;
-            Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'NonExistantDB' -ImpersonationMode 'ImpersonateServiceAccount';
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase; } | Should -Not -Throw;
+            { Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'NonExistantDB' -ImpersonationMode 'ImpersonateServiceAccount'; } | Should -Not -Throw;
             { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full } | Should -Throw;
-            Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase;
+            { Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase; } | Should -Not -Throw;
         }
     }
 
@@ -68,10 +68,10 @@ Describe "Invoke-ProcessTabularCubeDatabase" -Tag "Round2" {
             $ServerName = 'localhost';
             $CubeDatabase = 'CubeToProcess';
             $AsDatabasePath = Get-PathToCubeProject;
-            Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase;
-            Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount';
+            { Publish-Cube -AsDatabasePath $AsDatabasePath -Server $ServerName -CubeDatabase $CubeDatabase; } | Should -Not -Throw;
+            { Update-TabularCubeDataSource -Server $ServerName -CubeDatabase $CubeDatabase -SourceSqlServer $ServerName -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'; } | Should -Not -Throw;
             { Invoke-ProcessTabularCubeDatabase -Server $ServerName -CubeDatabase $CubeDatabase -RefreshType Full } | Should -Not -Throw;
-            Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase;
+            { Unpublish-Cube -Server $ServerName -CubeDatabase $CubeDatabase; } | Should -Not -Throw;
         }
 
     }

@@ -18,14 +18,14 @@
 
 #Invoke-Pester -Script .\Integration.Tests.ps1
 
-#Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
+Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
 
 
 #Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1
 #Invoke-Pester -Script .\Ping-SsasServer.Tests.ps1
 
 #Invoke-Pester -Script .\ProcessCube.Tests.ps1
-Invoke-Pester -Script .\Publish-Cube.Tests.ps1
+#Invoke-Pester -Script .\Publish-Cube.Tests.ps1
 
 #Invoke-Pester -Script .\Select-AnalysisServicesDeploymentExeVersion.Tests.ps1
 
