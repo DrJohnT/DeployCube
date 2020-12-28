@@ -13,7 +13,7 @@ BeforeAll {
 
 
 
-Describe "Invoke-ProcessTabularCubeDatabase" {
+Describe "Invoke-ProcessTabularCubeDatabase" -Tag "Round2" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Invoke-ProcessTabularCubeDatabase).Parameters['Server'].Attributes.mandatory | Should -Be $true

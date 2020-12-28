@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Ping-SsasServer" {
+Describe "Ping-SsasServer" -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Ping-SsasServer).Parameters['Server'].Attributes.mandatory | Should -Be $true

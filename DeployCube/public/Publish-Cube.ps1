@@ -179,8 +179,11 @@ function Publish-Cube {
         Write-Verbose "Publish-Cube: Deploying cube '$CubeDatabase' to server '$Server' using AsDatabase file '$AsDatabasePath'. Processing option: $ProcessingOption";
 
         $ErrorLogPath = "$AsDatabaseFolder\AnalysisServicesDeploymentExeLog.txt";
-        $ArgList = @(
-            
+        if (Test-Path $ErrorLogPath) {
+            # remove existing log file so we don't show previous error message
+            Remove-Item $ErrorLogPath;
+        }
+        $ArgList = @(            
             "$AsDatabasePath",
             "/s:$ErrorLogPath"
         );

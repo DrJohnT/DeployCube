@@ -1,3 +1,10 @@
+<#
+Add a service principal to the server administrator role
+    https://docs.microsoft.com/en-us/azure/analysis-services/analysis-services-addservprinc-admins
+How to: Use Azure PowerShell to create a service principal with a certificate
+    https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-authenticate-service-principal-powershell
+#>
+
 BeforeAll { 
     $CurrentFolder = Split-Path -Parent $PSScriptRoot;
     $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";

@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Get-ServerMode" {
+Describe "Get-ServerMode" -Tag "Round1"  {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Get-ServerMode).Parameters['Server'].Attributes.mandatory | Should -Be $true

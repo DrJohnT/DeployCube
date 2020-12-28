@@ -19,7 +19,7 @@
     }
 }
 
-Describe "Publish-Cube" {
+Describe "Publish-Cube" -Tag "Round3" {
     Context "Testing Inputs" {
         It "Should have AsDatabasePath as a mandatory parameter" {
             (Get-Command Publish-Cube).Parameters['AsDatabasePath'].Attributes.mandatory | Should -Be $true;

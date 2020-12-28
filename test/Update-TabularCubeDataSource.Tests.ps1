@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Update-TabularCubeDataSource" {
+Describe "Update-TabularCubeDataSource" -Tag "Round2" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Update-TabularCubeDataSource).Parameters['Server'].Attributes.mandatory | Should -Be $true

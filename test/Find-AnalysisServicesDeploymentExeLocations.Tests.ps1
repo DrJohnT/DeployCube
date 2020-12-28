@@ -6,7 +6,7 @@
 }
 
 
-Describe "Find-AnalysisServicesDeploymentExeLocations" {
+Describe "Find-AnalysisServicesDeploymentExeLocations" -Tag "Round1" {
 
     It "Finds some version" {
         ( Find-AnalysisServicesDeploymentExeLocations ) | Should -Not -Be $null

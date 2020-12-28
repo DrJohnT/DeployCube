@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Get-SqlConnectionString" {
+Describe "Get-SqlConnectionString"  -Tag "Round1" {
 
     Context "Testing Inputs" {
         It "Should have SourceSqlServer as a mandatory parameter" {

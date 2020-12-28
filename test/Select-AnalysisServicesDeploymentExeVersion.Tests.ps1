@@ -4,7 +4,7 @@
     import-Module -Name $ModulePath;
 }
 
-Describe "Select-AnalysisServicesDeploymentExeVersion" {
+Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
 
     Context "Testing Inputs" {
         It "Should have PreferredVersion as a mandatory parameter" {

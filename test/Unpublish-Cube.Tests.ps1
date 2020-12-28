@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Unpublish-Cube" {
+Describe "Unpublish-Cube" -Tag "Round2" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Unpublish-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true

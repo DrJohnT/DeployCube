@@ -7,7 +7,7 @@
 
 
 
-Describe "Get-AnalysisServicesDeploymentExePath" {
+Describe "Get-AnalysisServicesDeploymentExePath"  -Tag "Round1" {
     
 
     Context "Testing Inputs" {

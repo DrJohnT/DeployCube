@@ -5,7 +5,7 @@ $PublicPath = Resolve-Path "$CurrentFolder\DeployCube\public";
 
 # How to format results https://devblogs.microsoft.com/scripting/psscriptanalyzer-deep-dive-part-3-of-4/
 
-Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' {
+Describe -Tags 'PSSA' -Name 'Checking scripts against PSScriptAnalyzer rules' -Tag "Round3" {
     Context 'PSScriptAnalyzer Standard Rules' {
 		Import-Module PSScriptAnalyzer;
         $ExcludeRules = @('PSAlignAssignmentStatement','PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions','PSAvoidUsingPlainTextForPassword');

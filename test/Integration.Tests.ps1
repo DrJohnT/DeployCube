@@ -10,7 +10,7 @@ BeforeAll {
 
 }
 
-Describe "Publish-Cube Integration Tests" {
+Describe "Publish-Cube Integration Tests" -Tag "Round3" {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {

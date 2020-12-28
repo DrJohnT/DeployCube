@@ -28,7 +28,7 @@ BeforeAll {
     }
 }
 
-Describe "Update-AnalysisServicesConfig" {
+Describe "Update-AnalysisServicesConfig" -Tag "Round2" {
     Context "Testing Inputs" {
         It "Should have AsDatabasePath as a mandatory parameter" {
             (Get-Command Update-AnalysisServicesConfig).Parameters['AsDatabasePath'].Attributes.mandatory | Should -Be $true;

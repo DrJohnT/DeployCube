@@ -4,7 +4,7 @@ BeforeAll {
     import-Module -Name $ModulePath;
 }
 
-Describe "Get-CubeDatabaseCompatibilityLevel" {
+Describe "Get-CubeDatabaseCompatibilityLevel"  -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Get-CubeDatabaseCompatibilityLevel).Parameters['Server'].Attributes.mandatory | Should -Be $true
