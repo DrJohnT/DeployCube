@@ -27,17 +27,23 @@ function Find-AnalysisServicesDeploymentExeLocations {
     try {
         [string]$ExeName = "Microsoft.AnalysisServices.Deployment.exe";
         # Get SQL Server locations
-        $AnalysisServicesDeploymentExes = @();
 
         #Up to v17 (140)
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+        [System.IO.FileSystemInfo[]]$AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         #V18 (SSMS - 150)
         $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
-
+        
         # Custom install location defined by Environment variable CustomAsDwInstallLocation
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:CustomAsDwInstallLocation}" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
-
+        $CustomAsDwInstallLocation = [Environment]::GetEnvironmentVariable('CustomAsDwInstallLocation');
+        if ("$CustomAsDwInstallLocation" -ne "") {
+            if (Test-Path $CustomAsDwInstallLocation) {
+                $AnalysisServicesDeploymentExes += Get-Childitem -Path "$CustomAsDwInstallLocation\" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+            } else {
+                throw "Invalid custom environment variable path: CustomAsDwInstallLocation";
+            }        
+        }
+        
         # list all the locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
             [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);

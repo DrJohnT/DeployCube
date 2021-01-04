@@ -2,6 +2,13 @@
     $CurrentFolder = Split-Path -Parent $PSScriptRoot;
     $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
     import-Module -Name $ModulePath;
+    function ResetEnv {
+        $value = [Environment]::GetEnvironmentVariable("CustomAsDwInstallLocation");
+        if ("$value" -ne "") {
+            Clear-Item -Path Env:CustomAsDwInstallLocation;
+        }
+    }
+    ResetEnv;
 }
 
 Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
@@ -37,13 +44,23 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
             Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 11 | Should -Not -Be 11;
         }
 
-        It "Unsupported AnalysisServicesDeploymentExe version 100 so should Throw" {
+        It "Now finds version 11" {
+            ResetEnv;
+            $ExePath = Split-Path -Parent $PSScriptRoot;
+            $ExePath = Resolve-Path "$ExePath\examples\DeploymentWizard";
+            $env:CustomAsDwInstallLocation = $ExePath;
+            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 11 | Should -Be 11;
+        }
+
+        It "Unsupported AnalysisServicesDeploymentExe version 10 so should Throw" {
             { Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 10 } | Should -Throw;
         }
 
-        It "Invalid version XXX so should throw" {
+        It "Invalid version XX so should throw" {
             { Select-AnalysisServicesDeploymentExeVersion -PreferredVersion XX } | Should -Throw;
         }
+
+
     }
 }
 

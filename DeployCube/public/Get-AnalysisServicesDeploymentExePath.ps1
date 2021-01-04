@@ -54,20 +54,27 @@ function Get-AnalysisServicesDeploymentExePath {
         [string]$Version
     )
 
-    try {
+    #try {
         $AnalysisServicesDeploymentExes = @();
 
 	    [string] $ExeName = "Microsoft.AnalysisServices.Deployment.exe";
         [string] $AnalysisServicesDeploymentExePath = $null;
         
 	    # Location SQL Server 2017 and prior
-        $AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+        [System.IO.FileSystemInfo[]]$AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
 	    # Location SQL Server 2019 and greater (i.e. installed with SSMS) 
         $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         # Custom install location defined by Environment variable CustomAsDwInstallLocation
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:CustomAsDwInstallLocation}" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+        $CustomAsDwInstallLocation = [Environment]::GetEnvironmentVariable('CustomAsDwInstallLocation');
+        if ("$CustomAsDwInstallLocation" -ne "") {
+            if (Test-Path $CustomAsDwInstallLocation) {
+                $AnalysisServicesDeploymentExes += Get-Childitem -Path "$CustomAsDwInstallLocation\" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+            } else {
+                throw "Invalid custom environment variable path: CustomAsDwInstallLocation";
+            }        
+        }
 
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
             $ExePath = $AnalysisServicesDeploymentExe.FullName;
@@ -81,10 +88,11 @@ function Get-AnalysisServicesDeploymentExePath {
             }            
         }
         
-    }
-    catch {
-        Write-Error "Get-AnalysisServicesDeploymentExePath failed with error $Error";
-    }
+    #}
+    #catch {
+    #    $ErrMsg = $PSItem.ToString();
+    #    Write-Error "Get-AnalysisServicesDeploymentExePath failed with error $ErrMsg";
+    #}
     return $AnalysisServicesDeploymentExePath;
 }
 
