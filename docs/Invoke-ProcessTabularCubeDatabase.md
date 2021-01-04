@@ -13,8 +13,8 @@ Processes an SSAS database on a SQL Server SSAS instance
 ## SYNTAX
 
 ```
-Invoke-ProcessTabularCubeDatabase [-Server] <String> [-CubeDatabase] <String> [[-RefreshType] <String>]
- [<CommonParameters>]
+Invoke-ProcessTabularCubeDatabase [-Server] <String> [-CubeDatabase] <String> [[-Credential] <PSCredential>]
+ [[-RefreshType] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -22,12 +22,15 @@ Processes an SSAS database on a SQL Server SSAS instance
 
 ## EXAMPLES
 
-### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
+### EXAMPLE 1
+```
+Invoke-ProcessTabularCubeDatabase -Server "localhost" -CubeDatabase "MyCube" -RefreshType "Full"
 ```
 
-{{ Add example description here }}
+### EXAMPLE 2
+```
+Invoke-ProcessTabularCubeDatabase -Server "localhost" -CubeDatabase "MyCube2" -Credential "MyPsCredential" -RefreshType "Automatic"
+```
 
 ## PARAMETERS
 
@@ -61,6 +64,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Credential
+\[Optional\] A PSCredential object containing the credentials to connect to the AAS server.
+
+```yaml
+Type: PSCredential
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -RefreshType
 Valid options are: 'Full', 'Automatic', 'ClearValues', 'Calculate'.
 Default value: 'Full'.
@@ -77,7 +95,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 3
+Position: 4
 Default value: Full
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -92,7 +110,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

@@ -14,7 +14,7 @@ Updates a connection strings to source SQL databases with new server and databas
 
 ```
 Get-SqlConnectionString [-SourceSqlServer] <String> [-SourceSqlDatabase] <String>
- [-ExistingConnectionString] <String> [<CommonParameters>]
+ [-ExistingConnectionString] <String> [[-SqlUserID] <String>] [[-SqlUserPwd] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -77,6 +77,36 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -SqlUserID
+$SqlUserID
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 4
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -SqlUserPwd
+{{ Fill SqlUserPwd Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 5
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -87,7 +117,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### System.String
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

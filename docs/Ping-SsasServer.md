@@ -8,6 +8,7 @@ schema: 2.0.0
 # Ping-SsasServer
 
 ## SYNOPSIS
+For on-premise SSAS instances only!
 Checks that the SQL Server SSAS instance exists.
 
 ## SYNTAX
@@ -17,6 +18,7 @@ Ping-SsasServer [-Server] <String> [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+For on-premise SSAS instances only!
 Checks that the SQL Server SSAS instance exists.
 
 ## EXAMPLES
@@ -55,7 +57,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### System.Boolean
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

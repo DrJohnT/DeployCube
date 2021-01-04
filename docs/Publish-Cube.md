@@ -16,7 +16,8 @@ Publish-Cube deploys a tabular or multidimentional cube to a SQL Server Analysis
 Publish-Cube [-AsDatabasePath] <String> [-Server] <String> [-CubeDatabase] <String>
  [[-PreferredVersion] <String>] [[-ProcessingOption] <String>] [[-TransactionalDeployment] <Boolean>]
  [[-PartitionDeployment] <String>] [[-RoleDeployment] <String>] [[-ConfigurationSettingsDeployment] <String>]
- [[-OptimizationSettingsDeployment] <String>] [[-WriteBackTableCreation] <String>] [<CommonParameters>]
+ [[-OptimizationSettingsDeployment] <String>] [[-WriteBackTableCreation] <String>] [[-UserID] <String>]
+ [[-Password] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -230,6 +231,36 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -UserID
+\[Optional\] The user name used to connect to the AAS server.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 12
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Password
+\[Optional\] The password of the above user (in plain text unfortunately).
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 13
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -239,7 +270,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

@@ -13,9 +13,10 @@ Updates the tabular cube's connection to the source SQL database.
 ## SYNTAX
 
 ```
-Update-TabularCubeDataSource [-Server] <String> [-CubeDatabase] <String> [-SourceSqlServer] <String>
- [-SourceSqlDatabase] <String> [-ImpersonationMode] <String> [[-ImpersonationAccount] <String>]
- [[-ImpersonationPassword] <String>] [<CommonParameters>]
+Update-TabularCubeDataSource [-Server] <String> [-CubeDatabase] <String> [[-Credential] <PSCredential>]
+ [-SourceSqlServer] <String> [-SourceSqlDatabase] <String> [[-SqlUserID] <String>] [[-SqlUserPwd] <String>]
+ [-ImpersonationMode] <String> [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -63,6 +64,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Credential
+\[Optional\] A PSCredential object containing the credentials to connect to the AAS server.
+
+```yaml
+Type: PSCredential
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -SourceSqlServer
 The name of the source SQL Server server or its IP address. 
 Include the instance name and port if necessary.
@@ -73,7 +89,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 3
+Position: 4
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -88,7 +104,37 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 4
+Position: 5
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -SqlUserID
+{{ Fill SqlUserID Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 6
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -SqlUserPwd
+{{ Fill SqlUserPwd Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 7
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -106,7 +152,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: True
-Position: 5
+Position: 8
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -122,13 +168,13 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 6
+Position: 9
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ImpersonationPassword
+### -ImpersonationPwd
 The password of the account that will be used to connect to the SQL Server database. 
 Required for ImpersonationMode='ImpersonateAccount'.
 
@@ -138,7 +184,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 7
+Position: 10
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -154,7 +200,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### Returns true if the cube's data source was updated successfully.
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

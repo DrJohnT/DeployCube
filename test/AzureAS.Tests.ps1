@@ -11,10 +11,18 @@ BeforeAll {
     import-Module -Name $ModulePath; 
 
     function Get-AzureAsServer {
-
+        
         $data = @{};
+
+        if ("" -eq "$Env:AzureAsServer")
+        {
+            throw "AzureAsServer environment variable is not set!";
+            return $data;
+        }
+        
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
         $data.PathToCubeProject = "$CurrentFolder\examples\Azure\CubeToPublish\bin\Model.asdatabase";
+        
         $data.AzureAsServer = $Env:AzureAsServer;
         $data.CubeDatabase = "AzureTestCube";  
 
@@ -30,6 +38,12 @@ BeforeAll {
     function Get-AzureSqlServer {
 
         $data = @{};
+
+        if ("" -eq "$Env:AzureSqlServer")
+        {
+            throw "AzureSqlServer environment variable is not set!";
+            return $data;
+        }
         $data.AzureSqlServer = $Env:AzureSqlServer;
         $data.SqlServerDatabase = 'DatabaseToPublish';
         $data.SqlUserID = $Env:AzureSqlUserID;

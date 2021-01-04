@@ -23,11 +23,17 @@ function Invoke-ProcessTabularCubeDatabase {
     'ClearValues': Clear values in this object and all its dependents.
     'Calculate': Recalculate this object and all its dependents, but only if needed. This value does not force recalculation, except for volatile formulas.
 
+    .EXAMPLE
+    Invoke-ProcessTabularCubeDatabase -Server "localhost" -CubeDatabase "MyCube" -RefreshType "Full"
+
+    .EXAMPLE
+    Invoke-ProcessTabularCubeDatabase -Server "localhost" -CubeDatabase "MyCube2" -Credential "MyPsCredential" -RefreshType "Automatic"
+
     .LINK
     https://github.com/DrJohnT/DeployCube
 
     .NOTES
-    Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+    Written by (c) Dr. John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
     This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 #>
     [CmdletBinding()]

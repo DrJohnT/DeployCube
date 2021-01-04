@@ -17,7 +17,8 @@ Find-AnalysisServicesDeploymentExeLocations
 ```
 
 ## DESCRIPTION
-Finds and lists the location path to every version of Microsoft.AnalysisServices.Deployment.exe on the machine
+Finds and lists the location path to every version of Microsoft.AnalysisServices.Deployment.exe on the machine.
+Also checks the custom install location defined by Environment variable CustomAsDwInstallLocation
 
 ## EXAMPLES
 
@@ -36,7 +37,7 @@ Find-AnalysisServicesDeploymentExeLocations
 ### Output is written to standard output.
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS

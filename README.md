@@ -1,6 +1,5 @@
 [![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/DeployCube.svg)](https://www.powershellgallery.com/packages/DeployCube)
-[![Build Status](https://qatar-re.visualstudio.com/QatarRe.BI/_apis/build/status/Test%20and%20Publish%20Package%20DeployCube?branchName=master)](https://qatar-re.visualstudio.com/QatarRe.BI/_build/latest?definitionId=58&branchName=master)
-
+[![Build status](https://dev.azure.com/drjohnt/DeployCube/_apis/build/status/DeployCube-CI)](https://dev.azure.com/drjohnt/DeployCube/_build/latest?definitionId=5)
 
 ### DeployCube
 
@@ -8,7 +7,7 @@
 
 ## Overview
 
-**Publish-Cube** allows you to deploy a tabular or multidimensional cube to a SQL Server Analysis Services instance.  Behind the scenes it uses the
+**Publish-Cube** allows you to deploy a tabular or multidimensional cube to an Analysis Services instance either on-premise or in Azure.  Behind the scenes it uses the
 [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility)
 in silent mode.
 **Publish-Cube** simplifies the use of [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility)
@@ -42,9 +41,11 @@ Microsoft.AnalysisServices.Deployment.exe is known as the [Analysis Services Dep
 
 The module also requires the Microsoft SQL Server PowerShell module **SqlServer** which is installed automatically.
 
+Custom install directories for Microsoft.AnalysisServices.Deployment.exe are now supported.  Please set the environment variable CustomAsDwInstallLocation prior to running any functions.
+
 ### Admin privileges required for deployment
 
-In order to successfully deploy a tabular cube, the process running **Publish-Cube** needs to run under a service account that has admin privileges on your target SQL Server Analysis Services instance.
+In order to successfully deploy a tabular cube, the process running **Publish-Cube** needs to run under a service account that has admin privileges on your target Azure Analysis Services or SSAS instance.  If you wish to use a specific Windows account, all of the relevant functions have UserID / Password parameters.
 
 ## Getting Started
 

@@ -9,6 +9,7 @@ function Select-AnalysisServicesDeploymentExeVersion {
     .PARAMETER PreferredVersion
     The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find.
     Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows:
+    
     * latest: Latest SQL Server version found on agent
     * 15: SQL Server 2019
     * 14: SQL Server 2017
@@ -16,8 +17,17 @@ function Select-AnalysisServicesDeploymentExeVersion {
     * 12: SQL Server 2014
     * 11: SQL Server 2012
 
+    If you are unsure which version(s) of Microsoft.AnalysisServices.Deployment.exe you have installed, use the function [Find-AnalysisServicesDeploymentExeLocations](https://github.com/DrJohnT/DeployCube/blob/master/docs/Find-AnalysisServicesDeploymentExeLocations.md) to obtain a full list.
+
     .EXAMPLE
-    Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 140;
+    Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest;
+
+    Returns the latest version of Microsoft.AnalysisServices.Deployment.exe found on the machine.
+
+    .EXAMPLE
+    Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 14;
+
+    Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe (if present on the machine).
 
     .OUTPUTS
     Returns a string containing the version found, if the preferred version could not be found.
@@ -26,7 +36,7 @@ function Select-AnalysisServicesDeploymentExeVersion {
     https://github.com/DrJohnT/DeployCube
 
     .NOTES
-    Written by (c) Dr. John Tunnicliffe, 2019 https://github.com/DrJohnT/DeployCube
+    Written by (c) Dr. John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
     This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 #>
     [OutputType([string])]
