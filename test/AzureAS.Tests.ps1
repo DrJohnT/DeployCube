@@ -11,16 +11,15 @@ BeforeAll {
     import-Module -Name $ModulePath; 
 
     function Get-AzureAsServer {
-        
-        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
 
         $data = @{};
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
         $data.PathToCubeProject = "$CurrentFolder\examples\Azure\CubeToPublish\bin\Model.asdatabase";
-        $data.AzureAsServer = "asazure://uksouth.asazure.windows.net/xxx";
+        $data.AzureAsServer = $Env:AzureAsServer;
         $data.CubeDatabase = "AzureTestCube";  
 
-        $data.UserID = "xxx";
-        $data.Password = "xxx";
+        $data.UserID = $Env:AzureAsUserID;
+        $data.Password = $Env:AzureAsPassword;
         [SecureString] $SecurePassword = ConvertTo-SecureString $data.Password -AsPlainText -Force;
         [PsCredential] $data.Credential = New-Object System.Management.Automation.PSCredential($data.UserID, $SecurePassword);
 
@@ -29,16 +28,18 @@ BeforeAll {
 
 
     function Get-AzureSqlServer {
+
         $data = @{};
-        $data.AzureSqlServer = "xxx.database.windows.net,1433";
+        $data.AzureSqlServer = $Env:AzureSqlServer;
         $data.SqlServerDatabase = 'DatabaseToPublish';
-        $data.SqlUserID = "XXX";
-        $data.SqlUserPwd = "XXX!";
+        $data.SqlUserID = $Env:AzureSqlUserID;
+        $data.SqlUserPwd = $Env:AzureSqlPassword;
+
         return  $data;
     }
 }
 
-Describe "Publish-Cube Integration Tests" -Tag "Ignore" {
+Describe "Publish-Cube Integration Tests" -Tag "Azure" {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {
@@ -65,7 +66,6 @@ Describe "Publish-Cube Integration Tests" -Tag "Ignore" {
         }
 
         It "Drop cube should not throw" {
-            # clean up
             $aasData = Get-AzureAsServer
             { Unpublish-Cube -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential } | Should -Not -Throw;
         }

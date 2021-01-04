@@ -1,7 +1,15 @@
-﻿
-#Invoke-Pester -Tag "Round1";
-#Invoke-Pester -Tag "Round2";
-#Invoke-Pester -Tag "Round3";
+﻿$Env:AzureAsServer    = "asazure://uksouth.asazure.windows.net/xxx";
+$Env:AzureAsUserID    = "xxx";
+$Env:AzureAsPassword  = "xxx";
+
+$Env:AzureSqlServer   = "xxx.database.windows.net,1433";
+$Env:AzureSqlUserID   = "xxx";
+$Env:AzureSqlPassword = "xxx";
+
+Invoke-Pester -Tag "Round1";
+Invoke-Pester -Tag "Round2";
+Invoke-Pester -Tag "Round3";
+#Invoke-Pester -Tag "Azure";
 
 #Invoke-Pester -Script .\AnalyzePSScripts.Tests.ps1
 
@@ -22,7 +30,7 @@
 #Invoke-Pester -Script .\Invoke-ProcessTabularCubeDatabase.Tests.ps1
 
 
-Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1
+#Invoke-Pester -Script .\Ping-SsasDatabase.Tests.ps1
 #Invoke-Pester -Script .\Ping-SsasServer.Tests.ps1
 
 #Invoke-Pester -Script .\ProcessCube.Tests.ps1
