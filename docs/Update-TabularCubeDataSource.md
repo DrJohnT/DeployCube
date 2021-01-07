@@ -14,9 +14,8 @@ Updates the tabular cube's connection to the source SQL database.
 
 ```
 Update-TabularCubeDataSource [-Server] <String> [-CubeDatabase] <String> [[-Credential] <PSCredential>]
- [-SourceSqlServer] <String> [-SourceSqlDatabase] <String> [[-SqlUserID] <String>] [[-SqlUserPwd] <String>]
- [-ImpersonationMode] <String> [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>]
- [<CommonParameters>]
+ [-SourceSqlServer] <String> [-SourceSqlDatabase] <String> [-ImpersonationMode] <String>
+ [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -65,7 +64,7 @@ Accept wildcard characters: False
 ```
 
 ### -Credential
-\[Optional\] A PSCredential object containing the credentials to connect to the AAS server.
+A PSCredential object containing the credentials to connect to the AAS server.
 
 ```yaml
 Type: PSCredential
@@ -110,36 +109,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -SqlUserID
-{{ Fill SqlUserID Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 6
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -SqlUserPwd
-{{ Fill SqlUserPwd Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 7
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ImpersonationMode
 Defines how the cube will connect to the data source.
 Possible options are 'ImpersonateServiceAccount' which connects to the SQL Server database using ,
@@ -149,10 +118,10 @@ When using 'ImpersonateAccount' it is best to use a domain based service account
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: AuthenticationKind
 
 Required: True
-Position: 8
+Position: 6
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -168,7 +137,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 9
+Position: 7
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -181,10 +150,10 @@ Required for ImpersonationMode='ImpersonateAccount'.
 ```yaml
 Type: String
 Parameter Sets: (All)
-Aliases:
+Aliases: ImpersonationPassword
 
 Required: False
-Position: 10
+Position: 8
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False

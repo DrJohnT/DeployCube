@@ -88,10 +88,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## NOTES
 Written by (c) Dr.
-John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
+John Tunnicliffe, 2019-2021 
 This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 
 ## RELATED LINKS
-
-[https://github.com/DrJohnT/DeployCube](https://github.com/DrJohnT/DeployCube)
-
