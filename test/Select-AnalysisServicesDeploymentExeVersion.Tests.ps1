@@ -15,7 +15,7 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
 
     Context "Testing Inputs" {
         It "Should have PreferredVersion as a mandatory parameter" {
-            (Get-Command Select-AnalysisServicesDeploymentExeVersion).Parameters['PreferredVersion'].Attributes.mandatory | Should -Be $true
+            (Get-Command Select-AnalysisServicesDeploymentExeVersion).Parameters['PreferredVersion'].Attributes.mandatory | Should -BeTrue;
         }
     }
 
@@ -47,7 +47,7 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
         It "Now finds version 11" {
             ResetEnv;
             $ExePath = Split-Path -Parent $PSScriptRoot;
-            $ExePath = Resolve-Path "$ExePath\examples\DeploymentWizard";
+            $ExePath = Resolve-Path "$ExePath\examples\ForTests\DeploymentWizard";
             $env:CustomAsDwInstallLocation = $ExePath;
             Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 11 | Should -Be 11;
         }

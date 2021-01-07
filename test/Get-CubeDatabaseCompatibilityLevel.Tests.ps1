@@ -7,10 +7,10 @@ BeforeAll {
 Describe "Get-CubeDatabaseCompatibilityLevel"  -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Get-CubeDatabaseCompatibilityLevel).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Get-CubeDatabaseCompatibilityLevel).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as a mandatory parameter" {
-            (Get-Command Get-CubeDatabaseCompatibilityLevel).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
+            (Get-Command Get-CubeDatabaseCompatibilityLevel).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Get-CubeDatabaseCompatibilityLevel -Server "" -CubeDatabase "master" } | Should -Throw;
@@ -40,7 +40,7 @@ Describe "Get-CubeDatabaseCompatibilityLevel"  -Tag "Round1" {
     Context "Valid Inputs" {
 
         It "Valid server and cube CompatibilityLevel=1200" {
-            ( Get-CubeDatabaseCompatibilityLevel -Server "localhost" -CubeDatabase "CubeToPublish" ) | Should -Be 1200;
+            ( Get-CubeDatabaseCompatibilityLevel -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" ) | Should -Be 1200;
         }
     }
 }

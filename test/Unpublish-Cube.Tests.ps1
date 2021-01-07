@@ -7,10 +7,10 @@ BeforeAll {
 Describe "Unpublish-Cube" -Tag "Round2" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Unpublish-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Unpublish-Cube).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as a mandatory parameter" {
-            (Get-Command Unpublish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
+            (Get-Command Unpublish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Unpublish-Cube -Server ""  -CubeDatabase "master" } | Should -Throw;
@@ -28,10 +28,10 @@ Describe "Unpublish-Cube" -Tag "Round2" {
 
     Context "Testing Inputs for Alias Drop-Cube" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Drop-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Drop-Cube).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as a mandatory parameter" {
-            (Get-Command Drop-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
+            (Get-Command Drop-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Drop-Cube -Server ""  -CubeDatabase "master" } | Should -Throw;
@@ -49,7 +49,7 @@ Describe "Unpublish-Cube" -Tag "Round2" {
 
     Context "Main Tests" {
         It "Invalid server" {
-            { Unpublish-Cube -Server "InvalidServer" -CubeDatabase "CubeToPublish" } | Should -Throw;
+            { Unpublish-Cube -Server "InvalidServer" -CubeDatabase "CubeAtCompatibility1200" } | Should -Throw;
         }
 
         It "Valid server and invalid database" {

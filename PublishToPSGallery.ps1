@@ -8,6 +8,7 @@ $VerbosePreference = 'Continue';
 $ErrorActionPreference = 'Stop';
 $baseDir = $PSScriptRoot;
 
+.\UpdateHelp.ps1
 
 try {
     $buildDir = "$baseDir\DeployCube";

@@ -7,10 +7,10 @@ BeforeAll {
 Describe "Get-SqlAsPath"  -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Get-SqlAsPath).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Get-SqlAsPath).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as a mandatory parameter" {
-            (Get-Command Get-SqlAsPath).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
+            (Get-Command Get-SqlAsPath).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Get-SqlAsPath -Server "" -CubeDatabase MyCube } | Should -Throw;

@@ -1,6 +1,5 @@
 [![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/DeployCube.svg)](https://www.powershellgallery.com/packages/DeployCube)
 [![Build status](https://dev.azure.com/drjohnt/DeployCube/_apis/build/status/DeployCube-CI)](https://dev.azure.com/drjohnt/DeployCube/_build/latest?definitionId=5)
-
 ### DeployCube
 
 # Deploy a SSAS Tabular or Multidimensional cube using the Analysis Services Deployment Utility
@@ -19,7 +18,7 @@ When you perform a **build** of a Visual Studio cube project, it creates an **As
 To automate the build and deployment of tabular cube in Azure DevOps, you can use MsBuild to create AsDatabase from your Visual Studio solution.  You can then add a PowerShell task which uses **Publish-Cube** to invoke [Analysis Services Deployment Utility](https://docs.microsoft.com/en-us/sql/analysis-services/multidimensional-models/deploy-model-solutions-with-the-deployment-utility) to deploy each AsDatabase.
 For Multidimensional models you will have to use DevEnv.com (Visual Studio) to generate the AsDatabase file.
 
-**Publish-Cube** can also be used to automate the deployment of cubes as part of a server deployment using [Azure DevOps] pipelines or other tools such as [Octopus Deploy](https://octopus.com/) or Azure DevOps Release Manager.
+**Publish-Cube** can also be used to automate the deployment of cubes as part of a server deployment using tools such as [Octopus Deploy](https://octopus.com/) or [Azure DevOps Release Manager](https://dev.azure.com/).
 
 ## Installation
 
@@ -105,7 +104,7 @@ For CI senarios, **Publish-Cube** has been packaged as an extension for Azure Pi
 
 ## Example Tabular Model
 
-An example tabular model is provided as a Visual Studio solution alongside a SQL database which acts as the cubes source.  Th
+An example tabular model is provided as a Visual Studio solution alongside a SQL database which acts as the cubes source.  The
 DACPAC is provided in the .\example folder.  You can use this to test that deployments work correctly.  Note that the SSDT Visual Studio solution is configured to deploy to SQL Server 2016.  Open the Visual Studio solution and change the target version and rebuild the solution if you have a different version of SQL Server installed.
 
 ## Issue Reporting

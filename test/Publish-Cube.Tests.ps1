@@ -5,72 +5,77 @@
 
     function Get-PathToCubeProject {
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
+        return Resolve-Path "$CurrentFolder\examples\CubeAtCompatibility1200\bin\Model.asdatabase";
+    }
+
+    function Get-PathToCubeProject1500 {
+        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
+        return Resolve-Path "$CurrentFolder\examples\CubeAtCompatibility1500\bin\Model.asdatabase";
     }
 
     function Get-MissingDeploymentTargets {
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentTargets\Model.asdatabase";
+        return Resolve-Path "$CurrentFolder\examples\ForTests\MissingDeploymentTargets\Model.asdatabase";
     }
 
     function Get-MissingDeploymentOptions {
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\ForTests\MissingDeploymentOptions\Model.asdatabase";
+        return Resolve-Path "$CurrentFolder\examples\ForTests\MissingDeploymentOptions\Model.asdatabase";
     }
 }
 
 Describe "Publish-Cube" -Tag "Round3" {
     Context "Testing Inputs" {
         It "Should have AsDatabasePath as a mandatory parameter" {
-            (Get-Command Publish-Cube).Parameters['AsDatabasePath'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Publish-Cube).Parameters['AsDatabasePath'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Publish-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Publish-Cube).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as an mandatory parameter" {
-            (Get-Command Publish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Publish-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have PreferredVersion as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have ProcessingOption as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have TransactionalDeployment as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['TransactionalDeployment'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['TransactionalDeployment'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have PartitionDeployment as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['PartitionDeployment'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['PartitionDeployment'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have RoleDeployment as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['RoleDeployment'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['RoleDeployment'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have ConfigurationSettingsDeployment as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['ConfigurationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['ConfigurationSettingsDeployment'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have OptimizationSettingsDeployment as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['OptimizationSettingsDeployment'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['OptimizationSettingsDeployment'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have WriteBackTableCreation as an optional parameter" {
-            (Get-Command Publish-Cube).Parameters['WriteBackTableCreation'].Attributes.mandatory | Should -Be $false;
+            (Get-Command Publish-Cube).Parameters['WriteBackTableCreation'].Attributes.mandatory | Should -BeFalse;
         }
     }
 
     Context "Testing Inputs for alias Deploy-Cube" {
         It "Should have AsDatabasePath as a mandatory parameter" {
-            (Get-Alias Deploy-Cube).Parameters['AsDatabasePath'].Attributes.mandatory | Should -Be $true;
+            (Get-Alias Deploy-Cube).Parameters['AsDatabasePath'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have Server as a mandatory parameter" {
-            (Get-Alias Deploy-Cube).Parameters['Server'].Attributes.mandatory | Should -Be $true;
+            (Get-Alias Deploy-Cube).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as an mandatory parameter" {
-            (Get-Alias Deploy-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true;
+            (Get-Alias Deploy-Cube).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have PreferredVersion as an optional parameter" {
-            (Get-Alias Deploy-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -Be $false;
+            (Get-Alias Deploy-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -BeFalse;
         }
         It "Should have ProcessingOption as an optional parameter" {
-            (Get-Alias Deploy-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -Be $false;
+            (Get-Alias Deploy-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -BeFalse;
         }
 
     }
@@ -191,11 +196,20 @@ Describe "Publish-Cube" -Tag "Round3" {
     }
 
     Context "Valid parameters so deploy" {
-        It "Valid parameters so deploy a cube and test it is present" {
+        It "Valid parameters so deploy 1200 cube and test it is present" {
             $CubeDatabase = New-Guid;  # this ensures we cannot fake the test result
             $AsDatabasePath = Get-PathToCubeProject;
             Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase $CubeDatabase;
-            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase $CubeDatabase ) | Should -Be $true;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase $CubeDatabase ) | Should -BeTrue;
+            # clean up
+            Unpublish-Cube -Server "localhost" -CubeDatabase $CubeDatabase;
+        }
+
+        It "Valid parameters so deploy 1500 cube and test it is present" {
+            $CubeDatabase = New-Guid;  # this ensures we cannot fake the test result
+            $AsDatabasePath = Get-PathToCubeProject1500;
+            Publish-Cube -AsDatabasePath $AsDatabasePath -Server "localhost" -CubeDatabase $CubeDatabase;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase $CubeDatabase ) | Should -BeTrue;
             # clean up
             Unpublish-Cube -Server "localhost" -CubeDatabase $CubeDatabase;
         }
@@ -203,5 +217,5 @@ Describe "Publish-Cube" -Tag "Round3" {
 }
 
 AfterAll {
-    Remove-Module -Name DeployCube
+    Remove-Module -Name DeployCube;
 }

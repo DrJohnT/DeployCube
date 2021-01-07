@@ -7,10 +7,10 @@ BeforeAll {
 Describe "Ping-SsasDatabase" -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Ping-SsasDatabase).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Ping-SsasDatabase).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have CubeDatabase as a mandatory parameter" {
-            (Get-Command Ping-SsasDatabase).Parameters['CubeDatabase'].Attributes.mandatory | Should -Be $true
+            (Get-Command Ping-SsasDatabase).Parameters['CubeDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Ping-SsasDatabase -Server "" -CubeDatabase "master" } | Should -Throw;
@@ -28,15 +28,15 @@ Describe "Ping-SsasDatabase" -Tag "Round1" {
 
     Context "Main Tests" {
         It "Invalid server" {
-            { Ping-SsasDatabase -Server "InvalidServer" -CubeDatabase "CubeToPublish" } | Should -Throw;
+            { Ping-SsasDatabase -Server "InvalidServer" -CubeDatabase "CubeAtCompatibility1200" } | Should -Throw;
         }
 
         It "Valid server and invalid database" {
-            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "InvalidDatabase" ) | Should -Be $false;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "InvalidDatabase" ) | Should -BeFalse;
         }
 
         It "Valid server and database" {
-            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeToPublish" ) | Should -Be $true;
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" ) | Should -BeTrue;
         }
     }
 }

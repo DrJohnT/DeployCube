@@ -5,7 +5,7 @@
 
     function Get-PathToCubeProject {
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        return Resolve-Path "$CurrentFolder\examples\CubeToPublish\MyTabularProject\bin\Model.asdatabase";
+        return Resolve-Path "$CurrentFolder\examples\CubeAtCompatibility1200\bin\Model.asdatabase";
     }
 }
 

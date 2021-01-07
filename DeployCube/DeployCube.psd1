@@ -27,7 +27,7 @@ CompanyName = 'Decision Analytics'
 Copyright = '(c) 2019-2021 Dr. John Tunnicliffe. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Provides utilities to help you deploy your Analysis Services cube to Azure or your on-premise servers.  Supports both Tabular and Multidimensional projects.  Full documentation can be found on the [project site](https://github.com/DrJohnT/DeployCube)'
+Description = 'Provides utilities to help you deploy your Analysis Services cube to Azure or your on-premise servers.  Supports both Tabular and Multidimensional projects.  Full documentation can be found on the project site https://github.com/DrJohnT/DeployCube'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '5.0'

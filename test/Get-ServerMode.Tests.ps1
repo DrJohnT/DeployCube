@@ -7,7 +7,7 @@ BeforeAll {
 Describe "Get-ServerMode" -Tag "Round1"  {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Get-ServerMode).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Get-ServerMode).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Get-ServerMode -Server "" } | Should -Throw;

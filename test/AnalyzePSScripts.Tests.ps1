@@ -1,13 +1,13 @@
-﻿$CurrentFolder = Split-Path -Parent $PSScriptRoot;
-$PublicPath = Resolve-Path "$CurrentFolder\DeployCube\public";
+﻿# How to format results https://devblogs.microsoft.com/scripting/psscriptanalyzer-deep-dive-part-3-of-4/
 
 #region PSScriptAnalyzer Testing
-
-# How to format results https://devblogs.microsoft.com/scripting/psscriptanalyzer-deep-dive-part-3-of-4/
-
 Describe 'Checking scripts against PSScriptAnalyzer rules' -Tag "Round1" {
     Context 'PSScriptAnalyzer Standard Rules' {
 		Import-Module PSScriptAnalyzer;
+
+		$CurrentFolder = Split-Path -Parent $PSScriptRoot;
+		$PublicPath = Resolve-Path "$CurrentFolder\DeployCube\public";
+
         $ExcludeRules = @('PSAlignAssignmentStatement','PSUseSingularNouns','PSUseApprovedVerbs','PSUseShouldProcessForStateChangingFunctions','PSAvoidUsingPlainTextForPassword');
 
 		$includeScripts = Get-ChildItem "$PublicPath" -Recurse -Include *.ps1 -Exclude *Tests.ps1;

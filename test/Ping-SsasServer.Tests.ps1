@@ -7,7 +7,7 @@ BeforeAll {
 Describe "Ping-SsasServer" -Tag "Round1" {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
-            (Get-Command Ping-SsasServer).Parameters['Server'].Attributes.mandatory | Should -Be $true
+            (Get-Command Ping-SsasServer).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
         }
         It "Empty server" {
             { Ping-SsasServer -Server "" } | Should -Throw;
@@ -20,11 +20,11 @@ Describe "Ping-SsasServer" -Tag "Round1" {
 
     Context "Checking Inputs" {
         It "Invalid server" {
-            ( Ping-SsasServer -Server "InvalidServer" ) | Should -Be $false;
+            ( Ping-SsasServer -Server "InvalidServer" ) | Should -BeFalse;
         }
 
         It "Valid server" {
-            ( Ping-SsasServer -Server "localhost" ) | Should -Be $true;
+            ( Ping-SsasServer -Server "localhost" ) | Should -BeTrue;
         }
 
         It "Azure servers are unsupported by Ping-SsasServer" {

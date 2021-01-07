@@ -21,11 +21,8 @@ function Invoke-ExternalCommand {
     Invokes bcp (SQL Bulk Copy) with the parameters stored in $myStringArray.
     Note that the above will only work if bcp.exe is in your PATH.  Otherwise, use the full path to bcp.exe
 
-    .LINK
-    https://github.com/DrJohnT/DeployCube
-
     .NOTES
-    Written by (c) Dr. John Tunnicliffe, 2019-2021 https://github.com/DrJohnT/DeployCube
+    Written by (c) Dr. John Tunnicliffe, 2019-2021 
     This PowerShell script is released under the MIT license http://www.opensource.org/licenses/MIT
 #>
     [CmdletBinding()]

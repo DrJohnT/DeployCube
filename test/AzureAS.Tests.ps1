@@ -21,7 +21,7 @@ BeforeAll {
         }
         
         $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        $data.PathToCubeProject = "$CurrentFolder\examples\Azure\CubeToPublish\bin\Model.asdatabase";
+        $data.PathToCubeProject = "$CurrentFolder\examples\CubeAtCompatibility1500\bin\Model.asdatabase";
         
         $data.AzureAsServer = $Env:AzureAsServer;
         $data.CubeDatabase = "AzureTestCube";  
@@ -53,7 +53,7 @@ BeforeAll {
     }
 }
 
-Describe "Publish-Cube Integration Tests" -Tag "Azure" {
+Describe "Azure AS Integration Tests" -Tag "Azure" {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {
@@ -65,13 +65,13 @@ Describe "Publish-Cube Integration Tests" -Tag "Azure" {
 
         It "Check the cube is deployed" {
             $aasData = Get-AzureAsServer;
-            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -Be $true;
+            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -BeTrue;
         }
 
         It "Update cube data source connection string" {
             $aasData = Get-AzureAsServer
             $sqlData = Get-AzureSqlServer;            
-            ( Update-TabularCubeDataSource -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential -SourceSqlServer $sqlData.AzureSqlServer -SourceSqlDatabase $sqlData.SqlServerDatabase -SqlUserID $sqlData.SqlUserID -SqlUserPwd $sqlData.SqlUserPwd -ImpersonationMode 'ImpersonateServiceAccount' ) | Should -Be $true;
+            ( Update-TabularCubeDataSource -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential -SourceSqlServer $sqlData.AzureSqlServer -SourceSqlDatabase $sqlData.SqlServerDatabase -ImpersonationMode 'UsernamePassword' -ImpersonationAccount $sqlData.SqlUserID -ImpersonationPassword $sqlData.SqlUserPwd )[1] | Should -BeTrue;
         }
 
         It "Process cube should not throw" {
@@ -86,7 +86,7 @@ Describe "Publish-Cube Integration Tests" -Tag "Azure" {
 
         It "Check the cube dropped" {
             $aasData = Get-AzureAsServer
-            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -Be $false;
+            ( Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential ) | Should -BeFalse;
         }
         
 

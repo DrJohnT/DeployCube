@@ -8,13 +8,13 @@ Describe "Get-SqlConnectionString"  -Tag "Round1" {
 
     Context "Testing Inputs" {
         It "Should have SourceSqlServer as a mandatory parameter" {
-            (Get-Command Get-SqlConnectionString).Parameters['SourceSqlServer'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Get-SqlConnectionString).Parameters['SourceSqlServer'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have SourceSqlDatabase as a mandatory parameter" {
-            (Get-Command Get-SqlConnectionString).Parameters['SourceSqlDatabase'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Get-SqlConnectionString).Parameters['SourceSqlDatabase'].Attributes.mandatory | Should -BeTrue;
         }
         It "Should have ExistingConnectionString as an mandatory parameter" {
-            (Get-Command Get-SqlConnectionString).Parameters['ExistingConnectionString'].Attributes.mandatory | Should -Be $true;
+            (Get-Command Get-SqlConnectionString).Parameters['ExistingConnectionString'].Attributes.mandatory | Should -BeTrue;
         }
 
     }
