@@ -9,18 +9,14 @@
 *.layout
 *.jfm
 *.settings
+*.vs
 examples/ForTests/ExampleXMLA/*
 !examples/ForTests/DeploymentWizard/Microsoft.AnalysisServices.Deployment.exe
-examples/.vs/*
-examples/DatabaseToPublish/.vs/*
 examples/DatabaseToPublish/bin/*
 examples/DatabaseToPublish/obj/*
 examples/CubeAtCompatibility1200/bin/*
 examples/CubeAtCompatibility1200/obj/*
 examples/CubeAtCompatibility1500/bin/*
 examples/CubeAtCompatibility1500/obj/*
-/examples/Azure/CubeToPublish/bin/*
-/examples/Azure/CubeToPublish/obj/*
-/examples/Azure/DatabaseToPublish/obj/*
-/examples/Azure/DatabaseToPublish/bin/*
+
 

@@ -9,7 +9,7 @@
     }
 }
 
-Describe "ProcessCube" -Tag "Round3" {
+Describe "Process-Cube" -Tag "Round3" {
     Context "Publish and Process Cube" {
         It "Publish and Process Cube" {
             $Server = 'localhost';
