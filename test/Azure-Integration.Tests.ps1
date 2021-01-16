@@ -24,7 +24,7 @@ BeforeAll {
         $data.PathToCubeProject = "$CurrentFolder\examples\CubeAtCompatibility1500\bin\Model.asdatabase";
         
         $data.AzureAsServer = $Env:AzureAsServer;
-        $data.CubeDatabase = "AzureTestCube";  
+        $data.CubeDatabase = $Env:AzureAsCube;  
 
         $data.UserID = $Env:AzureAsUserID;
         $data.Password = $Env:AzureAsPassword;

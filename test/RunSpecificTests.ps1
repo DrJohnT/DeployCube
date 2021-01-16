@@ -1,23 +1,36 @@
-﻿$Env:AzureAsServer    = "asazure://uksouth.asazure.windows.net/xxx";
-$Env:AzureAsUserID    = "xxx";
-$Env:AzureAsPassword  = "xxx";
+﻿$Env:AzureAsServer    = "asazure://uksouth.asazure.windows.net/bovi1kenobi"; 
+$Env:AzureAsUserID    = "john@bovi.co.uk"; 
+$Env:AzureAsPassword  = "g]H-bP)%Y5Gc";  
 
-$Env:AzureSqlServer   = "xxx.database.windows.net,1433";
-$Env:AzureSqlUserID   = "xxx";
-$Env:AzureSqlPassword = "xxx";
+$Env:AzureSqlServer   = "bovi1kenobi.database.windows.net,1433"; 
+$Env:AzureSqlUserID   = "bovi"; 
+$Env:AzureSqlPassword = "LetMeSql!";
 
-Invoke-Pester -Tag "Round1";
-Invoke-Pester -Tag "Round2";
-Invoke-Pester -Tag "Round3";
+#Invoke-Pester 
+
+Invoke-Pester -Tag ( "Round1" ,"Round2", "Round3" ,"Round4" ,"Azure" );
+#Invoke-Pester -Tag "Round1";
+#Invoke-Pester -Tag "Round2";
+#Invoke-Pester -Tag "Round3";
+#Invoke-Pester -Tag "Round4";
 #Invoke-Pester -Tag "Azure";
 
 #Invoke-Pester -Script .\AnalyzePSScripts.Tests.ps1
 
 #Invoke-Pester -Script .\AzureAS.Tests.ps1
 
-#Invoke-Pester -Script .\Find-AnalysisServicesDeploymentExeLocations.Tests.ps1 -Tag 'Round1'
-#Invoke-Pester -Script .\Get-AnalysisServicesDeploymentExePath.Tests.ps1 -Tag Round1
+#Invoke-Pester -Script .\Find-AnalysisServicesDeploymentExeLocations.Tests.ps1
+#Invoke-Pester -Script .\Get-AnalysisServicesDeploymentExePath.Tests.ps1 
 
+#$CurrentFolder = Split-Path -Parent $PSScriptRoot;
+#$ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
+#import-Module -Name $ModulePath;
+#$val = Find-AnalysisServicesDeploymentExeLocations | Measure-Object 
+##| Select-Object -Property Count 
+#write-host $val.Count;
+#$val = Find-AnalysisServicesDeploymentExeLocations | Measure-Object | Where-Object {$_.Count -eq "2"}
+#write-host $val;
+#{$_.Count};
 
 #Invoke-Pester -Script .\Get-CubeDatabaseCompatibilityLevel.Tests.ps1
 #Invoke-Pester -Script .\Get-ServerMode.Tests.ps1
