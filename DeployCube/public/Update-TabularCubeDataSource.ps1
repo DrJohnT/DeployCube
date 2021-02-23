@@ -34,7 +34,7 @@ function Update-TabularCubeDataSource
     The password of the account that will be used to connect to the SQL Server database.  Required for ImpersonationMode='ImpersonateAccount'.
 
     .PARAMETER DataSourceName
-    The name of the data source that will be updated.
+    The name of the data source that will be updated.  Optional, use when there are multiple data sources in the deployed tabular cube database.
 
     .EXAMPLE
     Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateServiceAccount;
