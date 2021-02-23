@@ -33,6 +33,9 @@ function Update-TabularCubeDataSource
     .PARAMETER ImpersonationPwd
     The password of the account that will be used to connect to the SQL Server database.  Required for ImpersonationMode='ImpersonateAccount'.
 
+    .PARAMETER DataSourceName
+    The name of the data source that will be updated.
+
     .EXAMPLE
     Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateServiceAccount;
 
@@ -80,8 +83,10 @@ function Update-TabularCubeDataSource
 
         [Alias("ImpersonationPassword")]
         [String] [Parameter(Mandatory = $false)]
-        $ImpersonationPwd
+        $ImpersonationPwd,
 
+        [String] [Parameter(Mandatory = $false)]
+        $DataSourceName
     )
 
     # validate inputs
@@ -112,6 +117,11 @@ function Update-TabularCubeDataSource
     $nsmgr.AddNamespace('rootNS', 		'urn:schemas-microsoft-com:xml-analysis:rowset');
 
     $rows = $returnXML.SelectNodes("//xmlAnalysis:return/rootNS:root/rootNS:row", $nsmgr);
+
+    If (![string]::IsNullOrEmpty($DataSourceName)) {
+        $rows = @($rows | Where-Object { $_.name -eq $DataSourceName })
+    }
+
     if ($rows.Count -ge 1) {
         [string]$DataSourceName = $rows[0].name;
         $type = $rows[0].type;
