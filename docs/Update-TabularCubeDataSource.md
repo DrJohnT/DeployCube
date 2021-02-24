@@ -15,7 +15,7 @@ Updates the tabular cube's connection to the source SQL database.
 ```
 Update-TabularCubeDataSource [-Server] <String> [-CubeDatabase] <String> [[-Credential] <PSCredential>]
  [-SourceSqlServer] <String> [-SourceSqlDatabase] <String> [-ImpersonationMode] <String>
- [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>] [<CommonParameters>]
+ [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>] [[-DataSource] <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -27,6 +27,11 @@ Supports the newer PowerQuery style tabular cubes with CompatibilityLevel = 1400
 ### EXAMPLE 1
 ```
 Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateServiceAccount;
+```
+
+### EXAMPLE 2
+```
+Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateAccount -ImpersonationAccount "DOMAIN\user" -ImpersonationPwd "Password" -DataSource DataSource1;
 ```
 
 ## PARAMETERS
@@ -154,6 +159,22 @@ Aliases: ImpersonationPassword
 
 Required: False
 Position: 8
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DataSource
+The name of the data source that will be updated. 
+Optional, use when there are multiple data sources in the deployed tabular cube database.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 9
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
