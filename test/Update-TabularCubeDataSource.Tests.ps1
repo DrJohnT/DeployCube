@@ -28,6 +28,9 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
         It "Should have ImpersonationPwd as a optional parameter" {
             (Get-Command Update-TabularCubeDataSource).Parameters['ImpersonationPwd'].Attributes.mandatory | Should -BeFalse;
         }
+        It "Should have DataSource as a optional parameter" {
+            (Get-Command Update-TabularCubeDataSource).Parameters['DataSource'].Attributes.mandatory | Should -BeFalse;
+        }
 
         It "Empty server" {
             { Update-TabularCubeDataSource -Server ""  -CubeDatabase "MyCube" -SourceSqlServer "localhost" -SourceSqlDatabase 'MyDB' -ImpersonationMode 'ImpersonateServiceAccount' } | Should -Throw;
@@ -62,12 +65,27 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
     }
 
     Context "Invalid inputs" {
+        It "PreTest Check Cube Exists 1200" {
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" ) | Should -BeTrue;
+        }
+        It "PreTest Check Cube Exists 1500" {
+            ( Ping-SsasDatabase -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" ) | Should -BeTrue;
+        }
+
         It "Invalid server" {
             { Update-TabularCubeDataSource -Server 'InvalidServer' -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should -Throw;
         }
 
         It "Valid server and invalid CubeDatabase" {
             { Update-TabularCubeDataSource -Server 'localhost' -CubeDatabase "TrashInput" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateServiceAccount'} | Should -Throw;
+        }
+
+        It "Invalid DataSource 1200" {
+            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\sd' -ImpersonationPwd 'OSzkzmdT' -DataSource "InvalidDataSource" } | Should -Throw;
+        }
+
+        It "Invalid DataSource 1500" {
+            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "InvalidDataSource" } | Should -Throw;
         }
     }
 
@@ -98,8 +116,23 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
 
         It "Valid inputs - UsernamePassword 1500" {
             ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'UsernamePassword' -ImpersonationAccount 'ea' -ImpersonationPassword 'open' )[1] | Should -BeTrue;
-        } 
-        
+        }
+
+        It "Valid inputs - ImpersonateAccount 1200 DataSource" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\sd' -ImpersonationPwd 'OSzkzmdT' -DataSource "DatabaseToPublish")[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1500 DataSource" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "SQL/localhost;DatabaseToPublish")[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1200 DataSource Empty" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\sd' -ImpersonationPwd 'OSzkzmdT' -DataSource "")[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1500 DataSource Empty" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "")[1] | Should -BeTrue;
+        }
     }
     
 }
