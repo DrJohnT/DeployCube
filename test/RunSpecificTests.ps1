@@ -1,19 +1,10 @@
-﻿$Env:AzureAsServer    = "asazure://uksouth.asazure.windows.net/bovi1kenobi"; 
-$Env:AzureAsUserID    = "john@bovi.co.uk"; 
-$Env:AzureAsPassword  = "g]H-bP)%Y5Gc";  
+﻿#Invoke-Pester 
 
-$Env:AzureSqlServer   = "bovi1kenobi.database.windows.net,1433"; 
-$Env:AzureSqlUserID   = "bovi"; 
-$Env:AzureSqlPassword = "LetMeSql!";
-
-#Invoke-Pester 
-
-Invoke-Pester -Tag ( "Round1" ,"Round2", "Round3" ,"Round4" ,"Azure" );
+Invoke-Pester -Tag ( "Round1" ,"Round2", "Round3" ,"Round4" );
 #Invoke-Pester -Tag "Round1";
 #Invoke-Pester -Tag "Round2";
 #Invoke-Pester -Tag "Round3";
 #Invoke-Pester -Tag "Round4";
-#Invoke-Pester -Tag "Azure";
 
 #Invoke-Pester -Script .\AnalyzePSScripts.Tests.ps1
 

@@ -39,6 +39,9 @@ function Update-TabularCubeDataSource
     .EXAMPLE
     Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateServiceAccount;
 
+    .EXAMPLE
+    Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateAccount -ImpersonationAccount "DOMAIN\user" -ImpersonationPwd "Password" -DataSource DataSource2;
+
     .OUTPUTS
     Returns true if the cube's data source was updated successfully.
 

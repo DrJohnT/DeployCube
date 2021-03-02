@@ -15,7 +15,8 @@ Updates the tabular cube's connection to the source SQL database.
 ```
 Update-TabularCubeDataSource [-Server] <String> [-CubeDatabase] <String> [[-Credential] <PSCredential>]
  [-SourceSqlServer] <String> [-SourceSqlDatabase] <String> [-ImpersonationMode] <String>
- [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>] [[-DataSource] <String>] [<CommonParameters>]
+ [[-ImpersonationAccount] <String>] [[-ImpersonationPwd] <String>] [[-DataSource] <String>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -31,7 +32,7 @@ Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlSe
 
 ### EXAMPLE 2
 ```
-Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateAccount -ImpersonationAccount "DOMAIN\user" -ImpersonationPwd "Password" -DataSource DataSource1;
+Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateAccount -ImpersonationAccount "DOMAIN\user" -ImpersonationPwd "Password" -DataSource DataSource2;
 ```
 
 ## PARAMETERS
