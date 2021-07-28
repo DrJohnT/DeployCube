@@ -5,6 +5,7 @@ BeforeAll {
 }
 
 Describe "Update-TabularCubeDataSource" -Tag "Round2" {
+
     
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
@@ -30,6 +31,10 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
         }
         It "Should have DataSource as a optional parameter" {
             (Get-Command Update-TabularCubeDataSource).Parameters['DataSource'].Attributes.mandatory | Should -BeFalse;
+        }
+        It "Should have CommandTimeout as a optional parameter" {
+            (Get-Command Update-TabularCubeDataSource).Parameters['CommandTimeout
+            '].Attributes.mandatory | Should -BeFalse;
         }
 
         It "Empty server" {
@@ -87,6 +92,14 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
         It "Invalid DataSource 1500" {
             { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "InvalidDataSource" } | Should -Throw;
         }
+
+        It "Invalid CommandTimeout 1200" {
+            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "DatabaseToPublish" -CommandTimeout 0 } | Should -Throw;
+        }
+
+        It "Invalid CommandTimeout 1500" {
+            { Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "SQL/localhost;DatabaseToPublish" -CommandTimeout 0 } | Should -Throw;
+        }
     }
 
     Context "Valid inputs" {
@@ -133,10 +146,26 @@ Describe "Update-TabularCubeDataSource" -Tag "Round2" {
         It "Valid inputs - ImpersonateAccount 1500 DataSource Empty" {
             ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "")[1] | Should -BeTrue;
         }
-    }
-    
+
+        It "Valid inputs - ImpersonateAccount 1200 CommandTimeout Empty" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "DatabaseToPublish")[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1200 CommandTimeout" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1200" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "DatabaseToPublish" -CommandTimeout 60)[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1500 CommandTimeout Empty" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "DatabaseToPublish")[1] | Should -BeTrue;
+        }
+
+        It "Valid inputs - ImpersonateAccount 1500 CommandTimeout" {
+            ( Update-TabularCubeDataSource -Server "localhost" -CubeDatabase "CubeAtCompatibility1500" -SourceSqlServer "localhost" -SourceSqlDatabase 'DatabaseToPublish' -ImpersonationMode 'ImpersonateAccount' -ImpersonationAccount 'xx\yy' -ImpersonationPwd 'mypasswrd' -DataSource "SQL/localhost;DatabaseToPublish" -CommandTimeout 60)[1] | Should -BeTrue;
+        }
+    }      
 }
 
 AfterAll {
     Remove-Module -Name DeployCube;
-}
+} 
+

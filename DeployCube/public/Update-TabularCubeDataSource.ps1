@@ -36,6 +36,9 @@ function Update-TabularCubeDataSource
     .PARAMETER DataSource
     The name of the data source that will be updated.  Optional, use when there are multiple data sources in the deployed tabular cube database.
 
+    .PARAMETER CommandTimeout
+    Command timeout in minutes. Use a decimal number to set seconds. The fractional part defines a fraction of a minute e.g. 0.5 is 30 seconds and 0.334 is 20 seconds.
+
     .EXAMPLE
     Update-TabularCubeDataSource -Server localhost -CubeDatabase MyCube -SourceSqlServer localhost -SourceSqlDatabase MyDB -ImpersonationMode ImpersonateServiceAccount;
 
@@ -89,7 +92,12 @@ function Update-TabularCubeDataSource
         $ImpersonationPwd,
 
         [String] [Parameter(Mandatory = $false)]
-        $DataSource
+        $DataSource,
+
+        #[Decimal] 
+        [AllowNull()][System.Nullable[decimal]]
+        [Parameter(Mandatory = $false)]
+        $CommandTimeout
     )
 
     # validate inputs
@@ -101,6 +109,50 @@ function Update-TabularCubeDataSource
             throw "ImpersonationPassword not set but ImpersonationMode=ImpersonateAccount";
         }
     }    
+
+    $CommandTimeoutFormatted = $null
+    $CommandTimeoutFormatted_cl1200 = $null
+    if ($CommandTimeout -gt 0) {
+        # convert command timeout from minutes to a formatted string.
+
+        # formatted for compatibility level >= 1400
+        # split the timeout in minutes into days, hours, minutes and seconds
+        $CommandTimeoutDays = [Math]::Truncate($CommandTimeout / 1440)
+        $CommandTimeoutHours = [Math]::Truncate(($CommandTimeout % 1440) / 60)
+        $CommandTimeoutMinutes = [Math]::Truncate(($CommandTimeout % 1440) % 60)
+        $CommandTimeoutSeconds = [Math]::Truncate(($CommandTimeout - [Math]::Truncate($CommandTimeout)) * 60)
+
+        # convert the splitted time parts to proper format
+        $CommandTimeoutFormatted = "P"
+        
+        if ($CommandTimeoutDays -gt 0) {
+            $CommandTimeoutFormatted += "$($CommandTimeoutDays)D"
+        }
+
+        if ($CommandTimeoutHours -gt 0 -or $CommandTimeoutMinutes -gt 0 -or $CommandTimeoutSeconds -gt 0) {
+            $CommandTimeoutFormatted += "T"
+        
+            if ($CommandTimeoutHours -gt 0) {
+                $CommandTimeoutFormatted += "$($CommandTimeoutHours)H"
+            }
+        
+            if ($CommandTimeoutMinutes -gt 0) {
+                $CommandTimeoutFormatted += "$($CommandTimeoutMinutes)M"
+            }
+        
+            if ($CommandTimeoutSeconds -gt 0) {
+                $CommandTimeoutFormatted += "$($CommandTimeoutSeconds)S"
+            }
+        }
+
+        # formatted for compatibility level < 1400
+        # convert into seconds
+        $CommandTimeoutInSeconds = ([Math]::Truncate($CommandTimeout) * 60) + $CommandTimeoutSeconds
+        $CommandTimeoutFormatted_cl1200 = $CommandTimeoutInSeconds
+    } elseif ($null -ne $CommandTimeout) {
+        throw "CommandTimeout cannot be zero or a negative number.";
+    }
+    
 
     #  note that Get-CubeDatabaseCompatibilityLevel will throw and error if the cube or server do not exist, which is exactly what we want!
     [int]$CompatibilityLevel;
@@ -187,6 +239,12 @@ function Update-TabularCubeDataSource
                 }
                 credential = $credentialNode
             }
+            
+            # Add command timeout if specified
+            If (![string]::IsNullOrEmpty($CommandTimeoutFormatted)) {
+                $dataSourceObject | Add-Member -NotePropertyName options -NotePropertyValue @{commandTimeout=$CommandTimeoutFormatted}
+            }
+
         } else {
             # $CompatibilityLevel -lt 1400
             $type = 'model < 1200';  # only used in the message below
@@ -210,6 +268,12 @@ function Update-TabularCubeDataSource
                     impersonationMode = $ImpersonationMode
                 }
             }
+            
+            # Add command timeout if specified
+            If (![string]::IsNullOrEmpty($CommandTimeoutFormatted_cl1200)) {
+                $dataSourceObject | Add-Member -NotePropertyName timeout -NotePropertyValue $CommandTimeoutFormatted_cl1200
+            }
+           
         }
 
         $tmslStructure = [pscustomobject]@{
