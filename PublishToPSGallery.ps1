@@ -1,7 +1,10 @@
 
 param (
     [Parameter(Mandatory)]
-    [string] $ApiKey
+    [string] $ApiKey,
+    [Parameter(Mandatory=$false)]
+    [string] $repository
+    
 )
 
 #$VerbosePreference = 'Continue';
@@ -25,7 +28,11 @@ if ($confirmation -eq 'Y') {
         & $psGet { [CmdletBinding()] param () Install-NuGetClientBinaries -CallerPSCmdlet $PSCmdlet -BootstrapNuGetExe -Force }
 
         Write-Host 'Publishing module using PowerShellGet'
-        $null = Publish-Module -Path $buildDir -NuGetApiKey $ApiKey -Confirm:$false;
+        if(!($repository)){
+            $null = Publish-Module -Path $buildDir -NuGetApiKey $ApiKey -Confirm:$false;
+        } else {
+            $null = Publish-Module -Path $buildDir -NuGetApiKey $ApiKey -Confirm:$false -Repository $repository;
+        }
     }
     catch {
         Write-Error -ErrorRecord $_
