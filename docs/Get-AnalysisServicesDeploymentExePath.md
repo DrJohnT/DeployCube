@@ -46,8 +46,9 @@ Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -Version
 The version of Microsoft.AnalysisServices.Deployment.exe to find.
-Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows:
+Valid values for -Version are: ('16', '15', '14', '13', '12', '11') which translate as follows:
 
+* 16: SQL Server 2022
 * 15: SQL Server 2019
 * 14: SQL Server 2017
 * 13: SQL Server 2016
