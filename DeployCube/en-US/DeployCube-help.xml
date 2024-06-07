@@ -79,7 +79,8 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>Version</maml:name>
           <maml:Description>
-            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows:</maml:para>
+            <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('16', '15', '14', '13', '12', '11') which translate as follows:</maml:para>
+            <maml:para>* 16: SQL Server 2022</maml:para>
             <maml:para>* 15: SQL Server 2019</maml:para>
             <maml:para>* 14: SQL Server 2017</maml:para>
             <maml:para>* 13: SQL Server 2016</maml:para>
@@ -101,7 +102,8 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Version</maml:name>
         <maml:Description>
-          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('15', '14', '13', '12', '11') which translate as follows:</maml:para>
+          <maml:para>The version of Microsoft.AnalysisServices.Deployment.exe to find. Valid values for -Version are: ('16', '15', '14', '13', '12', '11') which translate as follows:</maml:para>
+          <maml:para>* 16: SQL Server 2022</maml:para>
           <maml:para>* 15: SQL Server 2019</maml:para>
           <maml:para>* 14: SQL Server 2017</maml:para>
           <maml:para>* 13: SQL Server 2016</maml:para>
@@ -1327,7 +1329,8 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('16', '15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 16: SQL Server 2022</maml:para>
             <maml:para>* 15: SQL Server 2019</maml:para>
             <maml:para>* 14: SQL Server 2017</maml:para>
             <maml:para>* 13: SQL Server 2016</maml:para>
@@ -1456,7 +1459,8 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="4" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'. Valid values for -PreferredVersion are: ('16', '15', '14', '13', '12', '11') which translate as follows: * latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 16: SQL Server 2022</maml:para>
           <maml:para>* 15: SQL Server 2019</maml:para>
           <maml:para>* 14: SQL Server 2017</maml:para>
           <maml:para>* 13: SQL Server 2016</maml:para>
@@ -1635,8 +1639,9 @@
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>PreferredVersion</maml:name>
           <maml:Description>
-            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows:</maml:para>
+            <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('16', '15', '14', '13', '12', '11', 'latest') which translate as follows:</maml:para>
             <maml:para>* latest: Latest SQL Server version found on agent</maml:para>
+            <maml:para>* 16: SQL Server 2022</maml:para>
             <maml:para>* 15: SQL Server 2019</maml:para>
             <maml:para>* 14: SQL Server 2017</maml:para>
             <maml:para>* 13: SQL Server 2016</maml:para>
@@ -1658,8 +1663,9 @@
       <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>PreferredVersion</maml:name>
         <maml:Description>
-          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('15', '14', '13', '12', '11', 'latest') which translate as follows:</maml:para>
+          <maml:para>The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find. Valid values for -PreferredVersion are: ('16', '15', '14', '13', '12', '11', 'latest') which translate as follows:</maml:para>
           <maml:para>* latest: Latest SQL Server version found on agent</maml:para>
+          <maml:para>* 16: SQL Server 2022</maml:para>
           <maml:para>* 15: SQL Server 2019</maml:para>
           <maml:para>* 14: SQL Server 2017</maml:para>
           <maml:para>* 13: SQL Server 2016</maml:para>
