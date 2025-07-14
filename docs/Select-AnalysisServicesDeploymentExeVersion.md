@@ -39,7 +39,7 @@ Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -PreferredVersion
 The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find.
-Valid values for -PreferredVersion are: ('16', '15', '14', '13', '12', '11', 'latest') which translate as follows:
+Valid values for -PreferredVersion are: ('20', '16', '15', '14', '13', '12', '11', 'latest') which translate as follows:
 
 * latest: Latest SQL Server version found on agent
 * 16: SQL Server 2022

@@ -12,7 +12,7 @@
 RootModule = 'DeployCube.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.2.4'
+ModuleVersion = '1.2.5'
 
 # ID used to uniquely identify this module
 GUID = 'de85c41f-a8ab-41b3-90ec-2cb7d1bc1cb3'
