@@ -9,7 +9,7 @@ function Get-AnalysisServicesDeploymentExePath {
     
         ${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn
         ${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE
-        ${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Common7\IDE
+        ${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Release\Common7\IDE
         $env:CustomAsDwInstallLocation
     
     The environment variable $env:CustomAsDwInstallLocation allows you to specify your own custom install directory.
@@ -64,7 +64,7 @@ function Get-AnalysisServicesDeploymentExePath {
 
     # Location SQL Server 2019 and greater (i.e. installed with SSMS) 
     $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
-    $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+    $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Release\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
     # Custom install location defined by Environment variable CustomAsDwInstallLocation
     $CustomAsDwInstallLocation = [Environment]::GetEnvironmentVariable('CustomAsDwInstallLocation');
