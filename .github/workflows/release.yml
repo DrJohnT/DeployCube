@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PowerShell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser
+
+      - name: Validate module version
+        shell: pwsh
+        run: |
+          $manifest = Import-PowerShellDataFile ./DeployCube/DeployCube.psd1
+          $expectedVersion = $env:GITHUB_REF_NAME -replace '^v', ''
+          if ($manifest.ModuleVersion -ne $expectedVersion) {
+            throw "Tag version '$expectedVersion' does not match manifest version '$($manifest.ModuleVersion)'."
+          }
+          Test-ModuleManifest -Path ./DeployCube/DeployCube.psd1 -ErrorAction Stop | Out-Null
+
+      - name: Run tests
+        shell: pwsh
+        run: Invoke-Pester -Path ./test -CI
+
+      - name: Publish module to PSGallery
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: Publish-Module -Path ./DeployCube -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh release create $env:GITHUB_REF_NAME --generate-notes --verify-tag
