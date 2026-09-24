@@ -18,7 +18,7 @@ function Publish-Cube {
 
     .PARAMETER PreferredVersion
     Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use.  Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
-    Valid values for -PreferredVersion are: ('20', '16', '15', '14', '13', '12', '11') which translate as follows:
+    Valid values for -PreferredVersion are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
     * latest: Latest SQL Server version found on agent
     * 16: SQL Server 2022
     * 15: SQL Server 2019
@@ -100,7 +100,7 @@ function Publish-Cube {
         $CubeDatabase,
 
         [String] [Parameter(Mandatory = $false)]
-        [ValidateSet('20', '16', '15', '14', '13', '12', '11', 'latest')]
+        [ValidateSet('22', '20', '16', '15', '14', '13', '12', '11', 'latest')]
         $PreferredVersion = 'latest',
 
         [String] [Parameter(Mandatory = $false)]
