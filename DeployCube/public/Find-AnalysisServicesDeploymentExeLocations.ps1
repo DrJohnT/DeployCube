@@ -30,7 +30,6 @@ function Find-AnalysisServicesDeploymentExeLocations {
 
         #Up to v17 (140)
         [System.IO.FileSystemInfo[]]$AnalysisServicesDeploymentExes = Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
-        $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles}\Microsoft SQL Server\*\Tools\Binn" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
         #V18 (SSMS - 150)
         $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;

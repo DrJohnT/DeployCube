@@ -22,6 +22,7 @@ Checks the following locations:
 
     ${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn
     ${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE
+    ${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Common7\IDE
     $env:CustomAsDwInstallLocation
 
 The environment variable $env:CustomAsDwInstallLocation allows you to specify your own custom install directory.
