@@ -22,6 +22,7 @@ Checks the following locations:
 
     ${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn
     ${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE
+    ${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Release\Common7\IDE
     $env:CustomAsDwInstallLocation
 
 The environment variable $env:CustomAsDwInstallLocation allows you to specify your own custom install directory.
@@ -46,7 +47,7 @@ Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -Version
 The version of Microsoft.AnalysisServices.Deployment.exe to find.
-Valid values for -Version are: ('20', '16', '15', '14', '13', '12', '11') which translate as follows:
+Valid values for -Version are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
 
 * 16: SQL Server 2022
 * 15: SQL Server 2019

@@ -9,13 +9,14 @@ function Get-AnalysisServicesDeploymentExePath {
     
         ${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn
         ${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE
+        ${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Release\Common7\IDE
         $env:CustomAsDwInstallLocation
     
     The environment variable $env:CustomAsDwInstallLocation allows you to specify your own custom install directory.
 
     .PARAMETER Version
     The version of Microsoft.AnalysisServices.Deployment.exe to find.
-    Valid values for -Version are: ('20', '16', '15', '14', '13', '12', '11') which translate as follows:
+    Valid values for -Version are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
     
     * 16: SQL Server 2022
     * 15: SQL Server 2019
@@ -51,7 +52,7 @@ function Get-AnalysisServicesDeploymentExePath {
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('20', '16', '15', '14', '13', '12', '11')]
+        [ValidateSet('22', '20', '16', '15', '14', '13', '12', '11')]
         [string]$Version
     )
 
@@ -63,6 +64,7 @@ function Get-AnalysisServicesDeploymentExePath {
 
     # Location SQL Server 2019 and greater (i.e. installed with SSMS) 
     $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server Management Studio *\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
+    $AnalysisServicesDeploymentExes += Get-Childitem -Path "${env:ProgramFiles}\Microsoft SQL Server Management Studio *\Release\Common7\IDE" -Recurse -Include $ExeName -ErrorAction SilentlyContinue;
 
     # Custom install location defined by Environment variable CustomAsDwInstallLocation
     $CustomAsDwInstallLocation = [Environment]::GetEnvironmentVariable('CustomAsDwInstallLocation');
