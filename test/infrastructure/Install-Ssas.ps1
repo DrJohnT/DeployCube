@@ -117,7 +117,7 @@ try {
         New-Item -ItemType Directory -Path $mediaDirectory -Force | Out-Null
         $bootstrapperArguments = @(
             '/Action=Download',
-            '/MediaType=Full',
+            '/MediaType=ISO',
             "/MediaPath=`"$mediaDirectory`"",
             '/IAcceptSqlServerLicenseTerms=True',
             '/Quiet=True',
@@ -158,7 +158,7 @@ try {
 
     if ($downloadedIso -is [System.IO.FileInfo] -or $downloadedIso -eq $downloadPath) {
         try {
-            $mountedImage = Mount-DiskImage -ImagePath ([string]$downloadedIso) -PassThru -ErrorAction Stop
+            $mountedImage = Mount-DiskImage -ImagePath $downloadPath -PassThru -ErrorAction Stop
         }
         catch {
             throw "Downloaded media could not be mounted as a SQL Server ISO. $($_.Exception.Message)"
