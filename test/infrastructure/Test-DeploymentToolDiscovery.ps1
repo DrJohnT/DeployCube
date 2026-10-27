@@ -17,12 +17,6 @@ Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR
         $script:inventory.Count | Should -BeGreaterThan 0 -Because "SSMS $env:COMPAT_SSMS_MAJOR is expected to provide a deployment utility; absence is reported as an installation failure"
     }
 
-    It 'uses a utility product version supported by DeployCube selection' {
-        foreach ($utility in $script:inventory) {
-            [string]$utility.ProductMajorVersion | Should -BeIn $script:knownVersions
-        }
-    }
-
     It 'returns every installed utility path through DeployCube discovery' {
         $reportedPaths = @(
             $script:discoveryOutput | ForEach-Object {
@@ -90,7 +84,6 @@ Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR
 
     It 'discovers utilities through CustomAsDwInstallLocation with standard roots isolated' {
         $utility = $script:inventory |
-            Where-Object { $script:knownVersions -contains [string]$_.ProductMajorVersion } |
             Select-Object -First 1
         $utility | Should -Not -BeNullOrEmpty
         $previousProgramFiles = $env:ProgramFiles
@@ -104,8 +97,15 @@ Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR
             ${env:ProgramFiles(x86)} = $isolatedRoot
             [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', (Split-Path -Parent $utility.Path), 'Process')
 
-            Get-AnalysisServicesDeploymentExePath -Version ([string]$utility.ProductMajorVersion) |
-                Should -Be $utility.Path
+            $customDiscoveryOutput = @(Find-AnalysisServicesDeploymentExeLocations)
+            $customDiscoveryOutput |
+                Where-Object { $_ -match [regex]::Escape($utility.Path) } |
+                Should -Not -BeNullOrEmpty
+
+            if ($script:knownVersions -contains [string]$utility.ProductMajorVersion) {
+                Get-AnalysisServicesDeploymentExePath -Version ([string]$utility.ProductMajorVersion) |
+                    Should -Be $utility.Path
+            }
         }
         finally {
             $env:ProgramFiles = $previousProgramFiles

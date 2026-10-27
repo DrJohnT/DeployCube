@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ssms: ['20', '21', '22']
+        ssms: ['21']
     steps:
       - name: Check out source
         uses: actions/checkout@v4

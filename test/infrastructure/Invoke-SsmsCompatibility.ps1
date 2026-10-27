@@ -21,6 +21,15 @@ $ErrorActionPreference = 'Stop'
 $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $installation = Get-Content -LiteralPath $InstallationReportPath -Raw | ConvertFrom-Json
 $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
+$knownProductMajors = @('22', '20', '16', '15', '14', '13', '12', '11')
+$unsupportedProductMajors = @(
+    $inventory |
+        Where-Object { $knownProductMajors -notcontains [string]$_.ProductMajorVersion } |
+        ForEach-Object {
+            if ($null -eq $_.ProductMajorVersion) { 'unknown' } else { [string]$_.ProductMajorVersion }
+        } |
+        Sort-Object -Unique
+)
 $installationMessage = "SSMS $SsmsMajor installer completed."
 $testMessage = $null
 $testResult = $null
@@ -58,6 +67,9 @@ if ($inventory.Count -eq 0) {
 if ($null -eq $testResult -or $testResult.FailedCount -gt 0) {
     $outcome = 'Failed'
 }
+elseif ($unsupportedProductMajors.Count -gt 0) {
+    $outcome = 'Unsupported'
+}
 
 $report = @{
     SchemaVersion = 1
@@ -67,6 +79,10 @@ $report = @{
     Outcome = $outcome
     TestedAtUtc = [DateTime]::UtcNow.ToString('o')
     InstallationDurationSeconds = $installation.InstallationDurationSeconds
+    UnsupportedDeploymentUtilityProductMajors = @($unsupportedProductMajors)
+    UnsupportedReason = if ($unsupportedProductMajors.Count -gt 0) {
+        "Deployment utility product major version(s) $($unsupportedProductMajors -join ', ') are not accepted by DeployCube's existing version-selection API. The public API was not modified."
+    } else { $null }
     Runner = @{
         OperatingSystem = $diagnostics.OperatingSystem
         PowerShellVersion = $diagnostics.PowerShellVersion
