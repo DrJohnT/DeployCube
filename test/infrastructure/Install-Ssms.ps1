@@ -49,6 +49,8 @@ try {
             'install',
             '--productId',
             'Microsoft.VisualStudio.Product.SSMS',
+            '--channelId',
+            "SSMS.$SsmsMajor.SSMS.Release",
             '--all',
             '--quiet',
             '--norestart',
