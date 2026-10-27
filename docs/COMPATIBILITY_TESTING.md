@@ -40,7 +40,7 @@ DeployCube also searches the legacy SQL Server `Tools\Binn` tree, which can cont
 
 ## SSAS integration matrix
 
-Run **Actions → SSAS compatibility → Run workflow**. The default scope is the Phase C cell (SSAS 2022 Tabular with SSMS 22). `full-matrix` enables the 16 combinations of SSAS 2017/2019/2022/2025, Tabular/Multidimensional, and SSMS 20/22. Each combination is a separate `windows-2022` runner with an independent timeout. A temporary branch-restricted push trigger may be used to execute this workflow before it exists on the default branch; it must be removed after the Phase C run.
+Run **Actions → SSAS compatibility → Run workflow**. The default scope is the Phase C cell (SSAS 2022 Tabular with SSMS 22). `full-matrix` enables the 16 combinations of SSAS 2017/2019/2022/2025, Tabular/Multidimensional, and SSMS 20/22. Each combination is a separate `windows-2022` runner with an independent timeout. The workflow is manual-only; a temporary branch-restricted push trigger used to run Phase C before the workflow existed on the default branch has been removed.
 
 The `media_urls_json` input may map versions to direct, public Microsoft ISO URLs. For the Phase C 2022 cell, the default is Microsoft's official SQL Server 2022 Developer bootstrapper (`https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409`), which downloads full media using its quiet command-line mode after accepting the SQL Server license terms. The installer and `setup.exe` signatures are validated and their product version is checked before installation. The workflow does not place SQL setup media in the repository or use production credentials.
 
@@ -54,12 +54,22 @@ For SSAS 2022 Tabular, the integration uses the checked-in self-contained compat
 
 The SSAS workflow records the exact SSAS version/mode, SSMS major, selected deployment utility major/path, model compatibility level, and test outcome in `compatibility-report.json`. Results apply only to that recorded tuple. A newer deployment utility is never assumed to work with an older SSAS server.
 
+### Phase C runner attempt
+
+Phase C has **not passed**. The SSAS 2022 Tabular test did not reach SQL Server media download or setup because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The failure is recorded in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) (initial attempt and retry) and [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) (after adding the documented `SSMS.22.SSMS.Release` channel ID). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
+
+| SSAS target | SSMS deployment utility | Observed outcome |
+|---|---|---|
+| 2022 Tabular | SSMS 22 | Blocked before SSAS setup; deployment utility version/path not inventoried in these runs; no deployment attempted |
+
+The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.0` at `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`, but that is not evidence that the Phase C runner installed the utility or that a model deploys to SSAS 2022.
+
 | SSAS target | SSMS deployment utility | Current status |
 |---|---|---|
 | 2019 | 20 | Not yet tested |
 | 2019 | 22 | Not yet tested |
 | 2022 | 20 | Not yet tested |
-| 2022 | 22 | Not yet tested |
+| 2022 Tabular | 22 | Blocked before SSAS setup by SSMS installer failure; deployment not tested |
 | 2025 | 22 | Not yet tested |
 | 2017 | 20 or 22 | Not yet tested |
 
