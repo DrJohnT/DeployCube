@@ -55,6 +55,7 @@ function Find-AnalysisServicesDeploymentExeLocations {
             }        
         }
         
+        
         # list all the locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
             [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);
