@@ -1,6 +1,9 @@
 name: SSMS compatibility
 
 on:
+  push:
+    branches:
+      - feature/ssms-ssas-compatibility
   workflow_dispatch:
     inputs:
       phase:
@@ -17,7 +20,7 @@ permissions:
 
 jobs:
   ssms-version:
-    if: inputs.phase == 'phase-a'
+    if: github.event_name == 'push' || inputs.phase == 'phase-a'
     name: SSMS ${{ matrix.ssms }}
     runs-on: windows-2022
     timeout-minutes: 90
@@ -71,7 +74,7 @@ jobs:
           retention-days: 30
 
   ssms-side-by-side:
-    if: inputs.phase == 'phase-b'
+    if: github.event_name == 'workflow_dispatch' && inputs.phase == 'phase-b'
     name: SSMS 20 + 22 (${{ matrix.install_order }})
     runs-on: windows-2022
     timeout-minutes: 150
@@ -164,7 +167,7 @@ jobs:
   ssms-side-by-side-fallback:
     name: Per-version fallback (${{ matrix.ssms }})
     needs: ssms-side-by-side
-    if: always() && inputs.phase == 'phase-b' && needs.ssms-side-by-side.result == 'failure'
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.phase == 'phase-b' && needs.ssms-side-by-side.result == 'failure'
     runs-on: windows-2022
     timeout-minutes: 90
     strategy:
