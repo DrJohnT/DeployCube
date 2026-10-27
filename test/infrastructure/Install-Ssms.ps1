@@ -45,7 +45,14 @@ try {
     }
 
     if ([int]$SsmsMajor -ge 21) {
-        $arguments = @('--quiet', '--norestart', '--wait')
+        $arguments = @(
+            'install',
+            '--productId',
+            'Microsoft.VisualStudio.Product.SSMS',
+            '--quiet',
+            '--norestart',
+            '--wait'
+        )
     }
     else {
         $arguments = @('/Quiet')

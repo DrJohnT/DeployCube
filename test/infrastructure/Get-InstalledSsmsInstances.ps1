@@ -1,10 +1,21 @@
 [CmdletBinding()]
 param()
 
-$roots = @(
-    (Join-Path ${env:ProgramFiles(x86)} 'Microsoft SQL Server Management Studio*'),
-    (Join-Path $env:ProgramFiles 'Microsoft SQL Server Management Studio*')
-) | Where-Object { $_ -and (Test-Path -Path $_) }
+$programFilesRoots = @(
+    ${env:ProgramFiles(x86)},
+    $env:ProgramFiles,
+    ${env:ProgramW6432}
+) |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Sort-Object -Unique
+
+$roots = foreach ($programFilesRoot in $programFilesRoots) {
+    if (Test-Path -LiteralPath $programFilesRoot -PathType Container) {
+        Get-ChildItem -LiteralPath $programFilesRoot -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'Microsoft SQL Server Management Studio*' } |
+            ForEach-Object { $_.FullName }
+    }
+}
 
 $instances = foreach ($root in $roots) {
     Get-ChildItem -Path $root -Filter 'Ssms.exe' -File -Recurse -ErrorAction SilentlyContinue |
