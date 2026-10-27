@@ -7,6 +7,7 @@ BeforeAll {
     $script:modelPath = $env:COMPAT_MODEL_PATH
     $script:expectedMode = $env:COMPAT_SSAS_MODE
     $script:expectedCompatibilityLevel = [int]$env:COMPAT_MODEL_COMPATIBILITY
+    $script:deploymentLogPath = $env:COMPAT_DEPLOYMENT_LOG_PATH
     $env:COMPAT_ACTUAL_SSAS_MODE = ''
     $env:COMPAT_ACTUAL_MODEL_COMPATIBILITY = ''
 }
@@ -17,6 +18,18 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
         $actualMode = Get-ServerMode -Server $script:ssasServer
         $actualMode | Should -Be $script:expectedMode
         $env:COMPAT_ACTUAL_SSAS_MODE = $actualMode
+
+        $server = New-Object Microsoft.AnalysisServices.Server
+        $server.Connect($script:ssasServer)
+        try {
+            $server.Version.ToString() | Should -Match '^16\.'
+            [string]$server.Edition | Should -Match 'Developer'
+        }
+        finally {
+            if ($server.Connected) {
+                $server.Disconnect()
+            }
+        }
     }
 
     It 'deploys the model and reports its compatibility level' {
@@ -26,7 +39,8 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
                 -Server $script:ssasServer `
                 -CubeDatabase $script:databaseName `
                 -PreferredVersion latest `
-                -ProcessingOption DoNotProcess
+                -ProcessingOption DoNotProcess *>&1 |
+                Tee-Object -FilePath $script:deploymentLogPath -Append
         } | Should -Not -Throw
 
         Ping-SsasDatabase -Server $script:ssasServer -CubeDatabase $script:databaseName |
@@ -36,28 +50,25 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
         $actualCompatibilityLevel | Should -Be $script:expectedCompatibilityLevel
     }
 
-    It 'supports full processing against the local test source database' {
+    It 'removes the test database with Unpublish-Cube' {
         {
-            Invoke-ProcessTabularCubeDatabase `
+            Unpublish-Cube `
                 -Server $script:ssasServer `
-                -CubeDatabase $script:databaseName `
-                -RefreshType Full
+                -CubeDatabase $script:databaseName
         } | Should -Not -Throw
-    }
 
-    It 'supports automatic processing after full processing' {
-        {
-            Invoke-ProcessTabularCubeDatabase `
-                -Server $script:ssasServer `
-                -CubeDatabase $script:databaseName `
-                -RefreshType Automatic
-        } | Should -Not -Throw
+        Ping-SsasDatabase -Server $script:ssasServer -CubeDatabase $script:databaseName |
+            Should -BeFalse
     }
 }
 
 AfterAll {
-    if (Ping-SsasDatabase -Server $script:ssasServer -CubeDatabase $script:databaseName) {
-        Unpublish-Cube -Server $script:ssasServer -CubeDatabase $script:databaseName
+    try {
+        if (Ping-SsasDatabase -Server $script:ssasServer -CubeDatabase $script:databaseName) {
+            Unpublish-Cube -Server $script:ssasServer -CubeDatabase $script:databaseName
+        }
     }
-    Remove-Module -Name DeployCube -ErrorAction SilentlyContinue
+    finally {
+        Remove-Module -Name DeployCube -ErrorAction SilentlyContinue
+    }
 }

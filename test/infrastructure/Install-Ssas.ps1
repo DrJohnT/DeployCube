@@ -20,8 +20,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $instanceName = 'DCUBE'
+$bootstrapperUrl = 'https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409'
 $downloadPath = Join-Path $env:TEMP "sql-server-$SsasVersion-developer.iso"
-$engineServiceName = 'MSSQLSERVER'
+$bootstrapperPath = Join-Path $env:TEMP "sql-server-$SsasVersion-developer-setup.exe"
+$mediaDirectory = Join-Path $env:TEMP "sql-server-$SsasVersion-developer-media"
 $analysisServicesServiceName = 'MSOLAP$DCUBE'
 $browserServiceName = 'SQLBrowser'
 $setupMajorVersions = @{
@@ -38,6 +40,7 @@ $serverRelease = $null
 $systemDrive = $null
 $freeSpaceGB = $null
 $mountedImage = $null
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $outcome = 'Failed'
 $setupResults = @()
 function Copy-SsasSetupLogs {
@@ -73,11 +76,19 @@ try {
     if (-not $supportedServerOs) {
         throw "SQL Server $SsasVersion setup is not attempted on unsupported or unverified OS '$($os.Caption)'. See Microsoft's SQL Server $SsasVersion OS requirements."
     }
-    if ($MediaUri.Scheme -ne 'https' -or
-        $MediaUri.UserInfo -or
-        $MediaUri.Query -or
-        $MediaUri.Host -notmatch '^download(\.[a-z0-9-]+)*\.microsoft\.com$') {
-        throw 'MediaUri must be a direct, public HTTPS Microsoft download URL without credentials or query tokens.'
+    $isDirectMicrosoftMedia = $MediaUri.Scheme -eq 'https' -and
+        -not $MediaUri.UserInfo -and
+        -not $MediaUri.Query -and
+        $MediaUri.Host -match '^download(\.[a-z0-9-]+)*\.microsoft\.com$'
+    $mediaQuery = $MediaUri.Query.TrimStart('?')
+    $isOfficialSql2022DeveloperBootstrapper = $SsasVersion -eq '2022' -and
+        $MediaUri.Scheme -eq 'https' -and
+        $MediaUri.Host -eq 'go.microsoft.com' -and
+        $MediaUri.AbsolutePath -eq '/fwlink/' -and
+        $mediaQuery -match '(^|&)linkid=2215158(&|$)' -and
+        $mediaQuery -match '(^|&)clcid=0x409(&|$)'
+    if (-not $isDirectMicrosoftMedia -and -not $isOfficialSql2022DeveloperBootstrapper) {
+        throw "MediaUri must be a direct, public Microsoft ISO URL or the exact official SQL Server 2022 Developer bootstrapper URL '$bootstrapperUrl'."
     }
 
     $systemDrive = [System.IO.DriveInfo]::new($env:SystemDrive + '\')
@@ -87,22 +98,73 @@ try {
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri $MediaUri -OutFile $downloadPath -UseBasicParsing -ErrorAction Stop
-    if (-not (Test-Path -LiteralPath $downloadPath) -or (Get-Item -LiteralPath $downloadPath).Length -eq 0) {
-        throw "Microsoft SQL Server $SsasVersion media download was empty."
+    if ($isOfficialSql2022DeveloperBootstrapper) {
+        Invoke-WebRequest -Uri $MediaUri -OutFile $bootstrapperPath -UseBasicParsing -ErrorAction Stop
+        if (-not (Test-Path -LiteralPath $bootstrapperPath) -or (Get-Item -LiteralPath $bootstrapperPath).Length -eq 0) {
+            throw 'Microsoft SQL Server 2022 Developer bootstrapper download was empty.'
+        }
+
+        $bootstrapperSignature = Get-AuthenticodeSignature -FilePath $bootstrapperPath
+        if ($bootstrapperSignature.Status -ne 'Valid' -or $bootstrapperSignature.SignerCertificate.Subject -notmatch 'Microsoft') {
+            throw "SQL Server Developer bootstrapper did not have a valid Microsoft Authenticode signature (status: $($bootstrapperSignature.Status))."
+        }
+
+        New-Item -ItemType Directory -Path $mediaDirectory -Force | Out-Null
+        $bootstrapperArguments = @(
+            '/Action=Download',
+            '/MediaType=Full',
+            "/MediaPath=`"$mediaDirectory`"",
+            '/IAcceptSqlServerLicenseTerms=True',
+            '/Quiet=True',
+            '/HideProgressBar=True'
+        )
+        $downloadProcess = Start-Process `
+            -FilePath $bootstrapperPath `
+            -ArgumentList $bootstrapperArguments `
+            -Wait `
+            -PassThru `
+            -RedirectStandardOutput (Join-Path $logDirectory 'media-download.stdout.log') `
+            -RedirectStandardError (Join-Path $logDirectory 'media-download.stderr.log')
+        if ($downloadProcess.ExitCode -notin @(0, 3010)) {
+            throw "The signed Microsoft SQL Server 2022 Developer bootstrapper returned exit code $($downloadProcess.ExitCode) while downloading full installation media."
+        }
+
+        $downloadedIso = Get-ChildItem -LiteralPath $mediaDirectory -Filter '*.iso' -File -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($downloadedIso) {
+            $downloadPath = $downloadedIso.FullName
+        }
+        else {
+            $mediaRoot = (Get-ChildItem -LiteralPath $mediaDirectory -Filter 'setup.exe' -File -Recurse -ErrorAction SilentlyContinue |
+                Select-Object -First 1 |
+                ForEach-Object { Split-Path -Parent $_.FullName })
+            if (-not $mediaRoot) {
+                throw "The official Developer bootstrapper completed with exit code $($downloadProcess.ExitCode), but produced neither an ISO nor a directory containing setup.exe under '$mediaDirectory'. See media-download logs."
+            }
+        }
+    }
+    else {
+        $downloadedIso = $downloadPath
+        Invoke-WebRequest -Uri $MediaUri -OutFile $downloadPath -UseBasicParsing -ErrorAction Stop
+        if (-not (Test-Path -LiteralPath $downloadPath) -or (Get-Item -LiteralPath $downloadPath).Length -eq 0) {
+            throw "Microsoft SQL Server $SsasVersion media download was empty."
+        }
     }
 
-    try {
-        $mountedImage = Mount-DiskImage -ImagePath $downloadPath -PassThru -ErrorAction Stop
+    if ($downloadedIso -is [System.IO.FileInfo] -or $downloadedIso -eq $downloadPath) {
+        try {
+            $mountedImage = Mount-DiskImage -ImagePath ([string]$downloadedIso) -PassThru -ErrorAction Stop
+        }
+        catch {
+            throw "Downloaded media could not be mounted as a SQL Server ISO. $($_.Exception.Message)"
+        }
+        $volume = $mountedImage | Get-Volume -ErrorAction Stop
+        $mediaRoot = "$($volume.DriveLetter):\"
     }
-    catch {
-        throw "Downloaded media could not be mounted as a SQL Server ISO. MediaUri must resolve directly to the ISO image, not a bootstrapper or interactive downloader. $($_.Exception.Message)"
-    }
-    $volume = $mountedImage | Get-Volume -ErrorAction Stop
-    $mediaRoot = "$($volume.DriveLetter):\"
+
     $setupPath = Join-Path $mediaRoot 'setup.exe'
     if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
-        throw "The mounted Microsoft SQL Server $SsasVersion ISO does not contain setup.exe at its root."
+        throw "The Microsoft SQL Server $SsasVersion media does not contain setup.exe at '$setupPath'."
     }
 
     $signature = Get-AuthenticodeSignature -FilePath $setupPath
@@ -112,33 +174,7 @@ try {
     $setupProductVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($setupPath).ProductVersion
     $expectedSetupPattern = '^\s*' + $setupMajorVersions[$SsasVersion] + '\.'
     if ($setupProductVersion -notmatch $expectedSetupPattern) {
-        throw "The selected ISO contains SQL Server setup version '$setupProductVersion', not SQL Server $SsasVersion. This avoids installing a different engine release than the matrix label."
-    }
-
-    $setupArguments = @(
-        '/Q',
-        '/ACTION=Install',
-        '/IACCEPTSQLSERVERLICENSETERMS',
-        '/SUPPRESSPRIVACYSTATEMENTNOTICE',
-        '/INDICATEPROGRESS',
-        '/FEATURES=SQL',
-        '/INSTANCENAME=MSSQLSERVER',
-        '/SQLSVCACCOUNT="NT Service\MSSQLSERVER"',
-        '/SQLSYSADMINACCOUNTS="BUILTIN\Administrators"'
-    )
-    $engineProcess = Start-Process `
-        -FilePath $setupPath `
-        -ArgumentList $setupArguments `
-        -Wait `
-        -PassThru `
-        -RedirectStandardOutput (Join-Path $logDirectory 'sql-engine-setup.stdout.log') `
-        -RedirectStandardError (Join-Path $logDirectory 'sql-engine-setup.stderr.log')
-    $setupResults += [pscustomobject]@{
-        Feature = 'SQL'
-        ExitCode = $engineProcess.ExitCode
-    }
-    if ($engineProcess.ExitCode -notin @(0, 3010)) {
-        throw "SQL Server $SsasVersion Database Engine setup returned exit code $($engineProcess.ExitCode)."
+        throw "The selected media contains SQL Server setup version '$setupProductVersion', not SQL Server $SsasVersion. This avoids installing a different release than the matrix label."
     }
 
     $analysisServicesArguments = @(
@@ -174,10 +210,11 @@ try {
         Start-Service -Name $browserServiceName -ErrorAction Stop
     }
 
-    foreach ($serviceName in @($engineServiceName, $analysisServicesServiceName, $browserServiceName)) {
+    foreach ($serviceName in @($analysisServicesServiceName, $browserServiceName)) {
         $service = Get-Service -Name $serviceName -ErrorAction Stop
         $service.WaitForStatus([System.ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromMinutes(5))
     }
+    $stopwatch.Stop()
     $outcome = 'Installed'
 }
 catch {
@@ -191,6 +228,7 @@ catch {
         SetupResults = $setupResults
         OperatingSystem = if ($os) { $os.Caption } else { $null }
         DiskFreeBeforeGB = $freeSpaceGB
+        InstallationDurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
         FailedAtUtc = [DateTime]::UtcNow.ToString('o')
     } | ConvertTo-Json -Depth 7 |
         Set-Content -LiteralPath (Join-Path $logDirectory 'ssas-install-failure.json') -Encoding UTF8
@@ -201,8 +239,13 @@ finally {
     if ($mountedImage) {
         Dismount-DiskImage -ImagePath $downloadPath -ErrorAction SilentlyContinue
     }
-    if (Test-Path -LiteralPath $downloadPath) {
+    if ($downloadPath -and (Test-Path -LiteralPath $downloadPath)) {
         Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
+    }
+    foreach ($temporaryPath in @($bootstrapperPath, $mediaDirectory)) {
+        if (Test-Path -LiteralPath $temporaryPath) {
+            Remove-Item -LiteralPath $temporaryPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
     Copy-SsasSetupLogs
 }
@@ -212,7 +255,9 @@ finally {
     Mode = $Mode
     Outcome = $outcome
     MediaHost = $MediaUri.Host
-    DatabaseEngineService = $engineServiceName
+    InstallationMedia = if ($isOfficialSql2022DeveloperBootstrapper) { 'SQL Server 2022 Developer' } else { 'Microsoft SQL Server ISO' }
+    SetupProductVersion = $setupProductVersion
+    Edition = if ($isOfficialSql2022DeveloperBootstrapper) { 'Developer' } else { $null }
     AnalysisServicesService = $analysisServicesServiceName
     SqlBrowserService = $browserServiceName
     InstanceName = $instanceName
@@ -220,6 +265,7 @@ finally {
     OperatingSystem = $os.Caption
     DiskFreeBeforeGB = $freeSpaceGB
     DiskFreeAfterGB = [math]::Floor($systemDrive.AvailableFreeSpace / 1GB)
+    InstallationDurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
     InstalledAtUtc = [DateTime]::UtcNow.ToString('o')
 } | ConvertTo-Json -Depth 7 |
     Set-Content -LiteralPath (Join-Path $logDirectory 'ssas-install.json') -Encoding UTF8

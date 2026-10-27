@@ -39,6 +39,18 @@ if ($Report.ActualServerMode) {
 if ($Report.SqlServerEdition) {
     $lines += "- **SQL Server edition:** $($Report.SqlServerEdition)"
 }
+if ($Report.AnalysisServicesEdition) {
+    $lines += "- **Analysis Services edition:** $($Report.AnalysisServicesEdition)"
+}
+if ($Report.ActualSsasProductVersion) {
+    $lines += "- **Actual SSAS product version:** $($Report.ActualSsasProductVersion)"
+}
+if ($Report.SetupProductVersion) {
+    $lines += "- **SQL Server setup product version:** $($Report.SetupProductVersion)"
+}
+if ($null -ne $Report.SsasInstallationDurationSeconds) {
+    $lines += "- **SSAS installation duration:** $($Report.SsasInstallationDurationSeconds) seconds"
+}
 if ($Report.InstallOrder) {
     $lines += "- **SSMS install order:** $($Report.InstallOrder)"
 }
@@ -53,7 +65,7 @@ if ($Report.InstallationDurations) {
 if ($null -ne $Report.OverlappingPathOccurrences) {
     $lines += "- **Occurrences for the overlapping utility path:** $($Report.OverlappingPathOccurrences)"
 }
-if ($Report.DeploymentUtilityVersion -or $null -ne $Report.ModelCompatibilityLevel -or $Report.ActualServerMode -or $Report.SqlServerEdition -or $Report.InstallOrder -or $Report.InstallationDurations -or $null -ne $Report.InstallationDurationSeconds -or $null -ne $Report.OverlappingPathOccurrences) {
+if ($Report.DeploymentUtilityVersion -or $null -ne $Report.ModelCompatibilityLevel -or $Report.ActualServerMode -or $Report.SqlServerEdition -or $Report.AnalysisServicesEdition -or $Report.ActualSsasProductVersion -or $Report.SetupProductVersion -or $null -ne $Report.SsasInstallationDurationSeconds -or $Report.InstallOrder -or $Report.InstallationDurations -or $null -ne $Report.InstallationDurationSeconds -or $null -ne $Report.OverlappingPathOccurrences) {
     $lines += ''
 }
 

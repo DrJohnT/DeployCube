@@ -1,0 +1,5 @@
+<DeploymentTarget xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Database>DeployCubeCompatibility</Database>
+  <Server>localhost\DCUBE</Server>
+  <ConnectionString>Data Source=localhost\DCUBE;Timeout=0</ConnectionString>
+</DeploymentTarget>

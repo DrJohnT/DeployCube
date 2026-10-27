@@ -1,0 +1,9 @@
+<DeploymentOptions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <TransactionalDeployment>true</TransactionalDeployment>
+  <PartitionDeployment>DeployPartitions</PartitionDeployment>
+  <RoleDeployment>DeployRolesRetainMembers</RoleDeployment>
+  <ProcessingOption>DoNotProcess</ProcessingOption>
+  <ConfigurationSettingsDeployment>Deploy</ConfigurationSettingsDeployment>
+  <OptimizationSettingsDeployment>Deploy</OptimizationSettingsDeployment>
+  <WriteBackTableCreation>UseExisting</WriteBackTableCreation>
+</DeploymentOptions>

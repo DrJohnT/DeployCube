@@ -22,6 +22,9 @@ param(
     [string]$DiagnosticsPath,
 
     [Parameter(Mandatory = $true)]
+    [string]$SsasInstallationReportPath,
+
+    [Parameter(Mandatory = $true)]
     [string]$LogDirectory
 )
 
@@ -30,18 +33,19 @@ $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $ssmsInstances = @(& (Join-Path $PSScriptRoot 'Get-InstalledSsmsInstances.ps1'))
 $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
+$ssasInstallation = Get-Content -LiteralPath $SsasInstallationReportPath -Raw | ConvertFrom-Json
 $ssasServer = 'localhost\DCUBE'
-$sourceDatabaseCreated = $false
 $modelPath = $null
 $testResult = $null
 $testMessage = $null
 $unsupportedReason = $null
 $actualMode = $null
+$actualSsasProductVersion = $null
 $selectedDeploymentUtility = $null
 $selectedVersion = $null
-$sqlServerEdition = $null
+$analysisServicesEdition = $null
 $installationMessage = 'SSAS installation result is unknown; inspect setup logs.'
-$modelCompatibilityLevel = if ($SsasVersion -eq '2017') { 1200 } else { 1500 }
+$modelCompatibilityLevel = 1500
 $outcome = 'Failed'
 
 try {
@@ -52,16 +56,6 @@ try {
     }
     Import-Module SqlServer -ErrorAction Stop
 
-    $editionResult = Invoke-Sqlcmd `
-        -ServerInstance 'localhost' `
-        -Database 'master' `
-        -Query "SELECT CONVERT(nvarchar(128), SERVERPROPERTY('Edition')) AS Edition" `
-        -ErrorAction Stop
-    $sqlServerEdition = [string]$editionResult.Edition
-    if ($sqlServerEdition -notmatch 'Developer') {
-        throw "The installed SQL Server edition is '$sqlServerEdition', not Developer. This matrix requires Developer Edition and will not treat Evaluation or another edition as equivalent."
-    }
-
     if (-not ($ssmsInstances | Where-Object { $_.MajorVersion -eq [int]$SsmsMajor })) {
         throw "SSMS $SsmsMajor is not installed on this runner."
     }
@@ -71,14 +65,31 @@ try {
     if (-not (Ping-SsasServer -Server $ssasServer)) {
         throw "Analysis Services instance '$ssasServer' is not reachable."
     }
-    $actualMode = Get-ServerMode -Server $ssasServer
+    $amoServer = New-Object Microsoft.AnalysisServices.Server
+    $amoServer.Connect($ssasServer)
+    try {
+        $actualMode = [string]$amoServer.ServerMode
+        $actualSsasProductVersion = $amoServer.Version.ToString()
+        $analysisServicesEdition = [string]$amoServer.Edition
+    }
+    finally {
+        if ($amoServer.Connected) {
+            $amoServer.Disconnect()
+        }
+    }
     if ($actualMode -ne $Mode) {
         throw "Expected SSAS mode '$Mode' but '$ssasServer' reports '$actualMode'."
     }
-    $installationMessage = "SSAS $SsasVersion $Mode instance '$ssasServer' is running and reports mode '$actualMode'."
+    if ($actualSsasProductVersion -notmatch '^16\.') {
+        throw "Expected SQL Server Analysis Services 2022 product version 16.x, but '$ssasServer' reports '$actualSsasProductVersion'."
+    }
+    if ($analysisServicesEdition -notmatch 'Developer') {
+        throw "Expected SSAS Developer Edition, but '$ssasServer' reports '$analysisServicesEdition'."
+    }
+    $installationMessage = "SSAS $SsasVersion $Mode $analysisServicesEdition instance '$ssasServer' is running, reports mode '$actualMode', and product version '$actualSsasProductVersion'."
     $selectedVersion = Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest
-    if (-not $selectedVersion) {
-        throw 'DeployCube could not select an installed deployment utility.'
+    if ($selectedVersion -ne $SsmsMajor) {
+        throw "Expected SSMS $SsmsMajor deployment utility, but DeployCube selected product major '$selectedVersion'."
     }
     $selectedPath = Get-AnalysisServicesDeploymentExePath -Version $selectedVersion
     $selectedDeploymentUtility = $inventory | Where-Object {
@@ -99,34 +110,7 @@ try {
         $env:COMPAT_SSMS_MAJOR = $SsmsMajor
         $env:COMPAT_MODEL_PATH = $modelPath
         $env:COMPAT_MODEL_COMPATIBILITY = [string]$modelCompatibilityLevel
-
-        $sourceQuery = @'
-IF DB_ID(N'DatabaseToPublish') IS NULL
-    CREATE DATABASE [DatabaseToPublish];
-
-IF SUSER_ID(N'NT Service\MSOLAP$DCUBE') IS NULL
-    CREATE LOGIN [NT Service\MSOLAP$DCUBE] FROM WINDOWS;
-
-USE [DatabaseToPublish];
-IF OBJECT_ID(N'dbo.MyOnlyTable', N'U') IS NULL
-    CREATE TABLE dbo.MyOnlyTable
-    (
-        MyOnlyTableId int NOT NULL PRIMARY KEY,
-        MyOnlyColumn nvarchar(100) NULL,
-        MyOnlyValue decimal(18, 2) NULL,
-        InMyCurrency nvarchar(10) NULL
-    );
-
-IF NOT EXISTS (SELECT 1 FROM dbo.MyOnlyTable)
-    INSERT dbo.MyOnlyTable (MyOnlyTableId, MyOnlyColumn, MyOnlyValue, InMyCurrency)
-    VALUES (1, N'Compatibility test', 1.00, N'USD');
-
-IF USER_ID(N'NT Service\MSOLAP$DCUBE') IS NULL
-    CREATE USER [NT Service\MSOLAP$DCUBE] FOR LOGIN [NT Service\MSOLAP$DCUBE];
-ALTER ROLE db_datareader ADD MEMBER [NT Service\MSOLAP$DCUBE];
-'@
-        $sourceDatabaseCreated = $true
-        Invoke-Sqlcmd -ServerInstance 'localhost' -Database 'master' -Query $sourceQuery -ErrorAction Stop
+        $env:COMPAT_DEPLOYMENT_LOG_PATH = Join-Path (Split-Path -Parent $modelPath) 'Publish-Cube-deployment.log'
 
         if (-not (Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version.Major -ge 5 })) {
             Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
@@ -147,24 +131,8 @@ ALTER ROLE db_datareader ADD MEMBER [NT Service\MSOLAP$DCUBE];
     }
 }
 catch {
-    $testMessage = $_.Exception.Message
+    $testMessage = $_.Exception.ToString()
     $outcome = 'Failed'
-}
-finally {
-    if ($sourceDatabaseCreated) {
-        try {
-            Invoke-Sqlcmd `
-                -ServerInstance 'localhost' `
-                -Database 'master' `
-                -Query "IF DB_ID(N'DatabaseToPublish') IS NOT NULL BEGIN ALTER DATABASE [DatabaseToPublish] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [DatabaseToPublish]; END" `
-                -ErrorAction Stop
-        }
-        catch {
-            $outcome = 'Failed'
-            $cleanupMessage = "Test source database cleanup failed: $($_.Exception.Message)"
-            $testMessage = if ($testMessage) { "$testMessage $cleanupMessage" } else { $cleanupMessage }
-        }
-    }
 }
 
 $report = @{
@@ -177,7 +145,10 @@ $report = @{
     SsmsMajor = $SsmsMajor
     DeploymentUtilityVersion = $selectedVersion
     SelectedDeploymentUtility = $selectedDeploymentUtility
-    SqlServerEdition = $sqlServerEdition
+    AnalysisServicesEdition = $analysisServicesEdition
+    ActualSsasProductVersion = $actualSsasProductVersion
+    SetupProductVersion = $ssasInstallation.SetupProductVersion
+    SsasInstallationDurationSeconds = $ssasInstallation.InstallationDurationSeconds
     ModelCompatibilityLevel = if ($Mode -eq 'Tabular') { $modelCompatibilityLevel } else { $null }
     ActualServerMode = if ($env:COMPAT_ACTUAL_SSAS_MODE) { $env:COMPAT_ACTUAL_SSAS_MODE } else { $actualMode }
     ActualModelCompatibilityLevel = if ($env:COMPAT_ACTUAL_MODEL_COMPATIBILITY) {
@@ -207,7 +178,7 @@ $report = @{
     } else { $null }
     Limitations = @(
         'A passing result applies only to the exact SSAS mode/version and SSMS deployment utility version recorded here.',
-        'Tabular processing requires the local DatabaseToPublish source table. Processing errors are reported as failed compatibility, not silently skipped.'
+        'The self-contained calculated-table fixture does not test external data sources or processing.'
     )
 }
 

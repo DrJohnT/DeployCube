@@ -1,6 +1,9 @@
 name: SSAS compatibility
 
 on:
+  push:
+    branches:
+      - feature/ssms-ssas-compatibility
   workflow_dispatch:
     inputs:
       scope:
@@ -15,7 +18,7 @@ on:
         description: JSON map of SQL Server version to direct public Microsoft Developer ISO URL (no credentials or query tokens)
         type: string
         required: true
-        default: '{"2017":"","2019":"","2022":"","2025":""}'
+        default: '{"2017":"","2019":"","2022":"https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409","2025":""}'
 
 permissions:
   contents: read
@@ -27,9 +30,9 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(inputs.scope == 'phase-c' && '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}' || '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}') }}
+      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}') }}
     env:
-      COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json }}
+      COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json || '{"2017":"","2019":"","2022":"https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409","2025":""}' }}
       COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
       COMPAT_SSAS_MODE: ${{ matrix.mode }}
       COMPAT_SSMS_MAJOR: ${{ matrix.ssms_major }}
@@ -51,12 +54,17 @@ jobs:
           $property = $mediaMap.PSObject.Properties[$env:COMPAT_SSAS_VERSION]
           $mediaUri = $null
           $validUri = $property -and [uri]::TryCreate([string]$property.Value, [System.UriKind]::Absolute, [ref]$mediaUri)
-          if (-not $validUri -or
-              $mediaUri.Scheme -ne 'https' -or
-              $mediaUri.UserInfo -or
-              $mediaUri.Query -or
-              $mediaUri.Host -notmatch '^download(\.[a-z0-9-]+)*\.microsoft\.com$') {
-            $message = "SQL Server $env:COMPAT_SSAS_VERSION setup was not attempted because its media URL is missing or is not a direct public Microsoft ISO URL without credentials or query tokens."
+          $directMicrosoftMedia = $validUri -and $mediaUri.Scheme -eq 'https' -and -not $mediaUri.UserInfo -and -not $mediaUri.Query -and $mediaUri.Host -match '^download(\.[a-z0-9-]+)*\.microsoft\.com$'
+          $mediaQuery = if ($validUri) { $mediaUri.Query.TrimStart('?') } else { '' }
+          $officialSql2022DeveloperBootstrapper = $validUri -and
+            $env:COMPAT_SSAS_VERSION -eq '2022' -and
+            $mediaUri.Scheme -eq 'https' -and
+            $mediaUri.Host -eq 'go.microsoft.com' -and
+            $mediaUri.AbsolutePath -eq '/fwlink/' -and
+            $mediaQuery -match '(^|&)linkid=2215158(&|$)' -and
+            $mediaQuery -match '(^|&)clcid=0x409(&|$)'
+          if (-not $directMicrosoftMedia -and -not $officialSql2022DeveloperBootstrapper) {
+            $message = "SQL Server $env:COMPAT_SSAS_VERSION setup was not attempted because its media URL is missing or is not a direct public Microsoft ISO or the exact official SQL Server 2022 Developer bootstrapper URL."
             $artifactDirectory = "artifacts/ssas/$env:COMPAT_SSAS_VERSION/$env:COMPAT_SSAS_MODE/ssms-$env:COMPAT_SSMS_MAJOR"
             $diagnostics = Get-Content -LiteralPath "$artifactDirectory/runner-diagnostics.json" -Raw | ConvertFrom-Json
             $report = @{
@@ -76,8 +84,8 @@ jobs:
               DeploymentUtilities = @()
               InstallationMessage = 'SQL Server setup was not attempted because the version-specific media URL failed preflight.'
               TestMessage = $message
-              UnsupportedReason = 'The manual dispatch must include a direct, uncredentialed Microsoft Developer ISO URL for this SQL Server major.'
-              Limitations = @('No setup or compatibility success is claimed for a matrix cell without a valid input media URL.')
+              UnsupportedReason = 'The manual dispatch must include a direct uncredentialed Microsoft ISO URL or the official SQL Server 2022 Developer bootstrapper URL.'
+              Limitations = @('No setup or compatibility success is claimed for a matrix cell without a valid official media URL.')
             }
             ./test/infrastructure/Write-CompatibilityReport.ps1 `
               -Report $report `
@@ -96,7 +104,7 @@ jobs:
             -LogDirectory "$artifactDirectory/ssms-installation" `
             -MinimumFreeSpaceGB 8
 
-      - name: Install SQL Server ${{ matrix.ssas_version }} and SSAS ${{ matrix.mode }}
+      - name: Install SSAS ${{ matrix.ssas_version }} ${{ matrix.mode }}
         id: install-ssas
         if: always() && steps.install-ssms.outcome == 'success'
         shell: powershell
@@ -109,7 +117,7 @@ jobs:
             -Mode $env:COMPAT_SSAS_MODE `
             -MediaUri $mediaUri `
             -LogDirectory "$artifactDirectory/sql-setup" `
-            -MinimumFreeSpaceGB 12
+            -MinimumFreeSpaceGB 20
 
       - name: Run DeployCube SSAS integration tests
         if: always() && steps.install-ssas.outcome == 'success'
@@ -123,6 +131,7 @@ jobs:
             -ReportPath "$artifactDirectory/compatibility-report.json" `
             -TestResultPath "$artifactDirectory/nunit-results.xml" `
             -DiagnosticsPath "$artifactDirectory/runner-diagnostics.json" `
+            -SsasInstallationReportPath "$artifactDirectory/sql-setup/ssas-install.json" `
             -LogDirectory "$artifactDirectory/model-build"
 
       - name: Record setup or prerequisite failure
