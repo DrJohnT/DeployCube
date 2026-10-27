@@ -34,6 +34,12 @@ The Phase B SSMS 20 + 22 jobs install both products in both orders on separate r
 
 The side-by-side job requires at least 14 GB free before it starts. When the side-by-side job fails, isolated SSMS 20 and SSMS 22 jobs run as a fallback and record individual discovery results. This fallback does **not** establish simultaneous installation or cross-version selection. Disk thresholds are preflight gates, not measured consumption.
 
+## Independent deployment utility installation
+
+The official Microsoft channels reviewed do not provide `Microsoft.AnalysisServices.Deployment.exe` as an independently installable package. For modern releases, the supported acquisition path is installing SSMS. SSMS 21/22 use the Visual Studio Installer bootstrapper and support unattended component selection, but an SSMS installation remains an SSMS product installation; no documented standalone Deployment Wizard component ID was found. The Analysis Services Projects Visual Studio extension provides project/design-time tooling, but its Microsoft Marketplace documentation does not offer this executable as a separate command-line package. Microsoft Analysis Services NuGet packages provide client libraries, not this deployment utility. Third-party packages are not treated as an official or supported source.
+
+DeployCube also searches the legacy SQL Server `Tools\Binn` tree, which can contain the utility from older combined SQL Server setup installations. That legacy path is distinct from a modern standalone utility installer and is not the strategy for this SSMS compatibility matrix.
+
 ## SSAS integration matrix
 
 Run **Actions → SSAS compatibility → Run workflow**. The default scope is the Phase C cell (SSAS 2022 Tabular with SSMS 22). `full-matrix` enables the 16 combinations of SSAS 2017/2019/2022/2025, Tabular/Multidimensional, and SSMS 20/22. Each combination is a separate `windows-2022` runner with an independent timeout.
@@ -78,8 +84,10 @@ Each job writes a machine-readable `compatibility-report.json`, runner diagnosti
 Official references:
 
 - [SSMS release history](https://learn.microsoft.com/en-us/ssms/release-history)
+- [Install SSMS](https://learn.microsoft.com/en-us/ssms/install/install)
 - [SSMS command-line installation parameters](https://learn.microsoft.com/en-us/ssms/install/command-line-parameters)
 - [SSMS system requirements](https://learn.microsoft.com/en-us/ssms/system-requirements)
+- [Analysis Services Projects Visual Studio extension](https://marketplace.visualstudio.com/items?itemName=ProBITools.MicrosoftAnalysisServicesModelingProjects)
 - [Install Analysis Services](https://learn.microsoft.com/en-us/analysis-services/instances/install-windows/install-analysis-services)
 - [SQL Server 2017 operating-system requirements](https://learn.microsoft.com/en-us/sql/sql-server/install/hardware-and-software-requirements-for-installing-sql-server-2017)
 - [SQL Server 2019 operating-system requirements](https://learn.microsoft.com/en-us/sql/sql-server/install/hardware-and-software-requirements-for-installing-sql-server-2019)
