@@ -22,6 +22,9 @@ param(
     [string]$DiagnosticsPath,
 
     [Parameter(Mandatory = $true)]
+    [string]$SsmsInstallationReportPath,
+
+    [Parameter(Mandatory = $true)]
     [string]$SsasInstallationReportPath,
 
     [Parameter(Mandatory = $true)]
@@ -34,6 +37,7 @@ $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $ssmsInstances = @(& (Join-Path $PSScriptRoot 'Get-InstalledSsmsInstances.ps1'))
 $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
 $ssasInstallation = Get-Content -LiteralPath $SsasInstallationReportPath -Raw | ConvertFrom-Json
+$ssmsInstallation = Get-Content -LiteralPath $SsmsInstallationReportPath -Raw | ConvertFrom-Json
 $ssasServer = 'localhost\DCUBE'
 $modelPath = $null
 $testResult = $null
@@ -47,6 +51,8 @@ $analysisServicesEdition = $null
 $installationMessage = 'SSAS installation result is unknown; inspect setup logs.'
 $modelCompatibilityLevel = 1500
 $outcome = 'Failed'
+$failureCategory = 'Prerequisites'
+$utilityProbe = $null
 
 try {
     Import-Module (Join-Path $repositoryRoot 'DeployCube\DeployCube.psd1') -Force -ErrorAction Stop
@@ -61,6 +67,11 @@ try {
     }
     if ($inventory.Count -eq 0) {
         throw 'No Microsoft.AnalysisServices.Deployment.exe was found after SSMS installation.'
+    }
+    $failureCategory = 'SSAS connectivity'
+    $service = Get-Service -Name 'MSOLAP$DCUBE' -ErrorAction Stop
+    if ($service.Status -ne 'Running') {
+        throw "Analysis Services service '$($service.Name)' is '$($service.Status)', not Running."
     }
     if (-not (Ping-SsasServer -Server $ssasServer)) {
         throw "Analysis Services instance '$ssasServer' is not reachable."
@@ -95,15 +106,30 @@ try {
     $selectedDeploymentUtility = $inventory | Where-Object {
         [System.StringComparer]::OrdinalIgnoreCase.Equals($_.Path, $selectedPath)
     } | Select-Object -First 1
+    if (-not $selectedDeploymentUtility -or $selectedDeploymentUtility.ProductMajorVersion -ne [int]$SsmsMajor) {
+        throw "Selected deployment utility metadata does not match SSMS $SsmsMajor."
+    }
 
     if ($Mode -eq 'Multidimensional') {
         $unsupportedReason = 'The repository currently has no checked-in or buildable Multidimensional .asdatabase fixture. The server installation and mode are verified, but a deployment is not claimed.'
         $outcome = 'Unsupported'
     }
     else {
+        $failureCategory = 'Test fixture validity'
         $modelPath = & (Join-Path $PSScriptRoot 'Build-CompatibilityModel.ps1') `
             -CompatibilityLevel ([string]$modelCompatibilityLevel) `
             -LogDirectory $LogDirectory
+        $fixture = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase(
+            (Get-Content -LiteralPath $modelPath -Raw))
+        if ($fixture.CompatibilityLevel -ne $modelCompatibilityLevel) {
+            throw 'TOM fixture validation returned an unexpected compatibility level.'
+        }
+
+        $failureCategory = 'Deployment Utility compatibility'
+        & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `
+            -DeploymentUtilityPath $selectedPath -ModelPath $modelPath `
+            -Server $ssasServer -LogDirectory $LogDirectory
+        $utilityProbe = Get-Content -LiteralPath (Join-Path $LogDirectory 'utility-probe\compatibility-probe.json') -Raw | ConvertFrom-Json
 
         $env:COMPAT_SSAS_VERSION = $SsasVersion
         $env:COMPAT_SSAS_MODE = $Mode
@@ -127,7 +153,11 @@ try {
         $configuration.TestResult.OutputFormat = 'NUnitXml'
         $testResult = Invoke-Pester -Configuration $configuration
         $testMessage = "Passed $($testResult.PassedCount), failed $($testResult.FailedCount), skipped $($testResult.SkippedCount)."
-        $outcome = if ($testResult.FailedCount -eq 0) { 'Passed' } else { 'Failed' }
+        $outcome = if ($testResult.FailedCount -eq 0 -and $testResult.PassedCount -eq 3) { 'Passed' } else { 'Failed' }
+        $failureCategory = $env:COMPAT_FAILURE_CATEGORY
+        if ($outcome -eq 'Failed') {
+            $testMessage += "`n" + (($testResult.Failed | ForEach-Object { $_.ErrorRecord | Out-String }) -join "`n")
+        }
     }
 }
 catch {
@@ -140,6 +170,13 @@ $report = @{
     TestSurface = 'SSAS deployment integration'
     Target = "SSAS $SsasVersion $Mode, SSMS $SsmsMajor deployment utility"
     Outcome = $outcome
+    FailureCategory = if ($outcome -eq 'Failed') { $failureCategory } else { $null }
+    UtilityCompatibilityProbe = $utilityProbe
+    DatabaseExistsAfterPublish = $env:COMPAT_DATABASE_EXISTS -eq 'True'
+    CleanupResult = $env:COMPAT_CLEANUP_RESULT
+    AnalysisServicesService = if ($service) { @{ Name = $service.Name; Status = [string]$service.Status } } else { $null }
+    SsmsInstallation = $ssmsInstallation.Installation
+    InstallationDurationSeconds = $ssmsInstallation.InstallationDurationSeconds
     SsasVersion = $SsasVersion
     SsasMode = $Mode
     SsmsMajor = $SsmsMajor

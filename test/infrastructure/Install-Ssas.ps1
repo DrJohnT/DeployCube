@@ -43,6 +43,9 @@ $mountedImage = $null
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $outcome = 'Failed'
 $setupResults = @()
+$failureCategory = 'SSAS prerequisites'
+$mediaDurationSeconds = $null
+$setupDurationSeconds = $null
 function Copy-SsasSetupLogs {
     try {
         $summaryFiles = @(
@@ -98,6 +101,8 @@ try {
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    $failureCategory = 'SSAS media acquisition'
+    $mediaStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     if ($isOfficialSql2022DeveloperBootstrapper) {
         Invoke-WebRequest -Uri $MediaUri -OutFile $bootstrapperPath -UseBasicParsing -ErrorAction Stop
         if (-not (Test-Path -LiteralPath $bootstrapperPath) -or (Get-Item -LiteralPath $bootstrapperPath).Length -eq 0) {
@@ -176,6 +181,10 @@ try {
     if ($setupProductVersion -notmatch $expectedSetupPattern) {
         throw "The selected media contains SQL Server setup version '$setupProductVersion', not SQL Server $SsasVersion. This avoids installing a different release than the matrix label."
     }
+    $mediaStopwatch.Stop()
+    $mediaDurationSeconds = [math]::Round($mediaStopwatch.Elapsed.TotalSeconds, 2)
+    $failureCategory = 'SSAS installation'
+    $setupStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
     $analysisServicesArguments = @(
         '/Q',
@@ -214,6 +223,8 @@ try {
         $service = Get-Service -Name $serviceName -ErrorAction Stop
         $service.WaitForStatus([System.ServiceProcess.ServiceControllerStatus]::Running, [TimeSpan]::FromMinutes(5))
     }
+    $setupStopwatch.Stop()
+    $setupDurationSeconds = [math]::Round($setupStopwatch.Elapsed.TotalSeconds, 2)
     $stopwatch.Stop()
     $outcome = 'Installed'
 }
@@ -224,8 +235,12 @@ catch {
         Mode = $Mode
         Outcome = 'Failed'
         Error = $failureMessage
+        ErrorDetails = $_.Exception.ToString()
+        FailureCategory = $failureCategory
         MediaHost = $MediaUri.Host
         SetupResults = $setupResults
+        MediaAcquisitionDurationSeconds = $mediaDurationSeconds
+        SetupDurationSeconds = $setupDurationSeconds
         OperatingSystem = if ($os) { $os.Caption } else { $null }
         DiskFreeBeforeGB = $freeSpaceGB
         InstallationDurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)

@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}') }}
+      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
     env:
       COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json || '{"2017":"","2019":"","2022":"https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409","2025":""}' }}
       COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
@@ -128,6 +128,7 @@ jobs:
             -ReportPath "$artifactDirectory/compatibility-report.json" `
             -TestResultPath "$artifactDirectory/nunit-results.xml" `
             -DiagnosticsPath "$artifactDirectory/runner-diagnostics.json" `
+            -SsmsInstallationReportPath "$artifactDirectory/ssms-installation/ssms-${{ matrix.ssms_major }}-install.json" `
             -SsasInstallationReportPath "$artifactDirectory/sql-setup/ssas-install.json" `
             -LogDirectory "$artifactDirectory/model-build"
 
