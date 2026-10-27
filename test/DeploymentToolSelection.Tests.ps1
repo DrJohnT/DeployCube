@@ -42,50 +42,50 @@ BeforeAll {
     }
 }
 
-BeforeEach {
-    $script:programFiles = Join-Path $TestDrive 'Program Files'
-    $script:programFilesX86 = Join-Path $TestDrive 'Program Files (x86)'
-    New-Item -ItemType Directory -Path $script:programFiles, $script:programFilesX86 -Force | Out-Null
-    $env:ProgramFiles = $script:programFiles
-    ${env:ProgramFiles(x86)} = $script:programFilesX86
-    [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $null, 'Process')
-    [Environment]::SetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER', $null, 'Process')
+Describe 'Deployment utility version selection with mocked filesystem metadata' {
+    BeforeEach {
+        $script:programFiles = Join-Path $TestDrive 'Program Files'
+        $script:programFilesX86 = Join-Path $TestDrive 'Program Files (x86)'
+        New-Item -ItemType Directory -Path $script:programFiles, $script:programFilesX86 -Force | Out-Null
+        $env:ProgramFiles = $script:programFiles
+        ${env:ProgramFiles(x86)} = $script:programFilesX86
+        [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $null, 'Process')
+        [Environment]::SetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER', $null, 'Process')
 
-    Mock -ModuleName DeployCube Get-ChildItem {
-        param($Path, [switch]$Recurse, [string[]]$Include, $ErrorAction)
+        Mock -ModuleName DeployCube Get-ChildItem {
+            param($Path, [switch]$Recurse, [string[]]$Include, $ErrorAction)
 
-        $arguments = @{
-            Path = $Path
-            ErrorAction = $ErrorAction
-        }
-        if ($Recurse) {
-            $arguments.Recurse = $true
-        }
-        if ($Include) {
-            $arguments.Include = $Include
-        }
+            $arguments = @{
+                Path = $Path
+                ErrorAction = $ErrorAction
+            }
+            if ($Recurse) {
+                $arguments.Recurse = $true
+            }
+            if ($Include) {
+                $arguments.Include = $Include
+            }
 
-        $files = @(Microsoft.PowerShell.Management\Get-ChildItem @arguments)
-        if ([Environment]::GetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER') -eq 'reverse') {
-            $files = @($files | Sort-Object -Property FullName -Descending)
-        }
+            $files = @(Microsoft.PowerShell.Management\Get-ChildItem @arguments)
+            if ([Environment]::GetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER') -eq 'reverse') {
+                $files = @($files | Sort-Object -Property FullName -Descending)
+            }
 
-        foreach ($file in $files) {
-            $productMajor = Get-Content -LiteralPath "$($file.FullName).version" -Raw -ErrorAction SilentlyContinue
-            $productVersion = if ($productMajor) { "$productMajor.0.0.0" } else { '' }
-            Add-Member -InputObject $file -MemberType NoteProperty -Name VersionInfo `
-                -Value ([pscustomobject]@{ ProductVersion = $productVersion }) -Force
-            $file
+            foreach ($file in $files) {
+                $productMajor = Get-Content -LiteralPath "$($file.FullName).version" -Raw -ErrorAction SilentlyContinue
+                $productVersion = if ($productMajor) { "$productMajor.0.0.0" } else { '' }
+                Add-Member -InputObject $file -MemberType NoteProperty -Name VersionInfo `
+                    -Value ([pscustomobject]@{ ProductVersion = $productVersion }) -Force
+                $file
+            }
         }
     }
-}
 
-AfterEach {
-    [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $null, 'Process')
-    [Environment]::SetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER', $null, 'Process')
-}
+    AfterEach {
+        [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $null, 'Process')
+        [Environment]::SetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER', $null, 'Process')
+    }
 
-Describe 'Deployment utility version selection with mocked filesystem metadata' {
     It 'discovers utility majors 18 through 22 in their SSMS installation layouts' {
         $expectedPaths = @{}
         $fixtures = @(
