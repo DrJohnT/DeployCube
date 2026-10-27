@@ -47,19 +47,18 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
         $script:programFiles = Join-Path $TestDrive 'Program Files'
         $script:programFilesX86 = Join-Path $TestDrive 'Program Files (x86)'
         New-Item -ItemType Directory -Path $script:programFiles, $script:programFilesX86 -Force | Out-Null
+        New-Item -ItemType Directory -Path (Join-Path $script:programFilesX86 'Microsoft SQL Server') -Force | Out-Null
         $env:ProgramFiles = $script:programFiles
         ${env:ProgramFiles(x86)} = $script:programFilesX86
         [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $null, 'Process')
         [Environment]::SetEnvironmentVariable('DEPLOY_CUBE_TEST_DISCOVERY_ORDER', $null, 'Process')
 
         Mock -ModuleName DeployCube Get-ChildItem {
-            param($Path, [switch]$Recurse, [string[]]$Include, $ErrorAction)
+            param($Path, [switch]$Recurse, [string[]]$Include)
 
             $arguments = @{
                 Path = $Path
-            }
-            if ($ErrorAction) {
-                $arguments.ErrorAction = $ErrorAction
+                ErrorAction = 'SilentlyContinue'
             }
             if ($Recurse) {
                 $arguments.Recurse = $true
