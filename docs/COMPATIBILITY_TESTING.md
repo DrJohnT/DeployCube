@@ -2,9 +2,9 @@
 
 These workflows are manual, experimental checks for the deployment utility that DeployCube discovers and executes. They run on disposable GitHub-hosted Windows Server 2022 runners, use Windows PowerShell 5.1, and make no production connections. They do not change the DeployCube public API or existing CI workflows.
 
-No compatibility combination has been run or certified by this change. A successful result must come from a completed workflow run and its JSON/NUnit artifacts; installer download, setup completion, or an unexecuted matrix entry is not a compatibility result.
+Phase A was executed on GitHub-hosted Windows Server 2022 runners. SSMS 20 and 22 passed discovery and selection tests; SSMS 21 installed its deployment utility, but its product major is not accepted by DeployCube's existing version-selection API. Phase A is therefore not fully successful, and Phase B was not run. These results validate installation/discovery/selection only; they do not establish SSAS server compatibility.
 
-GitHub requires a `workflow_dispatch` workflow to exist on the repository's default branch before it can be dispatched. While this feature remains unmerged by design, Phase A and Phase B cannot be started from the feature branch alone. Do not treat this limitation as an installer result.
+GitHub requires a `workflow_dispatch` workflow to exist on the repository's default branch before it can be dispatched. A branch-restricted push trigger was used temporarily for Phase A and has since been removed. The workflow is restored to manual-only operation; making `workflow_dispatch` available for this unmerged feature branch still requires the workflow to exist on the default branch.
 
 ## SSMS deployment utility matrix
 
@@ -18,7 +18,7 @@ Run **Actions → SSMS compatibility → Run workflow** with `phase-a` to valida
 | 21 | [Microsoft SSMS 21 release bootstrapper](https://aka.ms/ssms/21/release/vs_SSMS.exe) | Visual Studio Installer |
 | 22 | [Microsoft SSMS 22 release bootstrapper](https://aka.ms/ssms/22/release/vs_SSMS.exe) | Visual Studio Installer |
 
-SSMS 18 and 19 installer mappings remain available in the installation script but are outside the current Phase A matrix. The 18–20 links are fixed builds, not a promise to test the newest servicing update. SSMS 21/22 release aliases move over time. The installer script uses the quiet switches for each installer family and verifies an installed `Ssms.exe` and its product major before continuing. It records elapsed installation time and does not infer a utility version from the SSMS major.
+SSMS 18 and 19 installer mappings remain available in the installation script but are outside the current Phase A matrix. The 18–20 links are fixed builds, not a promise to test the newest servicing update. SSMS 21/22 release aliases move over time. The installer script uses the quiet switches for each installer family, installs all SSMS components for the Visual Studio Installer releases, verifies an installed `Ssms.exe` and its product major before continuing, and records elapsed installation time. It does not infer a utility version from the SSMS major.
 
 Each job inventories every `Microsoft.AnalysisServices.Deployment.exe` beneath the SQL Server/SSMS program directories and records the actual full path, file version, and product version. It then tests:
 
@@ -29,6 +29,18 @@ Each job inventories every `Microsoft.AnalysisServices.Deployment.exe` beneath t
 - No-utility behavior with empty temporary search roots; no installed files are moved or faked.
 
 The current selector prioritizes utility product versions in this order: `22`, `20`, `16`, `15`, `14`, `13`, `12`, `11`. This is not the SSMS-version order. An installed utility whose product major is not accepted by the current API is reported as an incompatibility; this infrastructure does not alter the public API to hide that result.
+
+### Phase A results from GitHub-hosted Windows runners
+
+The full Phase A matrix ran in [workflow run 40513688326](https://github.com/DrJohnT/DeployCube/actions/runs/40513688326). SSMS 21's unsupported-major reporting and custom-location test were then corrected and rerun in [workflow run 40515689408](https://github.com/DrJohnT/DeployCube/actions/runs/40515689408). Paths and versions below are taken from the uploaded installation and compatibility reports, not inferred from SSMS major numbers.
+
+| SSMS | Install | SSMS executable file version and path | Deployment utility file version and path | DeployCube discovery and selection | Pester | Install duration | Result |
+|---|---|---|---|---|---:|---:|---|
+| 20 | Successful | `20.2.37.0`; `C:\Program Files (x86)\Microsoft SQL Server Management Studio 20\Common7\IDE\Ssms.exe` | `20.0.3.0`; `C:\Program Files (x86)\Microsoft SQL Server Management Studio 20\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe` | Discovery found the path; explicit 20 and `latest` selected utility 20 | 8/8 passed | 586.89 s | Phase A passed |
+| 21 | Successful | `21.6.36603.0`; `C:\Program Files\Microsoft SQL Server Management Studio 21\Release\Common7\IDE\SSMS.exe` | `21.0.52.0`; `C:\Program Files\Microsoft SQL Server Management Studio 21\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe` | Discovery found the path; utility major 21 is not accepted by DeployCube's current selector/API, so explicit 21 selection is unsupported and `latest` does not select it | 7/7 passed | 169.82 s | **Unsupported** |
+| 22 | Successful | `22.11.12324.101`; `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\SSMS.exe` | `22.1.17.0`; `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe` | Discovery found the path; explicit 22 and `latest` selected utility 22 | 8/8 passed | 633.44 s | Phase A passed |
+
+Phase B was **not run**: the requested Phase A set is not fully supported because the SSMS 21 utility major is not in the existing DeployCube selector's accepted versions. The temporary push trigger was removed after the focused SSMS 21 rerun. No SSMS 20/22 side-by-side coexistence or installation-order result is claimed.
 
 The Phase B SSMS 20 + 22 jobs install both products in both orders on separate runners. They check both product installations, record all utility locations, actual file versions, and individual installation durations, and test selector stability when paths overlap through `CustomAsDwInstallLocation`. The existing finder can emit repeated paths for overlapping search roots; the tests check selection and path identity rather than claiming that the finder deduplicates results.
 
@@ -70,12 +82,12 @@ No combination is declared supported by this branch. Failures and explicit unsup
 ## Runner limitations, resource use, and coverage gaps
 
 - SSMS 22 lists Windows Server 2022 as a supported OS, but Microsoft also lists non-persistent VM environments as unsupported. GitHub-hosted runners are ephemeral; these results are experimental and are not a claim of Microsoft support for that runner arrangement.
-- SSAS setup requires large SQL Server media and installation space. SSMS single-install jobs require 8 GB free; the two-version job requires 14 GB free; SSAS setup currently requires 12 GB free after installing SSMS. Runner diagnostics capture available disk and physical memory before installation. SSMS installation duration is captured per installation; actual runtime and disk consumption are not certified until the workflow runs produce artifacts.
+- SSAS setup requires large SQL Server media and installation space. SSMS single-install jobs require 8 GB free; the two-version job requires 14 GB free; SSAS setup currently requires 12 GB free after installing SSMS. Runner diagnostics capture available disk and physical memory before installation. Phase A measured SSMS installation durations above; actual disk consumption is not certified.
 - The SSAS workflow requires externally supplied direct Microsoft ISO URLs; it does not automate download-center registration. This avoids credentials and avoids inventing stable links for releases whose direct media URLs aren't verified.
 - The Tabular fixture build depends on Analysis Services Projects build targets already being available to MSBuild on the hosted image. A missing target is recorded as a build failure; automatic extension acquisition is not implemented.
 - Multidimensional model deployment and processing are uncovered until a real fixture is checked in and built.
 - The current cross-version matrix samples SSMS 20 and 22. It does not certify every SSMS utility against every SSAS release, model compatibility level, deployment option, or service pack.
-- No workflow was dispatched as part of this implementation. Runtime, disk usage, installer success, actual executable paths, file versions, and compatibility outcomes remain unmeasured.
+- SSMS 18/19, side-by-side installation, and all SSAS scenarios remain untested. Phase A results do not establish deployment compatibility with any SSAS server or processing option.
 
 ## Reports and artifacts
 
