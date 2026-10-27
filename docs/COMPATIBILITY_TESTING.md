@@ -4,6 +4,8 @@ These workflows are manual, experimental checks for the deployment utility that 
 
 No compatibility combination has been run or certified by this change. A successful result must come from a completed workflow run and its JSON/NUnit artifacts; installer download, setup completion, or an unexecuted matrix entry is not a compatibility result.
 
+GitHub requires a `workflow_dispatch` workflow to exist on the repository's default branch before it can be dispatched. While this feature remains unmerged by design, Phase A and Phase B cannot be started from the feature branch alone. Do not treat this limitation as an installer result.
+
 ## SSMS deployment utility matrix
 
 Run **Actions → SSMS compatibility → Run workflow** with `phase-a` to validate SSMS 20, 21, and 22. After all Phase A jobs pass, dispatch again with `phase-b` for side-by-side SSMS 20 + 22 installs. The workflow does not start Phase B automatically. The installer sources are Microsoft links:
