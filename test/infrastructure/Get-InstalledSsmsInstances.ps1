@@ -20,11 +20,11 @@ $instances = foreach ($root in $roots) {
                 $_.FullName,
                 '(?i)^(.+?Microsoft SQL Server Management Studio\s+\d+)(?:\\|$)'
             )
-            $major = if ($productMatch.Success) {
-                [int]$productMatch.Groups[1].Value
-            }
-            elseif ($folderMatch.Success) {
+            $major = if ($folderMatch.Success) {
                 [int]$folderMatch.Groups[1].Value
+            }
+            elseif ($productMatch.Success) {
+                [int]$productMatch.Groups[1].Value
             }
             else {
                 $null
