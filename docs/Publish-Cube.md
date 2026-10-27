@@ -80,8 +80,9 @@ Accept wildcard characters: False
 ### -PreferredVersion
 Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use. 
 Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
-Valid values for -PreferredVersion are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
-* latest: Latest SQL Server version found on agent
+Valid values for -PreferredVersion are: ('22', '21', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
+* latest: Highest-priority supported deployment utility product major found on agent
+* 22, 21, 20: SSMS deployment utility product versions 22, 21, and 20
 * 16: SQL Server 2022
 * 15: SQL Server 2019
 * 14: SQL Server 2017
@@ -277,4 +278,3 @@ This PowerShell script is released under the MIT license http://www.opensource.o
 ## RELATED LINKS
 
 [https://github.com/DrJohnT/DeployCube](https://github.com/DrJohnT/DeployCube)
-

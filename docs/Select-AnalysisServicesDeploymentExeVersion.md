@@ -26,7 +26,7 @@ Selects a version of Microsoft.AnalysisServices.Deployment.exe to use
 Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest;
 ```
 
-Returns the latest version of Microsoft.AnalysisServices.Deployment.exe found on the machine.
+Returns the highest-priority supported product major of Microsoft.AnalysisServices.Deployment.exe found on the machine.
 
 ### EXAMPLE 2
 ```
@@ -39,9 +39,10 @@ Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -PreferredVersion
 The preferred version of Microsoft.AnalysisServices.Deployment.exe to attempt to find.
-Valid values for -PreferredVersion are: ('22', '20', '16', '15', '14', '13', '12', '11', 'latest') which translate as follows:
+Valid values for -PreferredVersion are: ('22', '21', '20', '16', '15', '14', '13', '12', '11', 'latest') which translate as follows:
 
-* latest: Latest SQL Server version found on agent
+* latest: Highest-priority supported deployment utility product major found on agent
+* 22, 21, 20: SSMS deployment utility product versions 22, 21, and 20
 * 16: SQL Server 2022
 * 15: SQL Server 2019
 * 14: SQL Server 2017
@@ -79,4 +80,3 @@ This PowerShell script is released under the MIT license http://www.opensource.o
 ## RELATED LINKS
 
 [https://github.com/DrJohnT/DeployCube](https://github.com/DrJohnT/DeployCube)
-

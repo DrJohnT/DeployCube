@@ -21,7 +21,14 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
 
     Context "Finding Versions" {
         It "Finds latest version" {
-            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be '15'
+            $expected = $null
+            foreach ($version in @('22', '21', '20', '16', '15', '14', '13', '12', '11')) {
+                if (Get-AnalysisServicesDeploymentExePath -Version $version) {
+                    $expected = $version
+                    break
+                }
+            }
+            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be $expected
         }
         
         It "Finds version 15" {
@@ -59,8 +66,31 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
         It "Invalid version XX so should throw" {
             { Select-AnalysisServicesDeploymentExeVersion -PreferredVersion XX } | Should -Throw;
         }
+    }
 
+    Context "Version 21 support" {
+        It "selects version 21 explicitly and uses it as latest when version 22 is absent" {
+            Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExePath {
+                param($Version)
+                if ($Version -in @('20', '21')) {
+                    return "C:\Deployment\$Version\Microsoft.AnalysisServices.Deployment.exe"
+                }
+            }
 
+            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 21 | Should -Be '21'
+            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be '21'
+        }
+
+        It "prefers version 22 over version 21 and 20 for latest" {
+            Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExePath {
+                param($Version)
+                if ($Version -in @('20', '21', '22')) {
+                    return "C:\Deployment\$Version\Microsoft.AnalysisServices.Deployment.exe"
+                }
+            }
+
+            Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be '22'
+        }
     }
 }
 

@@ -3,7 +3,7 @@ BeforeAll {
     Import-Module -Name (Join-Path $repositoryRoot 'DeployCube\DeployCube.psd1') -Force -ErrorAction Stop
     $script:ssmsInstances = @(& (Join-Path $PSScriptRoot 'Get-InstalledSsmsInstances.ps1'))
     $script:utilities = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
-    $script:versionPriority = @('22', '20', '16', '15', '14', '13', '12', '11')
+    $script:versionPriority = @('22', '21', '20', '16', '15', '14', '13', '12', '11')
 }
 
 Describe 'SSMS 20 and 22 side-by-side deployment utility selection' {
@@ -26,8 +26,14 @@ Describe 'SSMS 20 and 22 side-by-side deployment utility selection' {
             $versionString = [string]$version
             $selectedPath = Get-AnalysisServicesDeploymentExePath -Version $versionString
             $selectedPath | Should -Not -BeNullOrEmpty
-            [System.IO.Path]::GetFullPath($selectedPath) |
+            $selectedPath = [System.IO.Path]::GetFullPath($selectedPath)
+            $selectedPath |
                 Should -BeIn @($script:utilities | ForEach-Object { [System.IO.Path]::GetFullPath($_.Path) })
+            @(
+                $script:utilities | Where-Object {
+                    [System.IO.Path]::GetFullPath($_.Path) -eq $selectedPath
+                }
+            ).ProductMajorVersion | Should -Be ([int]$versionString)
             Select-AnalysisServicesDeploymentExeVersion -PreferredVersion $versionString |
                 Should -Be $versionString
         }
@@ -71,7 +77,7 @@ Describe 'SSMS 20 and 22 side-by-side deployment utility selection' {
             )
 
             $env:COMPAT_OVERLAPPING_PATH_OCCURRENCES = [string]$matchingOutput.Count
-            $matchingOutput.Count | Should -BeGreaterThan 0
+            $matchingOutput.Count | Should -Be 1
             Get-AnalysisServicesDeploymentExePath -Version $version | Should -Not -BeNullOrEmpty
             Select-AnalysisServicesDeploymentExeVersion -PreferredVersion $version | Should -Be $version
             Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest |

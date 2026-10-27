@@ -78,7 +78,7 @@ Build model with SSDT / Visual Studio tooling
 In [Publish-Cube](../DeployCube/public/Publish-Cube.ps1#L140):
 
 - The function first sets global `ErrorActionPreference` to `Stop`.
-- Version selection accepts `22`, `20`, `16`, `15`, `14`, `13`, `12`, `11`, or `latest`. An unavailable preferred version falls back to another known version, in descending hard-coded order.
+- Version selection accepts `22`, `21`, `20`, `16`, `15`, `14`, `13`, `12`, `11`, or `latest`. `latest` follows this descending utility-major priority; an unavailable preferred version falls back to the next available supported utility.
 - It checks utility/model existence, reads the utility's `ProductVersion`, and takes its first two characters. It does not parse the model or compare its compatibility level with the target/server/tool.
 - It updates files **in their original build directory**, then invokes the utility with the model path and `/s:<folder>\AnalysisServicesDeploymentExeLog.txt`.
 - It deletes an existing shared log before invoking the process. Successful exit is the wrapper's success criterion; it performs no independent post-deployment model/data validation.

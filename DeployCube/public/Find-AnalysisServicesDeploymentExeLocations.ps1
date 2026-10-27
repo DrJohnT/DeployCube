@@ -56,11 +56,19 @@ function Find-AnalysisServicesDeploymentExeLocations {
         }
         
         
-        # list all the locations found
+        $seenPaths = @{}
+
+        # list all the unique locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
+            $fullPath = [System.IO.Path]::GetFullPath($AnalysisServicesDeploymentExe.FullName)
+            if ($seenPaths.ContainsKey($fullPath)) {
+                continue
+            }
+            $seenPaths[$fullPath] = $true
+
             [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);
-            Write-Debug "Found '$ExeName': '$($AnalysisServicesDeploymentExe.FullName)' (product version $ProductVersion).";
-            Write-Output "$ProductVersion  $AnalysisServicesDeploymentExe";
+            Write-Debug "Found '$ExeName': '$fullPath' (product version $ProductVersion).";
+            Write-Output "$ProductVersion  $fullPath";
         }
     }
     catch {

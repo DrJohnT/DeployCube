@@ -38,6 +38,11 @@ Describe "Publish-Cube" -Tag "Round3" {
         It "Should have PreferredVersion as an optional parameter" {
             (Get-Command Publish-Cube).Parameters['PreferredVersion'].Attributes.mandatory | Should -BeFalse;
         }
+        It "Accepts deployment utility version 21" {
+            $validateSet = (Get-Command Publish-Cube).Parameters['PreferredVersion'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
+            $validateSet.ValidValues | Should -Contain '21'
+        }
         It "Should have ProcessingOption as an optional parameter" {
             (Get-Command Publish-Cube).Parameters['ProcessingOption'].Attributes.mandatory | Should -BeFalse;
         }

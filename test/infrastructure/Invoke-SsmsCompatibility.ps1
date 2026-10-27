@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $installation = Get-Content -LiteralPath $InstallationReportPath -Raw | ConvertFrom-Json
 $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
-$knownProductMajors = @('22', '20', '16', '15', '14', '13', '12', '11')
+$knownProductMajors = @('22', '21', '20', '16', '15', '14', '13', '12', '11')
 $unsupportedProductMajors = @(
     $inventory |
         Where-Object { $knownProductMajors -notcontains [string]$_.ProductMajorVersion } |
@@ -81,7 +81,7 @@ $report = @{
     InstallationDurationSeconds = $installation.InstallationDurationSeconds
     UnsupportedDeploymentUtilityProductMajors = @($unsupportedProductMajors)
     UnsupportedReason = if ($unsupportedProductMajors.Count -gt 0) {
-        "Deployment utility product major version(s) $($unsupportedProductMajors -join ', ') are not accepted by DeployCube's existing version-selection API. The public API was not modified."
+        "Deployment utility product major version(s) $($unsupportedProductMajors -join ', ') are outside DeployCube's supported selector versions."
     } else { $null }
     Runner = @{
         OperatingSystem = $diagnostics.OperatingSystem
