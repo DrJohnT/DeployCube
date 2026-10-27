@@ -28,7 +28,7 @@ BeforeAll {
                 $relativePath = "Microsoft SQL Server Management Studio $SsmsMajor\Release\Common7\IDE"
             }
             'custom' {
-                $root = Join-Path $script:testDrive 'Custom install'
+                $root = Join-Path $script:fixtureRoot 'Custom install'
                 $relativePath = "Microsoft SQL Server Management Studio $SsmsMajor\Release\Common7\IDE"
             }
         }
@@ -44,8 +44,9 @@ BeforeAll {
 
 Describe 'Deployment utility version selection with mocked filesystem metadata' {
     BeforeEach {
-        $script:programFiles = Join-Path $TestDrive 'Program Files'
-        $script:programFilesX86 = Join-Path $TestDrive 'Program Files (x86)'
+        $script:fixtureRoot = Join-Path $script:testDrive ([Guid]::NewGuid().ToString('N'))
+        $script:programFiles = Join-Path $script:fixtureRoot 'Program Files'
+        $script:programFilesX86 = Join-Path $script:fixtureRoot 'Program Files (x86)'
         New-Item -ItemType Directory -Path $script:programFiles, $script:programFilesX86 -Force | Out-Null
         New-Item -ItemType Directory -Path (Join-Path $script:programFilesX86 'Microsoft SQL Server') -Force | Out-Null
         $env:ProgramFiles = $script:programFiles
@@ -183,7 +184,7 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
 
     It 'discovers a utility from CustomAsDwInstallLocation when standard roots are empty' {
         $expectedPath = New-MockedDeploymentUtility -SsmsMajor 18 -ProductMajor 22 -Layout custom
-        $customRoot = Join-Path $script:testDrive 'Custom install'
+        $customRoot = Join-Path $script:fixtureRoot 'Custom install'
         [Environment]::SetEnvironmentVariable('CustomAsDwInstallLocation', $customRoot, 'Process')
 
         Find-AnalysisServicesDeploymentExeLocations | Should -Contain "22  $expectedPath"
@@ -205,7 +206,7 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
 
         [Environment]::SetEnvironmentVariable(
             'CustomAsDwInstallLocation',
-            (Join-Path $script:testDrive 'missing custom root'),
+            (Join-Path $script:fixtureRoot 'missing custom root'),
             'Process'
         )
         { Get-AnalysisServicesDeploymentExePath -Version 22 } | Should -Throw
