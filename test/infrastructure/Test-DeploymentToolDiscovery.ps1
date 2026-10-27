@@ -3,7 +3,7 @@ BeforeAll {
     $modulePath = Join-Path $repositoryRoot 'DeployCube\DeployCube.psd1'
     Import-Module -Name $modulePath -Force -ErrorAction Stop
 
-    $script:knownVersions = @('22', '21', '20', '16', '15', '14', '13', '12', '11')
+    $script:knownVersions = @('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11')
 }
 
 Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR" {
@@ -32,7 +32,7 @@ Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR
         @($reportedPaths | Sort-Object -Unique).Count | Should -Be $reportedPaths.Count
     }
 
-    It 'exposes version 21 through discovery and public selection parameters' {
+    It 'exposes supported utility versions through public selection parameters' {
         foreach ($commandName in @(
             'Get-AnalysisServicesDeploymentExePath',
             'Select-AnalysisServicesDeploymentExeVersion',
@@ -41,31 +41,10 @@ Describe "DeployCube deployment utility discovery on SSMS $env:COMPAT_SSMS_MAJOR
             $parameterName = if ($commandName -eq 'Get-AnalysisServicesDeploymentExePath') { 'Version' } else { 'PreferredVersion' }
             $validateSet = (Get-Command $commandName).Parameters[$parameterName].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
-            $validateSet.ValidValues | Should -Contain '21'
-        }
-    }
-
-    It 'selects version 21 explicitly and as latest ahead of 20 when version 22 is absent' {
-        Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExePath {
-            param($Version)
-            if ($Version -in @('20', '21')) {
-                return "C:\Deployment\$Version\Microsoft.AnalysisServices.Deployment.exe"
+            foreach ($version in @('18', '19', '20', '21', '22')) {
+                $validateSet.ValidValues | Should -Contain $version
             }
         }
-
-        Select-AnalysisServicesDeploymentExeVersion -PreferredVersion 21 | Should -Be '21'
-        Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be '21'
-    }
-
-    It 'selects version 22 as latest ahead of version 21 and 20' {
-        Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExePath {
-            param($Version)
-            if ($Version -in @('20', '21', '22')) {
-                return "C:\Deployment\$Version\Microsoft.AnalysisServices.Deployment.exe"
-            }
-        }
-
-        Select-AnalysisServicesDeploymentExeVersion -PreferredVersion latest | Should -Be '22'
     }
 
     It 'returns each installed utility for its actual supported product major version' {

@@ -21,10 +21,12 @@ Describe "Get-AnalysisServicesDeploymentExePath"  -Tag "Round1" {
             (Get-Command Get-AnalysisServicesDeploymentExePath).Parameters['Version'].Attributes.mandatory | Should -BeTrue;
         }
 
-        It "Accepts deployment utility version 21" {
+        It "Accepts deployment utility versions 18 through 22" {
             $validateSet = (Get-Command Get-AnalysisServicesDeploymentExePath).Parameters['Version'].Attributes |
                 Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
-            $validateSet.ValidValues | Should -Contain '21'
+            foreach ($version in @('18', '19', '20', '21', '22')) {
+                $validateSet.ValidValues | Should -Contain $version
+            }
         }
     }
 

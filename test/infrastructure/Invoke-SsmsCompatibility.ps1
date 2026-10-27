@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $installation = Get-Content -LiteralPath $InstallationReportPath -Raw | ConvertFrom-Json
 $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1'))
-$knownProductMajors = @('22', '21', '20', '16', '15', '14', '13', '12', '11')
+$knownProductMajors = @('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11')
 $unsupportedProductMajors = @(
     $inventory |
         Where-Object { $knownProductMajors -notcontains [string]$_.ProductMajorVersion } |
@@ -43,7 +43,10 @@ try {
 
     $env:COMPAT_SSMS_MAJOR = $SsmsMajor
     $configuration = New-PesterConfiguration
-    $configuration.Run.Path = Join-Path $PSScriptRoot 'Test-DeploymentToolDiscovery.ps1'
+    $configuration.Run.Path = @(
+        (Join-Path $PSScriptRoot 'Test-DeploymentToolDiscovery.ps1'),
+        (Join-Path $PSScriptRoot '..\DeploymentToolSelection.Tests.ps1')
+    )
     $configuration.Run.Exit = $false
     $configuration.Run.PassThru = $true
     $configuration.TestResult.Enabled = $true

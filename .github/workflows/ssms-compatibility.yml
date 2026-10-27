@@ -5,22 +5,12 @@ on:
     branches:
       - feature/ssms-ssas-compatibility
   workflow_dispatch:
-    inputs:
-      phase:
-        description: Run SSMS 20–22 discovery (Phase A), or side-by-side SSMS 20 + 22 (Phase B, after Phase A succeeds)
-        type: choice
-        required: true
-        default: phase-a
-        options:
-          - phase-a
-          - phase-b
 
 permissions:
   contents: read
 
 jobs:
   ssms-version:
-    if: github.event_name == 'push' || inputs.phase == 'phase-a'
     name: SSMS ${{ matrix.ssms }}
     runs-on: windows-2022
     timeout-minutes: 90
@@ -47,7 +37,7 @@ jobs:
             -LogDirectory 'artifacts/ssms/${{ matrix.ssms }}/installation' `
             -MinimumFreeSpaceGB 8
 
-      - name: Test DeployCube discovery
+      - name: Test DeployCube discovery and selection
         if: always() && steps.install.outcome == 'success'
         shell: powershell
         run: |
@@ -58,11 +48,15 @@ jobs:
             -DiagnosticsPath 'artifacts/ssms/${{ matrix.ssms }}/runner-diagnostics.json' `
             -InstallationReportPath 'artifacts/ssms/${{ matrix.ssms }}/installation/ssms-${{ matrix.ssms }}-install.json'
 
-      - name: Record skipped test after installation failure
-        if: always() && steps.install.outcome != 'success'
+      - name: Record skipped tests after installation failure
+        if: always() && steps.install.outcome == 'failure'
         shell: powershell
         run: |
-          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "## SSMS ${{ matrix.ssms }} compatibility`n`nInstallation failed; utility discovery and Pester tests were not run. No successful installation is claimed." -Encoding UTF8
+          ./test/infrastructure/Write-SsmsInstallationFailureReport.ps1 `
+            -SsmsMajor '${{ matrix.ssms }}' `
+            -InstallationFailurePath 'artifacts/ssms/${{ matrix.ssms }}/installation/ssms-${{ matrix.ssms }}-install-failure.json' `
+            -DiagnosticsPath 'artifacts/ssms/${{ matrix.ssms }}/runner-diagnostics.json' `
+            -ReportPath 'artifacts/ssms/${{ matrix.ssms }}/compatibility-report.json'
 
       - name: Upload installer logs, inventory and test results
         if: always()
@@ -70,146 +64,5 @@ jobs:
         with:
           name: ssms-${{ matrix.ssms }}-compatibility
           path: artifacts/ssms/${{ matrix.ssms }}
-          if-no-files-found: warn
-          retention-days: 30
-
-  ssms-side-by-side:
-    if: github.event_name == 'push' || inputs.phase == 'phase-b'
-    name: SSMS 20 + 22 (${{ matrix.install_order }})
-    runs-on: windows-2022
-    timeout-minutes: 150
-    strategy:
-      fail-fast: false
-      matrix:
-        install_order: ['20-then-22', '22-then-20']
-    steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Capture runner diagnostics and check disk budget
-        shell: powershell
-        run: |
-          $artifactDirectory = 'artifacts/ssms-side-by-side/${{ matrix.install_order }}'
-          New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
-          ./test/infrastructure/Get-RunnerDiagnostics.ps1 -OutputPath "$artifactDirectory/runner-diagnostics.json"
-          $systemDrive = [System.IO.DriveInfo]::new($env:SystemDrive + '\')
-          $freeGB = [math]::Floor($systemDrive.AvailableFreeSpace / 1GB)
-          if ($freeGB -lt 14) {
-            $message = "Insufficient disk space for simultaneous SSMS 20 and 22 installation: $freeGB GB free on $($systemDrive.Name), 14 GB required. The per-version fallback job will run, but does not claim side-by-side coverage."
-            $diagnostics = Get-Content -LiteralPath "$artifactDirectory/runner-diagnostics.json" -Raw | ConvertFrom-Json
-            $report = @{
-              SchemaVersion = 1
-              TestSurface = 'SSMS 20 + SSMS 22 side-by-side deployment utility compatibility'
-              Target = "SSMS installation order ${{ matrix.install_order }}"
-              InstallOrder = '${{ matrix.install_order }}'
-              Outcome = 'NotRun'
-              TestedAtUtc = [DateTime]::UtcNow.ToString('o')
-              Runner = @{
-                OperatingSystem = $diagnostics.OperatingSystem
-                PowerShellVersion = $diagnostics.PowerShellVersion
-                ComputerName = $diagnostics.ComputerName
-                TotalPhysicalMemoryBytes = $diagnostics.TotalPhysicalMemoryBytes
-                FreePhysicalMemoryBytes = $diagnostics.FreePhysicalMemoryBytes
-                Drives = $diagnostics.Drives
-              }
-              DeploymentUtilities = @()
-              InstallationMessage = $message
-              TestMessage = 'Side-by-side installation was not attempted because the disk preflight failed.'
-              Limitations = @('The isolated per-version fallback does not claim simultaneous installation or cross-version selection.')
-            }
-            ./test/infrastructure/Write-CompatibilityReport.ps1 `
-              -Report $report `
-              -ReportPath "$artifactDirectory/compatibility-report.json" `
-              -SummaryPath $env:GITHUB_STEP_SUMMARY
-            throw $message
-          }
-
-      - name: Install first SSMS release
-        id: install-first
-        shell: powershell
-        run: |
-          $first = if ('${{ matrix.install_order }}' -eq '20-then-22') { '20' } else { '22' }
-          ./test/infrastructure/Install-Ssms.ps1 `
-            -SsmsMajor $first `
-            -LogDirectory 'artifacts/ssms-side-by-side/${{ matrix.install_order }}/installation' `
-            -MinimumFreeSpaceGB 6
-
-      - name: Install second SSMS release
-        id: install-second
-        if: always() && steps.install-first.outcome == 'success'
-        shell: powershell
-        run: |
-          $second = if ('${{ matrix.install_order }}' -eq '20-then-22') { '22' } else { '20' }
-          ./test/infrastructure/Install-Ssms.ps1 `
-            -SsmsMajor $second `
-            -LogDirectory 'artifacts/ssms-side-by-side/${{ matrix.install_order }}/installation' `
-            -MinimumFreeSpaceGB 6
-
-      - name: Test coexistence and version selection
-        if: always() && steps.install-first.outcome == 'success' && steps.install-second.outcome == 'success'
-        shell: powershell
-        run: |
-          ./test/infrastructure/Invoke-SsmsSideBySideCompatibility.ps1 `
-            -InstallOrder '${{ matrix.install_order }}' `
-            -ReportPath 'artifacts/ssms-side-by-side/${{ matrix.install_order }}/compatibility-report.json' `
-            -TestResultPath 'artifacts/ssms-side-by-side/${{ matrix.install_order }}/nunit-results.xml' `
-            -DiagnosticsPath 'artifacts/ssms-side-by-side/${{ matrix.install_order }}/runner-diagnostics.json'
-
-      - name: Upload side-by-side logs and results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ssms-side-by-side-${{ matrix.install_order }}
-          path: artifacts/ssms-side-by-side/${{ matrix.install_order }}
-          if-no-files-found: warn
-          retention-days: 30
-
-  ssms-side-by-side-fallback:
-    name: Per-version fallback (${{ matrix.ssms }})
-    needs: ssms-side-by-side
-    if: always() && (github.event_name == 'push' || inputs.phase == 'phase-b') && needs.ssms-side-by-side.result == 'failure'
-    runs-on: windows-2022
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        ssms: ['20', '22']
-    steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Capture runner diagnostics
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Path artifacts/ssms-fallback/${{ matrix.ssms }} -Force | Out-Null
-          ./test/infrastructure/Get-RunnerDiagnostics.ps1 -OutputPath artifacts/ssms-fallback/${{ matrix.ssms }}/runner-diagnostics.json
-
-      - name: Install SSMS ${{ matrix.ssms }} separately
-        id: install
-        shell: powershell
-        run: |
-          ./test/infrastructure/Install-Ssms.ps1 `
-            -SsmsMajor '${{ matrix.ssms }}' `
-            -LogDirectory 'artifacts/ssms-fallback/${{ matrix.ssms }}/installation' `
-            -MinimumFreeSpaceGB 8
-
-      - name: Test isolated utility discovery
-        if: always() && steps.install.outcome == 'success'
-        shell: powershell
-        run: |
-          ./test/infrastructure/Invoke-SsmsCompatibility.ps1 `
-            -SsmsMajor '${{ matrix.ssms }}' `
-            -ReportPath 'artifacts/ssms-fallback/${{ matrix.ssms }}/compatibility-report.json' `
-            -TestResultPath 'artifacts/ssms-fallback/${{ matrix.ssms }}/nunit-results.xml' `
-            -DiagnosticsPath 'artifacts/ssms-fallback/${{ matrix.ssms }}/runner-diagnostics.json' `
-            -InstallationReportPath 'artifacts/ssms-fallback/${{ matrix.ssms }}/installation/ssms-${{ matrix.ssms }}-install.json'
-          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value 'Disk-limited fallback validates each SSMS release on its own runner. It does not claim simultaneous installation or cross-version selection.' -Encoding UTF8
-
-      - name: Upload fallback logs and results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ssms-fallback-${{ matrix.ssms }}
-          path: artifacts/ssms-fallback/${{ matrix.ssms }}
           if-no-files-found: warn
           retention-days: 30

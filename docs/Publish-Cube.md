@@ -80,9 +80,9 @@ Accept wildcard characters: False
 ### -PreferredVersion
 Defines the preferred version of Microsoft.AnalysisServices.Deployment.exe you wish to use. 
 Use 'latest' for the latest version, or do not provide the parameter as the default is 'latest'.
-Valid values for -PreferredVersion are: ('22', '21', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
+Valid values for -PreferredVersion are: ('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11') which translate as follows:
 * latest: Highest-priority supported deployment utility product major found on agent
-* 22, 21, 20: SSMS deployment utility product versions 22, 21, and 20
+* 22, 21, 20, 19, 18: SSMS deployment utility product versions 22, 21, 20, 19, and 18
 * 16: SQL Server 2022
 * 15: SQL Server 2019
 * 14: SQL Server 2017

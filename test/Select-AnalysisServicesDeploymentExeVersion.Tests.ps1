@@ -22,7 +22,7 @@ Describe "Select-AnalysisServicesDeploymentExeVersion"  -Tag "Round1" {
     Context "Finding Versions" {
         It "Finds latest version" {
             $expected = $null
-            foreach ($version in @('22', '21', '20', '16', '15', '14', '13', '12', '11')) {
+            foreach ($version in @('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11')) {
                 if (Get-AnalysisServicesDeploymentExePath -Version $version) {
                     $expected = $version
                     break

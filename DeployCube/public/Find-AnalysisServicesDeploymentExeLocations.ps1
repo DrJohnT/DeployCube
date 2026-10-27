@@ -66,9 +66,14 @@ function Find-AnalysisServicesDeploymentExeLocations {
             }
             $seenPaths[$fullPath] = $true
 
-            [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);
+            $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion
+            if ($ProductVersion -notmatch '^\s*(\d+)') {
+                Write-Warning "Skipping '$fullPath' because it has no readable product major version."
+                continue
+            }
+            $ProductMajorVersion = $matches[1]
             Write-Debug "Found '$ExeName': '$fullPath' (product version $ProductVersion).";
-            Write-Output "$ProductVersion  $fullPath";
+            Write-Output "$ProductMajorVersion  $fullPath";
         }
     }
     catch {
