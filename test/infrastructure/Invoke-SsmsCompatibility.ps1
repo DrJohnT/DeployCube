@@ -36,10 +36,11 @@ try {
     $configuration = New-PesterConfiguration
     $configuration.Run.Path = Join-Path $PSScriptRoot 'Test-DeploymentToolDiscovery.ps1'
     $configuration.Run.Exit = $false
+    $configuration.Run.PassThru = $true
     $configuration.TestResult.Enabled = $true
     $configuration.TestResult.OutputPath = $TestResultPath
     $configuration.TestResult.OutputFormat = 'NUnitXml'
-    $testResult = Invoke-Pester -Configuration $configuration -PassThru
+    $testResult = Invoke-Pester -Configuration $configuration
     $testMessage = "Passed $($testResult.PassedCount), failed $($testResult.FailedCount), skipped $($testResult.SkippedCount)."
 }
 catch {
