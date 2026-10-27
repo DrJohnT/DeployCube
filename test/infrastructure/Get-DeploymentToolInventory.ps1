@@ -1,15 +1,30 @@
 [CmdletBinding()]
 param()
 
-$searchRoots = @(
-    (Join-Path ${env:ProgramFiles(x86)} 'Microsoft SQL Server'),
-    (Join-Path ${env:ProgramFiles(x86)} 'Microsoft SQL Server Management Studio*'),
-    (Join-Path $env:ProgramFiles 'Microsoft SQL Server Management Studio*')
-) | Where-Object { $_ -and (Test-Path -Path $_) }
+$programFilesRoots = @(
+    ${env:ProgramFiles(x86)},
+    $env:ProgramFiles,
+    ${env:ProgramW6432}
+) |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Sort-Object -Unique
+
+$searchRoots = foreach ($programFilesRoot in $programFilesRoots) {
+    if (Test-Path -LiteralPath $programFilesRoot -PathType Container) {
+        $sqlServerRoot = Join-Path $programFilesRoot 'Microsoft SQL Server'
+        if (Test-Path -LiteralPath $sqlServerRoot -PathType Container) {
+            $sqlServerRoot
+        }
+
+        Get-ChildItem -LiteralPath $programFilesRoot -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like 'Microsoft SQL Server Management Studio*' } |
+            ForEach-Object { $_.FullName }
+    }
+}
 
 $executables = @()
 foreach ($root in $searchRoots) {
-    $executables += Get-ChildItem -Path $root -Filter 'Microsoft.AnalysisServices.Deployment.exe' -File -Recurse -ErrorAction SilentlyContinue
+    $executables += Get-ChildItem -LiteralPath $root -Filter 'Microsoft.AnalysisServices.Deployment.exe' -File -Recurse -ErrorAction SilentlyContinue
 }
 
 $customRoot = [Environment]::GetEnvironmentVariable('CustomAsDwInstallLocation')

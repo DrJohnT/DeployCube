@@ -43,7 +43,10 @@ try {
     $testMessage = "Passed $($testResult.PassedCount), failed $($testResult.FailedCount), skipped $($testResult.SkippedCount)."
 }
 catch {
-    $testMessage = $_.Exception.Message
+    $testMessage = @(
+        $_.Exception.ToString()
+        $_.ScriptStackTrace
+    ) -join [Environment]::NewLine
 }
 
 $outcome = 'Passed'
