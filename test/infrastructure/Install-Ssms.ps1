@@ -49,6 +49,7 @@ try {
             'install',
             '--productId',
             'Microsoft.VisualStudio.Product.SSMS',
+            '--all',
             '--quiet',
             '--norestart',
             '--wait'

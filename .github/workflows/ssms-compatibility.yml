@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - feature/ssms-ssas-compatibility
+    paths:
+      - .github/workflows/ssms-compatibility.yml
   workflow_dispatch:
     inputs:
       phase:
