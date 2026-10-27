@@ -124,6 +124,17 @@ try {
         if ($fixture.CompatibilityLevel -ne $modelCompatibilityLevel) {
             throw 'TOM fixture validation returned an unexpected compatibility level.'
         }
+        foreach ($table in $fixture.Model.Tables) {
+            foreach ($partition in $table.Partitions) {
+                if ($partition.Source -is [Microsoft.AnalysisServices.Tabular.CalculatedPartitionSource]) {
+                    foreach ($column in $table.Columns) {
+                        if ($column -isnot [Microsoft.AnalysisServices.Tabular.CalculatedTableColumn]) {
+                            throw "Calculated table '$($table.Name)' contains a non-calculated-table column '$($column.Name)'."
+                        }
+                    }
+                }
+            }
+        }
 
         $failureCategory = 'Deployment Utility compatibility'
         & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `

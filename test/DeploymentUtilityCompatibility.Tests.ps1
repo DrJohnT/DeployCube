@@ -20,6 +20,7 @@ Describe 'Direct Deployment Utility compatibility gate' {
         Mock New-Object { return $script:mockConnection } -ParameterFilter {
             $TypeName -eq 'Microsoft.AnalysisServices.Server'
         }
+
         Mock Start-Process {
             if ($script:createDatabase) {
                 $database = [pscustomobject]@{
@@ -34,6 +35,14 @@ Describe 'Direct Deployment Utility compatibility gate' {
             }
             return [pscustomobject]@{ ExitCode = $script:exitCode }
         }
+    }
+
+    It 'declares calculated table columns bound to the DAX ROW result' {
+        $fixture = Get-Content -LiteralPath $script:fixturePath -Raw | ConvertFrom-Json
+        $fixture.compatibilityLevel | Should -Be 1500
+        $fixture.model.tables[0].partitions[0].source.type | Should -Be 'calculated'
+        $fixture.model.tables[0].columns[0].type | Should -Be 'calculatedTableColumn'
+        $fixture.model.tables[0].columns[0].sourceColumn | Should -Be '[Value]'
     }
 
     It 'requires an actual database at compatibility 1500 and cleans up the probe' {

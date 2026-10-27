@@ -9,9 +9,10 @@
         "name": "CompatibilityProbe",
         "columns": [
           {
+            "type": "calculatedTableColumn",
             "name": "Value",
             "dataType": "int64",
-            "sourceColumn": "Value"
+            "sourceColumn": "[Value]"
           }
         ],
         "partitions": [
