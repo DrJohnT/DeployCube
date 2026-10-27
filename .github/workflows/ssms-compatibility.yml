@@ -1,9 +1,6 @@
 name: SSMS compatibility
 
 on:
-  push:
-    branches:
-      - feature/ssms-ssas-compatibility
   workflow_dispatch:
 
 permissions:
