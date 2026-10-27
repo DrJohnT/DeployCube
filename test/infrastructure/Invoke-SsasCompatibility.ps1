@@ -163,6 +163,10 @@ try {
 catch {
     $testMessage = $_.Exception.ToString()
     $outcome = 'Failed'
+    $probeReportPath = Join-Path $LogDirectory 'utility-probe\compatibility-probe.json'
+    if (Test-Path -LiteralPath $probeReportPath) {
+        $utilityProbe = Get-Content -LiteralPath $probeReportPath -Raw | ConvertFrom-Json
+    }
 }
 
 $report = @{
@@ -186,6 +190,8 @@ $report = @{
     ActualSsasProductVersion = $actualSsasProductVersion
     SetupProductVersion = $ssasInstallation.SetupProductVersion
     SsasInstallationDurationSeconds = $ssasInstallation.InstallationDurationSeconds
+    MediaAcquisitionDurationSeconds = $ssasInstallation.MediaAcquisitionDurationSeconds
+    SsasSetupDurationSeconds = $ssasInstallation.SetupDurationSeconds
     ModelCompatibilityLevel = if ($Mode -eq 'Tabular') { $modelCompatibilityLevel } else { $null }
     ActualServerMode = if ($env:COMPAT_ACTUAL_SSAS_MODE) { $env:COMPAT_ACTUAL_SSAS_MODE } else { $actualMode }
     ActualModelCompatibilityLevel = if ($env:COMPAT_ACTUAL_MODEL_COMPATIBILITY) {
@@ -223,6 +229,18 @@ $report = @{
     -Report $report `
     -ReportPath $ReportPath `
     -SummaryPath $env:GITHUB_STEP_SUMMARY
+
+$details = @(
+    '',
+    "### Phase C deployment evidence",
+    "- SSMS executable version: $($ssmsInstallation.Installation.FileVersion)",
+    "- Selected Deployment Utility file/product version: $($selectedDeploymentUtility.FileVersion) / $($selectedDeploymentUtility.ProductVersion)",
+    "- Direct utility deployment probe: $($utilityProbe.Outcome); database compatibility: $($utilityProbe.CompatibilityLevel); cleanup: $($utilityProbe.Cleanup)",
+    "- Database exists after Publish-Cube: $($report.DatabaseExistsAfterPublish)",
+    "- Unpublish-Cube cleanup: $($report.CleanupResult)",
+    "- Failure category: $($report.FailureCategory)"
+)
+Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value ($details -join [Environment]::NewLine) -Encoding UTF8
 
 if ($outcome -ne 'Passed') {
     throw "SSAS compatibility outcome is '$outcome'. See the JSON report, setup logs, and NUnit results."
