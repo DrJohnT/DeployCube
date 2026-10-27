@@ -1,3 +1,19 @@
+function Get-AnalysisServicesDeploymentExeProductMajorVersion {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.FileSystemInfo]$DeploymentExe
+    )
+
+    $productVersion = $DeploymentExe.VersionInfo.ProductVersion
+    if ($productVersion -notmatch '^\s*(\d+)') {
+        Write-Warning "Skipping '$($DeploymentExe.FullName)' because it has no readable product major version."
+        return $null
+    }
+
+    return $matches[1]
+}
+
 function Find-AnalysisServicesDeploymentExeLocations {
     [CmdletBinding()]
     param()
@@ -66,13 +82,12 @@ function Find-AnalysisServicesDeploymentExeLocations {
             }
             $seenPaths[$fullPath] = $true
 
-            $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion
-            if ($ProductVersion -notmatch '^\s*(\d+)') {
-                Write-Warning "Skipping '$fullPath' because it has no readable product major version."
+            $ProductMajorVersion = Get-AnalysisServicesDeploymentExeProductMajorVersion `
+                -DeploymentExe $AnalysisServicesDeploymentExe
+            if ($null -eq $ProductMajorVersion) {
                 continue
             }
-            $ProductMajorVersion = $matches[1]
-            Write-Debug "Found '$ExeName': '$fullPath' (product version $ProductVersion).";
+            Write-Debug "Found '$ExeName': '$fullPath' (product major version $ProductMajorVersion).";
             Write-Output "$ProductMajorVersion  $fullPath";
         }
     }

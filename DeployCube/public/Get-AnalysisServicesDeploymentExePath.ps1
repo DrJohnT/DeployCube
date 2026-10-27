@@ -79,12 +79,11 @@ function Get-AnalysisServicesDeploymentExePath {
 
     foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
         $ExePath = $AnalysisServicesDeploymentExe.FullName;
-        $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion
-        if ($ProductVersion -notmatch '^\s*(\d+)') {
-            Write-Warning "Skipping '$ExePath' because it has no readable product major version."
+        $ProductMajorVersion = Get-AnalysisServicesDeploymentExeProductMajorVersion `
+            -DeploymentExe $AnalysisServicesDeploymentExe
+        if ($null -eq $ProductMajorVersion) {
             continue
         }
-        $ProductMajorVersion = $matches[1]
        
         if ($ProductMajorVersion -eq $Version) {
             $AnalysisServicesDeploymentExePath = $ExePath;

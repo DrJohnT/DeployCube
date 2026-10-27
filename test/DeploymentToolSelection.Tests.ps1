@@ -57,7 +57,9 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
 
             $arguments = @{
                 Path = $Path
-                ErrorAction = $ErrorAction
+            }
+            if ($ErrorAction) {
+                $arguments.ErrorAction = $ErrorAction
             }
             if ($Recurse) {
                 $arguments.Recurse = $true
@@ -71,13 +73,19 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
                 $files = @($files | Sort-Object -Property FullName -Descending)
             }
 
-            foreach ($file in $files) {
-                $productMajor = Get-Content -LiteralPath "$($file.FullName).version" -Raw -ErrorAction SilentlyContinue
-                $productVersion = if ($productMajor) { "$productMajor.0.0.0" } else { '' }
-                Add-Member -InputObject $file -MemberType NoteProperty -Name VersionInfo `
-                    -Value ([pscustomobject]@{ ProductVersion = $productVersion }) -Force
-                $file
+            $files
+        }
+
+        Mock -ModuleName DeployCube Get-AnalysisServicesDeploymentExeProductMajorVersion {
+            param($DeploymentExe)
+
+            $productMajor = Get-Content -LiteralPath "$($DeploymentExe.FullName).version" -Raw -ErrorAction SilentlyContinue
+            if ($productMajor -match '^\s*(\d+)') {
+                return $matches[1]
             }
+
+            Write-Warning "Skipping '$($DeploymentExe.FullName)' because it has no readable product major version."
+            return $null
         }
     }
 
