@@ -1,0 +1,141 @@
+name: SSAS compatibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Run the initial Phase C cell or the full experimental matrix
+        type: choice
+        required: true
+        default: phase-c
+        options:
+          - phase-c
+          - full-matrix
+      media_urls_json:
+        description: JSON map of SQL Server version to direct public Microsoft Developer ISO URL (no credentials or query tokens)
+        type: string
+        required: true
+        default: '{"2017":"","2019":"","2022":"","2025":""}'
+
+permissions:
+  contents: read
+
+jobs:
+  ssas-compatibility:
+    name: SQL Server ${{ matrix.ssas_version }} ${{ matrix.mode }} + SSMS ${{ matrix.ssms_major }}
+    runs-on: windows-2022
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.scope == 'phase-c' && '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}' || '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}') }}
+    env:
+      COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json }}
+      COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
+      COMPAT_SSAS_MODE: ${{ matrix.mode }}
+      COMPAT_SSMS_MAJOR: ${{ matrix.ssms_major }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Capture runner diagnostics
+        shell: powershell
+        run: |
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
+          ./test/infrastructure/Get-RunnerDiagnostics.ps1 -OutputPath "$artifactDirectory/runner-diagnostics.json"
+
+      - name: Validate media input before installation
+        shell: powershell
+        run: |
+          $mediaMap = ConvertFrom-Json -InputObject $env:COMPAT_MEDIA_URLS_JSON -ErrorAction Stop
+          $property = $mediaMap.PSObject.Properties[$env:COMPAT_SSAS_VERSION]
+          $mediaUri = $null
+          $validUri = $property -and [uri]::TryCreate([string]$property.Value, [System.UriKind]::Absolute, [ref]$mediaUri)
+          if (-not $validUri -or
+              $mediaUri.Scheme -ne 'https' -or
+              $mediaUri.UserInfo -or
+              $mediaUri.Query -or
+              $mediaUri.Host -notmatch '^download(\.[a-z0-9-]+)*\.microsoft\.com$') {
+            $message = "SQL Server $env:COMPAT_SSAS_VERSION setup was not attempted because its media URL is missing or is not a direct public Microsoft ISO URL without credentials or query tokens."
+            $artifactDirectory = "artifacts/ssas/$env:COMPAT_SSAS_VERSION/$env:COMPAT_SSAS_MODE/ssms-$env:COMPAT_SSMS_MAJOR"
+            $diagnostics = Get-Content -LiteralPath "$artifactDirectory/runner-diagnostics.json" -Raw | ConvertFrom-Json
+            $report = @{
+              SchemaVersion = 1
+              TestSurface = 'SSAS deployment integration'
+              Target = "SSAS $env:COMPAT_SSAS_VERSION $env:COMPAT_SSAS_MODE, SSMS $env:COMPAT_SSMS_MAJOR deployment utility"
+              Outcome = 'NotRun'
+              TestedAtUtc = [DateTime]::UtcNow.ToString('o')
+              Runner = @{
+                OperatingSystem = $diagnostics.OperatingSystem
+                PowerShellVersion = $diagnostics.PowerShellVersion
+                ComputerName = $diagnostics.ComputerName
+                TotalPhysicalMemoryBytes = $diagnostics.TotalPhysicalMemoryBytes
+                FreePhysicalMemoryBytes = $diagnostics.FreePhysicalMemoryBytes
+                Drives = $diagnostics.Drives
+              }
+              DeploymentUtilities = @()
+              InstallationMessage = 'SQL Server setup was not attempted because the version-specific media URL failed preflight.'
+              TestMessage = $message
+              UnsupportedReason = 'The manual dispatch must include a direct, uncredentialed Microsoft Developer ISO URL for this SQL Server major.'
+              Limitations = @('No setup or compatibility success is claimed for a matrix cell without a valid input media URL.')
+            }
+            ./test/infrastructure/Write-CompatibilityReport.ps1 `
+              -Report $report `
+              -ReportPath "$artifactDirectory/compatibility-report.json" `
+              -SummaryPath $env:GITHUB_STEP_SUMMARY
+            throw $message
+          }
+
+      - name: Install SSMS ${{ matrix.ssms_major }}
+        id: install-ssms
+        shell: powershell
+        run: |
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          ./test/infrastructure/Install-Ssms.ps1 `
+            -SsmsMajor $env:COMPAT_SSMS_MAJOR `
+            -LogDirectory "$artifactDirectory/ssms-installation" `
+            -MinimumFreeSpaceGB 8
+
+      - name: Install SQL Server ${{ matrix.ssas_version }} and SSAS ${{ matrix.mode }}
+        id: install-ssas
+        if: always() && steps.install-ssms.outcome == 'success'
+        shell: powershell
+        run: |
+          $mediaMap = ConvertFrom-Json -InputObject $env:COMPAT_MEDIA_URLS_JSON -ErrorAction Stop
+          $mediaUri = [uri][string]$mediaMap.PSObject.Properties[$env:COMPAT_SSAS_VERSION].Value
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          ./test/infrastructure/Install-Ssas.ps1 `
+            -SsasVersion $env:COMPAT_SSAS_VERSION `
+            -Mode $env:COMPAT_SSAS_MODE `
+            -MediaUri $mediaUri `
+            -LogDirectory "$artifactDirectory/sql-setup" `
+            -MinimumFreeSpaceGB 12
+
+      - name: Run DeployCube SSAS integration tests
+        if: always() && steps.install-ssas.outcome == 'success'
+        shell: powershell
+        run: |
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          ./test/infrastructure/Invoke-SsasCompatibility.ps1 `
+            -SsasVersion $env:COMPAT_SSAS_VERSION `
+            -Mode $env:COMPAT_SSAS_MODE `
+            -SsmsMajor $env:COMPAT_SSMS_MAJOR `
+            -ReportPath "$artifactDirectory/compatibility-report.json" `
+            -TestResultPath "$artifactDirectory/nunit-results.xml" `
+            -DiagnosticsPath "$artifactDirectory/runner-diagnostics.json" `
+            -LogDirectory "$artifactDirectory/model-build"
+
+      - name: Record setup or prerequisite failure
+        if: always() && (steps.install-ssms.outcome != 'success' || steps.install-ssas.outcome != 'success')
+        shell: powershell
+        run: |
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "## SSAS $env:COMPAT_SSAS_VERSION $env:COMPAT_SSAS_MODE / SSMS $env:COMPAT_SSMS_MAJOR`n`nSetup or a required prerequisite failed. See artifacts for runner diagnostics and installer logs. No compatibility success is claimed." -Encoding UTF8
+
+      - name: Upload SQL setup logs, reports and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssas-${{ matrix.ssas_version }}-${{ matrix.mode }}-ssms-${{ matrix.ssms_major }}
+          path: artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}
+          if-no-files-found: warn
+          retention-days: 30
