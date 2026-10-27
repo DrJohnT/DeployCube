@@ -1,0 +1,124 @@
+name: CI
+
+# Validation for every pull request and push to master: PSScriptAnalyzer + Pester unit tests on
+# Windows PowerShell 5.1. Neither step needs SQL Server, Analysis Services or the deployment utility.
+#
+# Live SSAS integration tests are opt-in only: start this workflow manually (Actions > CI > Run workflow)
+# with "run_integration" ticked. They run on a self-hosted runner labelled [self-hosted, windows, ssas];
+# see test/README.md for how to provision one. No hosted runner can run them, so no infrastructure cost
+# is incurred unless you provide that runner.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: 'Also run live SSAS integration tests (requires a self-hosted runner labelled "ssas")'
+        type: boolean
+        default: false
+  # Lets release.yml reuse exactly the same validation gate before publishing.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Analyzer and unit tests (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify Windows PowerShell 5.1
+        run: |
+          $PSVersionTable | Format-Table -AutoSize | Out-String | Write-Host
+          if ($PSVersionTable.PSEdition -ne 'Desktop' -or $PSVersionTable.PSVersion.Major -ne 5) {
+            throw "Expected Windows PowerShell 5.1, got $($PSVersionTable.PSEdition) $($PSVersionTable.PSVersion)"
+          }
+
+      - name: Install pinned test dependencies
+        id: dependencies
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+          # The PowerShell Gallery occasionally fails a download ("Package 'Pester' failed to download"). bootstrap.ps1
+          # skips modules that are already installed, so retrying only re-attempts what is missing.
+          for ($attempt = 1; ; $attempt++) {
+            try {
+              Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
+              ./test/bootstrap.ps1
+              break
+            }
+            catch {
+              if ($attempt -ge 3) { throw }
+              Write-Warning "Installing test dependencies failed (attempt $attempt of 3): $_"
+              Start-Sleep -Seconds (15 * $attempt)
+            }
+          }
+
+      - name: Validate module manifest
+        run: Test-ModuleManifest -Path ./DeployCube/DeployCube.psd1 -ErrorAction Stop | Format-List Name, Version, PowerShellVersion
+
+      - name: PSScriptAnalyzer
+        run: ./test/Invoke-DeployCubeTests.ps1 -Type Analyzer -CI
+
+      - name: Pester unit tests
+        # Run even when the analyzer gate fails so both result sets are reported, but not without dependencies.
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: ./test/Invoke-DeployCubeTests.ps1 -Type Unit -CodeCoverage -CI
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-windows-powershell-5.1
+          path: TestResults/
+          if-no-files-found: warn
+
+  integration:
+    name: SSAS integration tests (self-hosted, opt-in)
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.run_integration && github.repository == 'DrJohnT/DeployCube'
+    runs-on: [self-hosted, windows, ssas]
+    # Approval gate and home for the DEPLOYCUBE_* variables; create it under Settings > Environments.
+    environment: ssas-integration
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: powershell
+    env:
+      DEPLOYCUBE_SSAS_SERVER: ${{ vars.DEPLOYCUBE_SSAS_SERVER }}
+      # Must equal DEPLOYCUBE_SSAS_SERVER when that server is not the runner itself (see test/README.md).
+      DEPLOYCUBE_DISPOSABLE_SSAS_SERVER: ${{ vars.DEPLOYCUBE_DISPOSABLE_SSAS_SERVER }}
+      DEPLOYCUBE_SOURCE_SQL_SERVER: ${{ vars.DEPLOYCUBE_SOURCE_SQL_SERVER }}
+      DEPLOYCUBE_SOURCE_SQL_DATABASE: ${{ vars.DEPLOYCUBE_SOURCE_SQL_DATABASE }}
+      DEPLOYCUBE_ASDATABASE_1200: ${{ vars.DEPLOYCUBE_ASDATABASE_1200 }}
+      DEPLOYCUBE_ASDATABASE_1500: ${{ vars.DEPLOYCUBE_ASDATABASE_1500 }}
+      DEPLOYCUBE_EXPECTED_DEPLOYMENT_EXE_VERSION: ${{ vars.DEPLOYCUBE_EXPECTED_DEPLOYMENT_EXE_VERSION }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned test dependencies
+        run: ./test/bootstrap.ps1
+
+      - name: Pester SSAS integration tests
+        run: ./test/Invoke-DeployCubeTests.ps1 -Type Integration -CI
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-ssas-integration
+          path: TestResults/
+          if-no-files-found: warn
