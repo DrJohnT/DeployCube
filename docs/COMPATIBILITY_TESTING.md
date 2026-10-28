@@ -58,6 +58,22 @@ The focused [media-only run 40680324226](https://github.com/DrJohnT/DeployCube/a
 
 Only after that success, [Phase C run 40680739031](https://github.com/DrJohnT/DeployCube/actions/runs/40680739031) was dispatched with the same direct ISO URL. Media acquisition passed again in **9.55 seconds**. SSMS **20.2.37.0** installed in **584.77 seconds** with Deployment Utility **20.0.3.0**. SSAS setup succeeded (exit 0; **100.53 seconds**) and AMO confirmed **16.0.42.209**, **Developer64**, **Tabular**, service **MSOLAP$DCUBE Running**. The utility log reported a completed deployment and exit 0, but the probe harness then failed because `DatabaseCollection.Refresh()` does not exist in AMO. Database verification and probe cleanup therefore did not pass, and the DeployCube step was correctly skipped. This was a test-harness verification failure, not a proven utility incompatibility. The harness now uses the verified AMO `Server.Refresh(Boolean)` method with a full child refresh; mocks no longer invent a collection method.
 
+The corrected [end-to-end Phase C run 40682470858](https://github.com/DrJohnT/DeployCube/actions/runs/40682470858) **passed** on 2026-10-28:
+
+| Evidence | Actual result |
+|---|---|
+| Media download | 11.06 s; 1,163,053,056 bytes; identical SHA-256 to the focused media test |
+| Media validation | ISO/UDF descriptor, exact size, mounted x64 setup structure, Microsoft signature; setup version 16.0.1000.6 |
+| SSMS installation | 20.2.37.0; 758.55 s |
+| Deployment Utility | File/product version 20.0.3.0; direct probe exit 0; database exists at compatibility 1500; probe cleanup passed |
+| SSAS installation | Setup exit 0; 131.59 s setup, 132.17 s including readiness |
+| Running SSAS | Product 16.0.42.209, Developer64, Tabular; MSOLAP$DCUBE and SQLBrowser Running; AMO connection passed |
+| DeployCube | Real Publish-Cube succeeded; database existence and compatibility 1500 verified |
+| Cleanup | Unpublish-Cube succeeded; database absence verified; ISO dismounted and deleted |
+| Integration tests | 3 passed, 0 failed, 0 skipped |
+
+This is evidence for the exact recorded server/tool/fixture tuple only, not the full matrix or processing/external-data-source compatibility. The public module and separate SSMS compatibility workflow were unchanged.
+
 `Mount-SqlServerMedia.ps1` mounts the validated image and checks the x64 setup structure, Microsoft's Authenticode signature, and setup executable product major (SQL Server 2017/2019/2022/2025 correspond to setup majors 14/15/16/17). `Install-Ssas.ps1` now takes an existing media root; it cannot invoke a downloader. Before setup it rechecks the media, Windows Server release, and disk space. It installs a named `DCUBE` Analysis Services instance in the selected mode and records SQL Setup and service-readiness durations, with independent 120- and 15-minute limits. A separate step verifies the running `MSOLAP$DCUBE` service and uses AMO to confirm product version, Developer edition, and requested mode. The direct Deployment Utility probe and real DeployCube integration are separate, ordered workflow steps; integration requires a successful probe including database verification and cleanup. Diagnostics and reports are uploaded with `if: always()` when the runner remains available. No installation media is uploaded, cached, or redistributed. The job limit is 240 minutes, leaving time for diagnostics after individual step deadlines. It does not install the Database Engine or use production credentials.
 
 For SSAS 2022 Tabular, the integration uses the checked-in self-contained compatibility-1500 fixture under `test/infrastructure/fixtures/Tabular1500`. Its calculated table requires neither a local SQL source nor Analysis Services Projects build targets. Phase C reuses the unchanged `Install-Ssms.ps1` SSMS 20 installation path that passed the independent matrix in [run 40528965611](https://github.com/DrJohnT/DeployCube/actions/runs/40528965611) (14/14 discovery/selection tests; utility `20.0.3.0`). The separate SSMS compatibility workflow is unchanged.
@@ -76,7 +92,7 @@ The SSAS workflow records the exact SSAS version/mode, SSMS major, selected depl
 
 ### Phase C runner attempt
 
-Phase C has **not passed**. The SSAS 2022 Tabular test did not reach SQL Server media download or setup in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) or [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
+Phase C **passed in run 40682470858** as recorded above. The following earlier attempts document the blockers resolved before that pass. The SSAS 2022 Tabular test did not reach SQL Server media download or setup in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) or [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
 
 The SSMS 20 replacement run, [40588588717](https://github.com/DrJohnT/DeployCube/actions/runs/40588588717), installed SSMS successfully in 12m 32s. Its SSAS installation step started at 2026-10-27 21:52:18 UTC and remained in progress when the job ended at 2026-10-28 00:44:31 UTC. The workflow at that revision had a 180-minute job timeout; the 180-minute deadline from the 21:39:31 UTC job start was 00:39:31 UTC, five minutes before the Actions job finished cancellation handling. GitHub recorded the conclusion as `cancelled`, not `timed_out`; logs and artifacts were unavailable, so the exact blocked sub-operation and any external cancellation actor cannot be proven. The timing strongly indicates the job timeout, and the old installer had no bounded child-process wait. No SSAS version, service status, media/setup completion, or deployment result can be inferred from that run.
 
@@ -87,7 +103,7 @@ The first instrumented rerun, [40660803981](https://github.com/DrJohnT/DeployCub
 | SSAS target | SSMS deployment utility | Observed outcome |
 |---|---|---|
 | 2022 Tabular | SSMS 22 | Blocked before SSAS setup; deployment utility version/path not inventoried in these runs; no deployment attempted |
-| 2022 Tabular | SSMS 20 | SSMS installation passed; SSAS step remained active until the 180-minute job-timeout window; installer logs/artifacts unavailable; SSAS version, service, and deployment not verified |
+| 2022 Tabular | SSMS 20 | Earlier bootstrapper attempts blocked; direct-ISO run 40682470858 passed service verification, utility probe, real deployment, database verification, and cleanup |
 
 The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.0` at `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`, but that is not evidence that the Phase C runner installed the utility or that a model deploys to SSAS 2022.
 
@@ -95,12 +111,12 @@ The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.
 |---|---|---|
 | 2019 | 20 | Not yet tested |
 | 2019 | 22 | Not yet tested |
-| 2022 | 20 | Provisioning timed out/cancelled before verification; no Deployment Utility probe or DeployCube deployment |
+| 2022 Tabular | 20 | Passed in run 40682470858: server 16.0.42.209, utility 20.0.3.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2022 Tabular | 22 | Blocked before SSAS setup by SSMS installer failure; deployment not tested |
 | 2025 | 22 | Not yet tested |
 | 2017 | 20 or 22 | Not yet tested |
 
-No combination is declared supported by this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
+Only the exact SSAS 2022 Tabular / SSMS 20 tuple above has passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
 
 ## Runner limitations, resource use, and coverage gaps
 
@@ -110,7 +126,7 @@ No combination is declared supported by this branch. Failures and explicit unsup
 - The Phase C calculated-table fixture does not test relational data sources or processing. Those checks require a separate explicit fixture and additional local services.
 - Multidimensional model deployment and processing are uncovered until a real fixture is checked in and built.
 - The SSAS workflow does not certify every deployment utility against every SSAS release, model compatibility level, deployment option, or service pack. The selector unit tests are not server integration tests.
-- SSMS 18/19 installations and all SSAS scenarios remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
+- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C tuple remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
 
 ## Reports and artifacts
 
