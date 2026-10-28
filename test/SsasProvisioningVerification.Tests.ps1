@@ -1,4 +1,5 @@
 BeforeAll {
+    Add-Type -AssemblyName System.ServiceProcess
     $script:verificationScript = Join-Path $PSScriptRoot 'infrastructure/Verify-SsasInstallation.ps1'
     function Get-Service {
         param([string]$Name)
