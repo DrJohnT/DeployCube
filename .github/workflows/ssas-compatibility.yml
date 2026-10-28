@@ -69,10 +69,11 @@ jobs:
           }
           Import-Module Pester -RequiredVersion 5.7.1 -ErrorAction Stop
           $configuration = New-PesterConfiguration
-          $configuration.Run.Path = @('test/SqlServerMedia.Tests.ps1', 'test/SqlServerMediaDownload.Tests.ps1', 'test/BoundedProcess.Tests.ps1')
+          $testPaths = @('test/SqlServerMedia.Tests.ps1', 'test/SqlServerMediaDownload.Tests.ps1', 'test/BoundedProcess.Tests.ps1')
           if ('${{ inputs.scope }}' -eq 'phase-d') {
-            $configuration.Run.Path += @('test/DeploymentToolSelection.Tests.ps1', 'test/DeploymentUtilityCompatibility.Tests.ps1')
+            $testPaths += @('test/DeploymentToolSelection.Tests.ps1', 'test/DeploymentUtilityCompatibility.Tests.ps1')
           }
+          $configuration.Run.Path = $testPaths
           $configuration.Run.PassThru = $true
           $configuration.TestResult.Enabled = $true
           $configuration.TestResult.OutputPath = "$env:ARTIFACT_DIRECTORY/media/nunit-media.xml"
