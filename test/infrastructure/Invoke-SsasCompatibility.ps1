@@ -117,8 +117,9 @@ try {
     }
 
     if ($Mode -eq 'Multidimensional') {
-        $unsupportedReason = 'The repository currently has no checked-in or buildable Multidimensional .asdatabase fixture. The server installation and mode are verified, but a deployment is not claimed.'
-        $outcome = 'Unsupported'
+        $failureCategory = 'Fixture build or validation'
+        $modelCompatibilityLevel = 1100
+        $modelPath = & (Join-Path $PSScriptRoot 'Build-MultidimensionalModel.ps1') -LogDirectory $LogDirectory
     }
     else {
         $failureCategory = 'Test fixture validity'
@@ -142,49 +143,52 @@ try {
             }
         }
 
-        $failureCategory = 'Deployment Utility compatibility'
-        if (-not $RequireExistingUtilityProbe) {
-            & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `
-                -DeploymentUtilityPath $selectedPath -ModelPath $modelPath `
-                -Server $ssasServer -LogDirectory $LogDirectory
-        }
-        $utilityProbe = Get-Content -LiteralPath (Join-Path $LogDirectory 'utility-probe\compatibility-probe.json') -Raw | ConvertFrom-Json
-        if ($utilityProbe.Outcome -ne 'Passed' -or $utilityProbe.Cleanup -ne 'Passed' -or
-            -not $utilityProbe.DatabaseExists -or $utilityProbe.CompatibilityLevel -ne 1500) {
-            throw 'The direct Deployment Utility probe and its cleanup must pass before DeployCube integration.'
-        }
-        if ($ProbeOnly) {
-            Write-Host 'Direct Deployment Utility probe, database verification, and cleanup passed. DeployCube integration has not run.'
-            return
-        }
+    }
 
-        $env:COMPAT_SSAS_VERSION = $SsasVersion
-        $env:COMPAT_SSAS_MODE = $Mode
-        $env:COMPAT_SSMS_MAJOR = $SsmsMajor
-        $env:COMPAT_MODEL_PATH = $modelPath
-        $env:COMPAT_MODEL_COMPATIBILITY = [string]$modelCompatibilityLevel
-        $env:COMPAT_DEPLOYMENT_LOG_PATH = Join-Path (Split-Path -Parent $modelPath) 'Publish-Cube-deployment.log'
+    $failureCategory = 'Deployment Utility compatibility'
+    if (-not $RequireExistingUtilityProbe) {
+        & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `
+            -DeploymentUtilityPath $selectedPath -ModelPath $modelPath `
+            -Server $ssasServer -LogDirectory $LogDirectory -Mode $Mode
+    }
+    $utilityProbe = Get-Content -LiteralPath (Join-Path $LogDirectory 'utility-probe\compatibility-probe.json') -Raw | ConvertFrom-Json
+    if ($utilityProbe.Outcome -ne 'Passed' -or $utilityProbe.Cleanup -ne 'Passed' -or
+        -not $utilityProbe.DatabaseExists -or
+        ($Mode -eq 'Tabular' -and $utilityProbe.CompatibilityLevel -ne 1500) -or
+        ($Mode -eq 'Multidimensional' -and $utilityProbe.Metadata.Outcome -ne 'Passed')) {
+        throw 'The direct Deployment Utility probe and its cleanup must pass before DeployCube integration.'
+    }
+    if ($ProbeOnly) {
+        Write-Host 'Direct Deployment Utility probe, database verification, and cleanup passed. DeployCube integration has not run.'
+        return
+    }
 
-        if (-not (Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version.Major -ge 5 })) {
-            Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-            Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -ErrorAction Stop
-        }
-        Import-Module Pester -MinimumVersion 5.0.0 -ErrorAction Stop
+    $env:COMPAT_SSAS_VERSION = $SsasVersion
+    $env:COMPAT_SSAS_MODE = $Mode
+    $env:COMPAT_SSMS_MAJOR = $SsmsMajor
+    $env:COMPAT_MODEL_PATH = $modelPath
+    $env:COMPAT_MODEL_COMPATIBILITY = [string]$modelCompatibilityLevel
+    $env:COMPAT_DEPLOYMENT_LOG_PATH = Join-Path (Split-Path -Parent $modelPath) 'Publish-Cube-deployment.log'
 
-        $configuration = New-PesterConfiguration
-        $configuration.Run.Path = Join-Path $PSScriptRoot 'Test-SsasDeployment.ps1'
-        $configuration.Run.Exit = $false
-        $configuration.Run.PassThru = $true
-        $configuration.TestResult.Enabled = $true
-        $configuration.TestResult.OutputPath = $TestResultPath
-        $configuration.TestResult.OutputFormat = 'NUnitXml'
-        $testResult = Invoke-Pester -Configuration $configuration
-        $testMessage = "Passed $($testResult.PassedCount), failed $($testResult.FailedCount), skipped $($testResult.SkippedCount)."
-        $outcome = if ($testResult.FailedCount -eq 0 -and $testResult.PassedCount -eq 3) { 'Passed' } else { 'Failed' }
-        $failureCategory = $env:COMPAT_FAILURE_CATEGORY
-        if ($outcome -eq 'Failed') {
-            $testMessage += "`n" + (($testResult.Failed | ForEach-Object { $_.ErrorRecord | Out-String }) -join "`n")
-        }
+    if (-not (Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version.Major -ge 5 })) {
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+        Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -ErrorAction Stop
+    }
+    Import-Module Pester -MinimumVersion 5.0.0 -ErrorAction Stop
+
+    $configuration = New-PesterConfiguration
+    $configuration.Run.Path = Join-Path $PSScriptRoot 'Test-SsasDeployment.ps1'
+    $configuration.Run.Exit = $false
+    $configuration.Run.PassThru = $true
+    $configuration.TestResult.Enabled = $true
+    $configuration.TestResult.OutputPath = $TestResultPath
+    $configuration.TestResult.OutputFormat = 'NUnitXml'
+    $testResult = Invoke-Pester -Configuration $configuration
+    $testMessage = "Passed $($testResult.PassedCount), failed $($testResult.FailedCount), skipped $($testResult.SkippedCount)."
+    $outcome = if ($testResult.FailedCount -eq 0 -and $testResult.PassedCount -eq 3) { 'Passed' } else { 'Failed' }
+    $failureCategory = $env:COMPAT_FAILURE_CATEGORY
+    if ($outcome -eq 'Failed') {
+        $testMessage += "`n" + (($testResult.Failed | ForEach-Object { $_.ErrorRecord | Out-String }) -join "`n")
     }
 }
 catch {
@@ -222,7 +226,11 @@ $report = @{
     SsasInstallationDurationSeconds = $ssasInstallation.InstallationDurationSeconds
     MediaAcquisitionDurationSeconds = $ssasInstallation.MediaAcquisitionDurationSeconds
     SsasSetupDurationSeconds = $ssasInstallation.SetupDurationSeconds
-    ModelCompatibilityLevel = if ($Mode -eq 'Tabular') { $modelCompatibilityLevel } else { $null }
+    ModelCompatibilityLevel = $modelCompatibilityLevel
+    MetadataVerification = if ($Mode -eq 'Multidimensional' -and $modelPath -and
+        (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $modelPath) 'published-metadata.json'))) {
+        Get-Content -LiteralPath (Join-Path (Split-Path -Parent $modelPath) 'published-metadata.json') -Raw | ConvertFrom-Json
+    } else { $null }
     ActualServerMode = if ($env:COMPAT_ACTUAL_SSAS_MODE) { $env:COMPAT_ACTUAL_SSAS_MODE } else { $actualMode }
     ActualModelCompatibilityLevel = if ($env:COMPAT_ACTUAL_MODEL_COMPATIBILITY) {
         [int]$env:COMPAT_ACTUAL_MODEL_COMPATIBILITY
@@ -251,7 +259,7 @@ $report = @{
     } else { $null }
     Limitations = @(
         'A passing result applies only to the exact SSAS mode/version and SSMS deployment utility version recorded here.',
-        'The self-contained calculated-table fixture does not test external data sources or processing.'
+        'Processing is not requested. Tabular uses a calculated table; Multidimensional uses a verified local one-row source and validates deployed metadata only.'
     )
 }
 
@@ -262,7 +270,7 @@ $report = @{
 
 $details = @(
     '',
-    "### Phase C deployment evidence",
+    "### Deployment evidence",
     "- SSMS executable version: $($ssmsInstallation.Installation.FileVersion)",
     "- Selected Deployment Utility file/product version: $($selectedDeploymentUtility.FileVersion) / $($selectedDeploymentUtility.ProductVersion)",
     "- Direct utility deployment probe: $($utilityProbe.Outcome); database compatibility: $($utilityProbe.CompatibilityLevel); cleanup: $($utilityProbe.Cleanup)",

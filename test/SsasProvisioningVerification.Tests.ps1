@@ -65,6 +65,22 @@ Describe 'SSAS provisioning verification gate' {
         $report.Error | Should -Match "Expected SQL Server Analysis Services $Release product major"
     }
 
+    It 'verifies Multidimensional Developer mode on <Release>' -ForEach @(
+        @{ Release = '2019'; ProductVersion = '15.0.1000.1' }
+        @{ Release = '2022'; ProductVersion = '16.0.1000.1' }
+        @{ Release = '2025'; ProductVersion = '17.0.1000.1' }
+    ) {
+        $script:connection.Version = [version]$ProductVersion
+        $script:connection.ServerMode = 'Multidimensional'
+        . $script:verificationScript -SsasVersion $Release -Mode Multidimensional `
+            -InstallationReportPath (Join-Path $script:reportDirectory 'ssas-install.json') `
+            -ReportPath $script:reportPath -LogPath $script:logPath
+        $report = Get-Content -LiteralPath $script:reportPath -Raw | ConvertFrom-Json
+        $report.Outcome | Should -Be 'Passed'
+        $report.ActualMode | Should -Be 'Multidimensional'
+        $report.ProductVersion | Should -Be $ProductVersion
+    }
+
     It 'fails before the deployment gate when the server mode is wrong' {
         $script:connection.ServerMode = 'Multidimensional'
         {

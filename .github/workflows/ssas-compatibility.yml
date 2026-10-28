@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Validate media, Phase C/D (SSAS 2022), Phase E (SSAS 2019/2025), or the experimental full matrix
+        description: Validate media, Phase C/D/E (Tabular), Phase F (Multidimensional), or the experimental full matrix
         type: choice
         required: true
         default: media-only
@@ -13,6 +13,7 @@ on:
           - phase-c
           - phase-d
           - phase-e
+          - phase-f
           - full-matrix
       media_urls_json:
         description: JSON map of SQL Server version to direct public Microsoft installation ISO URL
@@ -30,7 +31,7 @@ jobs:
     timeout-minutes: 240
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || inputs.scope == 'phase-e' && '{"ssas_version":["2019","2025"],"mode":["Tabular"],"ssms_major":["22"]}' || inputs.scope == 'phase-d' && '{"ssas_version":["2022"],"mode":["Tabular"],"ssms_major":["20","21","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
+      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || inputs.scope == 'phase-f' && '{"ssas_version":["2019","2022","2025"],"mode":["Multidimensional"],"ssms_major":["22"]}' || inputs.scope == 'phase-e' && '{"ssas_version":["2019","2025"],"mode":["Tabular"],"ssms_major":["22"]}' || inputs.scope == 'phase-d' && '{"ssas_version":["2022"],"mode":["Tabular"],"ssms_major":["20","21","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
     env:
       COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json }}
       COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
@@ -61,7 +62,7 @@ jobs:
             -TimeoutMinutes 20 -InactivityTimeoutSeconds 60
 
       - name: Test infrastructure guards
-        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e')
+        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e' || inputs.scope == 'phase-f')
         timeout-minutes: 5
         shell: powershell
         run: |
@@ -71,11 +72,14 @@ jobs:
           Import-Module Pester -RequiredVersion 5.7.1 -ErrorAction Stop
           $configuration = New-PesterConfiguration
           $testPaths = @('test/SqlServerMedia.Tests.ps1', 'test/SqlServerMediaDownload.Tests.ps1', 'test/BoundedProcess.Tests.ps1')
-          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e')) {
+          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f')) {
             $testPaths += @('test/DeploymentToolSelection.Tests.ps1', 'test/DeploymentUtilityCompatibility.Tests.ps1')
           }
-          if ('${{ inputs.scope }}' -eq 'phase-e') {
+          if ('${{ inputs.scope }}' -in @('phase-e', 'phase-f')) {
             $testPaths += 'test/SsasProvisioningVerification.Tests.ps1'
+          }
+          if ('${{ inputs.scope }}' -eq 'phase-f') {
+            $testPaths += 'test/MultidimensionalMetadata.Tests.ps1'
           }
           $configuration.Run.Path = $testPaths
           $configuration.Run.PassThru = $true
@@ -102,7 +106,7 @@ jobs:
         shell: powershell
         run: |
           $logDirectory = "$env:ARTIFACT_DIRECTORY/ssms-installation"
-          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e')) {
+          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f')) {
             $logDirectory = Join-Path $env:RUNNER_TEMP "ssms-$env:COMPAT_SSMS_MAJOR-logs"
           }
           try {
@@ -112,7 +116,7 @@ jobs:
               -MinimumFreeSpaceGB 8
           }
           finally {
-            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e') -and (Test-Path -LiteralPath $logDirectory)) {
+            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f') -and (Test-Path -LiteralPath $logDirectory)) {
               New-Item -ItemType Directory -Path "$env:ARTIFACT_DIRECTORY/ssms-installation" -Force | Out-Null
               Copy-Item -Path (Join-Path $logDirectory '*') -Destination "$env:ARTIFACT_DIRECTORY/ssms-installation" -Recurse -Force -ErrorAction Stop
             }
@@ -154,6 +158,13 @@ jobs:
             -ReportPath "$env:ARTIFACT_DIRECTORY/ssas-verification.json" `
             -LogPath "$env:ARTIFACT_DIRECTORY/sql-setup/ssas-verification.log"
 
+      - name: Create isolated Multidimensional fixture source
+        if: success() && inputs.scope != 'media-only' && matrix.mode == 'Multidimensional'
+        timeout-minutes: 5
+        shell: powershell
+        run: |
+          ./test/infrastructure/Initialize-MultidimensionalSource.ps1 -LogDirectory "$env:ARTIFACT_DIRECTORY/fixture-source"
+
       - name: Probe Deployment Utility compatibility
         id: utility-probe
         if: success() && inputs.scope != 'media-only'
@@ -184,7 +195,7 @@ jobs:
             -LogDirectory "$env:ARTIFACT_DIRECTORY/model-build" -RequireExistingUtilityProbe
 
       - name: Capture SSAS provisioning diagnostics
-        if: always() && inputs.scope != 'media-only' && steps.verify-ssas.outcome != 'success'
+        if: always() && inputs.scope != 'media-only' && (failure() || cancelled())
         shell: powershell
         run: |
           ./test/infrastructure/Get-SsasProvisioningDiagnostics.ps1 `

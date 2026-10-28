@@ -10,10 +10,14 @@ param(
     [string]$Server,
 
     [Parameter(Mandatory = $true)]
-    [string]$LogDirectory
+    [string]$LogDirectory,
+
+    [ValidateSet('Tabular', 'Multidimensional')]
+    [string]$Mode = 'Tabular'
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Assert-MultidimensionalMetadata.ps1')
 $probeDirectory = Join-Path $LogDirectory 'utility-probe'
 New-Item -ItemType Directory -Path $probeDirectory -Force | Out-Null
 $probeDirectory = (Resolve-Path -LiteralPath $probeDirectory).Path
@@ -31,6 +35,7 @@ $report = @{
     ExitCode = $null
     DatabaseExists = $false
     CompatibilityLevel = $null
+    Metadata = $null
     Cleanup = 'NotRun'
     Error = $null
     FailureCategory = 'Deployment Utility compatibility'
@@ -59,7 +64,11 @@ try {
         throw 'Deployment Utility returned success but the probe database does not exist.'
     }
     $report.CompatibilityLevel = $database.CompatibilityLevel
-    if ($database.CompatibilityLevel -ne 1500) {
+    if ($Mode -eq 'Multidimensional') {
+        $report.FailureCategory = 'Server-side metadata validation'
+        $report.Metadata = Assert-MultidimensionalMetadata -Database $database
+    }
+    elseif ($database.CompatibilityLevel -ne 1500) {
         throw "Utility probe database compatibility level was $($database.CompatibilityLevel), expected 1500."
     }
     $report.Outcome = 'Passed'

@@ -95,6 +95,18 @@ Describe 'Direct Deployment Utility compatibility gate' {
         $script:databases.Database | Should -BeNullOrEmpty
     }
 
+    It 'rejects a Multidimensional database without cube metadata even when the utility succeeds' {
+        $script:compatibilityLevel = 1100
+        { . $script:probeScript -DeploymentUtilityPath 'utility.exe' -ModelPath $script:fixturePath `
+            -Server 'localhost\DCUBE' -LogDirectory $script:logDirectory -Mode Multidimensional } |
+            Should -Throw '*metadata validation failed*'
+        $report = Get-Content (Join-Path $script:logDirectory 'utility-probe/compatibility-probe.json') -Raw | ConvertFrom-Json
+        $report.Outcome | Should -Be 'Failed'
+        $report.FailureCategory | Should -Be 'Server-side metadata validation'
+        $report.Cleanup | Should -Be 'Passed'
+        $script:databases.Database | Should -BeNullOrEmpty
+    }
+
     It 'fails explicitly if probe cleanup fails' {
         $script:dropFails = $true
         { . $script:probeScript -DeploymentUtilityPath 'utility.exe' -ModelPath $script:fixturePath `

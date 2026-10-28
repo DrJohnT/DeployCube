@@ -1,5 +1,6 @@
 BeforeAll {
     . (Join-Path $PSScriptRoot 'Get-SsasProductMajor.ps1')
+    . (Join-Path $PSScriptRoot 'Assert-MultidimensionalMetadata.ps1')
     $script:expectedProductMajor = Get-SsasProductMajor -SsasVersion $env:COMPAT_SSAS_VERSION
     $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
     Import-Module -Name (Join-Path $repositoryRoot 'DeployCube\DeployCube.psd1') -Force -ErrorAction Stop
@@ -56,6 +57,21 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
         $actualCompatibilityLevel = Get-CubeDatabaseCompatibilityLevel -Server $script:ssasServer -CubeDatabase $script:databaseName
         $env:COMPAT_ACTUAL_MODEL_COMPATIBILITY = [string]$actualCompatibilityLevel
         $actualCompatibilityLevel | Should -Be $script:expectedCompatibilityLevel
+        if ($script:expectedMode -eq 'Multidimensional') {
+            $env:COMPAT_FAILURE_CATEGORY = 'Server-side metadata validation'
+            $server = New-Object Microsoft.AnalysisServices.Server
+            $server.Connect($script:ssasServer)
+            try {
+                $server.Refresh($true)
+                $metadata = Assert-MultidimensionalMetadata -Database ($server.Databases.FindByName($script:databaseName))
+                $metadata | ConvertTo-Json -Depth 5 |
+                    Set-Content -LiteralPath (Join-Path (Split-Path -Parent $script:modelPath) 'published-metadata.json') -Encoding UTF8
+                $metadata.Outcome | Should -Be 'Passed'
+            }
+            finally {
+                if ($server.Connected) { $server.Disconnect() }
+            }
+        }
     }
 
     It 'removes the test database with Unpublish-Cube' {
