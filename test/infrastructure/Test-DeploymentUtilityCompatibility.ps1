@@ -50,7 +50,7 @@ try {
     if ($process.ExitCode -ne 0) {
         throw "Deployment Utility compatibility probe returned exit code $($process.ExitCode). See '$probeDirectory'."
     }
-    $connection.Databases.Refresh()
+    $connection.Refresh($true)
     $database = $connection.Databases.FindByName($databaseName)
     $report.DatabaseExists = $null -ne $database
     if (-not $database) {
@@ -69,11 +69,11 @@ catch {
 finally {
     try {
         if ($connection.Connected) {
-            $connection.Databases.Refresh()
+            $connection.Refresh($true)
             $database = $connection.Databases.FindByName($databaseName)
             if ($database -and $null -ne $report.ExitCode) {
                 $database.Drop()
-                $connection.Databases.Refresh()
+                $connection.Refresh($true)
                 if ($connection.Databases.FindByName($databaseName)) {
                     throw "Utility probe database '$databaseName' still exists after cleanup."
                 }

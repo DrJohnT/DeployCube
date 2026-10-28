@@ -11,11 +11,14 @@ Describe 'Direct Deployment Utility compatibility gate' {
         $script:compatibilityLevel = 1500
         $script:dropFails = $false
         $script:databases = [pscustomobject]@{ Database = $null }
-        $script:databases | Add-Member ScriptMethod Refresh {}
         $script:databases | Add-Member ScriptMethod FindByName { param($Name) return $this.Database }
         $script:mockConnection = [pscustomobject]@{ Connected = $false; Databases = $script:databases }
         $script:mockConnection | Add-Member ScriptMethod Connect { param($Server) $this.Connected = $true }
         $script:mockConnection | Add-Member ScriptMethod Disconnect { $this.Connected = $false }
+        $script:mockConnection | Add-Member ScriptMethod Refresh {
+            param([bool]$Full)
+            if (-not $Full) { throw 'Expected a full server refresh including database children' }
+        }
 
         Mock New-Object { return $script:mockConnection } -ParameterFilter {
             $TypeName -eq 'Microsoft.AnalysisServices.Server'
