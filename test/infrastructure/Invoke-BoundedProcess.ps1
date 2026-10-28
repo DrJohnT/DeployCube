@@ -75,7 +75,7 @@ function Invoke-BoundedProcess {
             $progressMessage = "Process PID $($process.Id) is still running after $([math]::Round($processStopwatch.Elapsed.TotalMinutes, 1)) minutes."
             if ($ObservedDirectory -and (Test-Path -LiteralPath $ObservedDirectory -PathType Container)) {
                 $files = @(Get-ChildItem -LiteralPath $ObservedDirectory -File -Recurse -ErrorAction SilentlyContinue)
-                $totalBytes = ($files | Measure-Object -Property Length -Sum).Sum
+                [long]$totalBytes = ($files | Measure-Object -Property Length -Sum).Sum
                 $latestFile = $files | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
                 $progressMessage += " Media files: $($files.Count); bytes: $totalBytes; latest file: $($latestFile.FullName)."
             }

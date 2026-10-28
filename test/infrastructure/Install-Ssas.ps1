@@ -9,16 +9,16 @@ param(
     [string]$Mode,
 
     [Parameter(Mandatory = $true)]
-    [uri]$MediaUri,
+    [string]$MediaRoot,
+
+    [Parameter(Mandatory = $true)]
+    [string]$MediaAcquisitionReportPath,
 
     [Parameter(Mandatory = $true)]
     [string]$LogDirectory,
 
     [ValidateRange(1, 150)]
     [int]$MinimumFreeSpaceGB = 24,
-
-    [ValidateRange(1, 240)]
-    [int]$MediaTimeoutMinutes = 90,
 
     [ValidateRange(1, 240)]
     [int]$SetupTimeoutMinutes = 120,
@@ -29,10 +29,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $instanceName = 'DCUBE'
-$bootstrapperUrl = 'https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409'
-$mediaDirectory = Join-Path $env:TEMP "sql-server-$SsasVersion-developer-media-$PID"
-$downloadPath = Join-Path $mediaDirectory "sql-server-$SsasVersion-developer.iso"
-$bootstrapperPath = Join-Path $env:TEMP "sql-server-$SsasVersion-developer-setup-$PID.exe"
 $analysisServicesServiceName = 'MSOLAP$DCUBE'
 $browserServiceName = 'SQLBrowser'
 $setupMajorVersions = @{
@@ -48,7 +44,6 @@ $os = $null
 $serverRelease = $null
 $systemDrive = $null
 $freeSpaceGB = $null
-$mountedImage = $null
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $outcome = 'Failed'
 $setupResults = @()
@@ -56,7 +51,6 @@ $failureCategory = 'SSAS prerequisites'
 $mediaDurationSeconds = $null
 $setupDurationSeconds = $null
 $serviceReadinessDurationSeconds = $null
-$mediaStopwatch = $null
 $setupStopwatch = $null
 $serviceStopwatch = $null
 $serviceStatuses = @()
@@ -93,6 +87,7 @@ function Write-ProvisioningLog {
 }
 
 . (Join-Path $PSScriptRoot 'Invoke-BoundedProcess.ps1')
+. (Join-Path $PSScriptRoot 'SqlServerMedia.ps1')
 
 function Copy-SsasSetupLogs {
     try {
@@ -149,149 +144,23 @@ try {
     if (-not $supportedServerOs) {
         throw "SQL Server $SsasVersion setup is not attempted on unsupported or unverified OS '$($os.Caption)'. See Microsoft's SQL Server $SsasVersion OS requirements."
     }
-    $isDirectMicrosoftMedia = $MediaUri.Scheme -eq 'https' -and
-        -not $MediaUri.UserInfo -and
-        -not $MediaUri.Query -and
-        $MediaUri.Host -match '^download(\.[a-z0-9-]+)*\.microsoft\.com$'
-    $mediaQuery = $MediaUri.Query.TrimStart('?')
-    $isOfficialSql2022DeveloperBootstrapper = $SsasVersion -eq '2022' -and
-        $MediaUri.Scheme -eq 'https' -and
-        $MediaUri.Host -eq 'go.microsoft.com' -and
-        $MediaUri.AbsolutePath -eq '/fwlink/' -and
-        $mediaQuery -match '(^|&)linkid=2215158(&|$)' -and
-        $mediaQuery -match '(^|&)clcid=0x409(&|$)'
-    if (-not $isDirectMicrosoftMedia -and -not $isOfficialSql2022DeveloperBootstrapper) {
-        throw "MediaUri must be a direct, public Microsoft ISO URL or the exact official SQL Server 2022 Developer bootstrapper URL '$bootstrapperUrl'."
-    }
-
     $systemDrive = [System.IO.DriveInfo]::new($env:SystemDrive + '\')
     $freeSpaceGB = [math]::Floor($systemDrive.AvailableFreeSpace / 1GB)
     if ($freeSpaceGB -lt $MinimumFreeSpaceGB) {
         throw "Insufficient disk space for SQL Server $SsasVersion media and SSAS installation: $freeSpaceGB GB free on $($systemDrive.Name), at least $MinimumFreeSpaceGB GB required."
     }
     Write-ProvisioningLog -Stage 'Preflight' -Message (
-        "Runner OS '$($os.Caption)'; system drive free space $freeSpaceGB GB; media timeout ${MediaTimeoutMinutes}m, setup timeout ${SetupTimeoutMinutes}m, service readiness timeout ${ServiceReadinessTimeoutMinutes}m."
+        "Runner OS '$($os.Caption)'; system drive free space $freeSpaceGB GB; setup timeout ${SetupTimeoutMinutes}m, service readiness timeout ${ServiceReadinessTimeoutMinutes}m."
     )
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $failureCategory = 'SSAS media acquisition'
-    $mediaStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    Write-ProvisioningLog -Stage $failureCategory -Message "Acquiring official Microsoft SQL Server $SsasVersion media from '$($MediaUri.Host)'."
-    if ($isOfficialSql2022DeveloperBootstrapper) {
-        $bootstrapperDownload = Invoke-BoundedProcess `
-            -FilePath (Join-Path $env:SystemRoot 'System32\curl.exe') `
-            -ArgumentList @('--location', '--fail', '--show-error', '--silent', '--connect-timeout', '60', '--max-time', '300', '--output', "`"$bootstrapperPath`"", $MediaUri.AbsoluteUri) `
-            -TimeoutSeconds 300 -Stage 'SSAS bootstrapper download' `
-            -StandardOutputPath (Join-Path $logDirectory 'bootstrapper-download.stdout.log') `
-            -StandardErrorPath (Join-Path $logDirectory 'bootstrapper-download.stderr.log')
-        if ($bootstrapperDownload.ExitCode -ne 0) {
-            throw "Microsoft SQL Server 2022 Developer bootstrapper download returned curl exit code $($bootstrapperDownload.ExitCode)."
-        }
-        if (-not (Test-Path -LiteralPath $bootstrapperPath) -or (Get-Item -LiteralPath $bootstrapperPath).Length -eq 0) {
-            throw 'Microsoft SQL Server 2022 Developer bootstrapper download was empty.'
-        }
-
-        $bootstrapperSignature = Get-AuthenticodeSignature -FilePath $bootstrapperPath
-        if ($bootstrapperSignature.Status -ne 'Valid' -or $bootstrapperSignature.SignerCertificate.Subject -notmatch 'Microsoft') {
-            throw "SQL Server Developer bootstrapper did not have a valid Microsoft Authenticode signature (status: $($bootstrapperSignature.Status))."
-        }
-
-        New-Item -ItemType Directory -Path $mediaDirectory -Force | Out-Null
-        $bootstrapperArguments = @(
-            '/Action=Download',
-            '/MediaType=ISO',
-            "/MediaPath=`"$mediaDirectory`"",
-            '/IAcceptSqlServerLicenseTerms=True',
-            '/Quiet=True',
-            '/HideProgressBar=True'
-        )
-        $downloadProcess = Invoke-BoundedProcess `
-            -FilePath $bootstrapperPath -ArgumentList $bootstrapperArguments `
-            -TimeoutSeconds ($MediaTimeoutMinutes * 60) -Stage 'SSAS media acquisition' `
-            -StandardOutputPath (Join-Path $logDirectory 'media-download.stdout.log') `
-            -StandardErrorPath (Join-Path $logDirectory 'media-download.stderr.log') `
-            -ObservedDirectory $mediaDirectory
-        if ($downloadProcess.ExitCode -notin @(0, 3010)) {
-            throw "The signed Microsoft SQL Server 2022 Developer bootstrapper returned exit code $($downloadProcess.ExitCode) while downloading ISO media."
-        }
-
-        $downloadedIso = Get-ChildItem -LiteralPath $mediaDirectory -Filter '*.iso' -File -Recurse -ErrorAction SilentlyContinue |
-            Select-Object -First 1
-        if ($downloadedIso) {
-            $downloadPath = $downloadedIso.FullName
-            Write-ProvisioningLog -Stage $failureCategory -Message (
-                "Downloaded ISO '$($downloadedIso.FullName)' ($([math]::Round($downloadedIso.Length / 1GB, 2)) GB)."
-            )
-        }
-        else {
-            $mediaRoot = (Get-ChildItem -LiteralPath $mediaDirectory -Filter 'setup.exe' -File -Recurse -ErrorAction SilentlyContinue |
-                Select-Object -First 1 |
-                ForEach-Object { Split-Path -Parent $_.FullName })
-            if (-not $mediaRoot) {
-                throw "The official Developer bootstrapper completed with exit code $($downloadProcess.ExitCode), but produced neither an ISO nor a directory containing setup.exe under '$mediaDirectory'. See media-download logs."
-            }
-            Write-ProvisioningLog -Stage $failureCategory -Message "Bootstrapper produced extracted media at '$mediaRoot'."
-        }
-    }
-    else {
-        $downloadedIso = $downloadPath
-        New-Item -ItemType Directory -Path $mediaDirectory -Force | Out-Null
-        $mediaDownload = Invoke-BoundedProcess `
-            -FilePath (Join-Path $env:SystemRoot 'System32\curl.exe') `
-            -ArgumentList @('--location', '--fail', '--show-error', '--silent', '--connect-timeout', '60', '--max-time', [string]($MediaTimeoutMinutes * 60), '--output', "`"$downloadPath`"", $MediaUri.AbsoluteUri) `
-            -TimeoutSeconds ($MediaTimeoutMinutes * 60) -Stage 'SSAS media acquisition' `
-            -StandardOutputPath (Join-Path $logDirectory 'media-download.stdout.log') `
-            -StandardErrorPath (Join-Path $logDirectory 'media-download.stderr.log') `
-            -ObservedDirectory $mediaDirectory
-        if ($mediaDownload.ExitCode -ne 0) {
-            throw "Microsoft SQL Server $SsasVersion ISO download returned curl exit code $($mediaDownload.ExitCode)."
-        }
-        if (-not (Test-Path -LiteralPath $downloadPath) -or (Get-Item -LiteralPath $downloadPath).Length -eq 0) {
-            throw "Microsoft SQL Server $SsasVersion media download was empty."
-        }
-        Write-ProvisioningLog -Stage $failureCategory -Message (
-            "Downloaded ISO '$downloadPath' ($([math]::Round((Get-Item -LiteralPath $downloadPath).Length / 1GB, 2)) GB)."
-        )
-    }
-
-    if ($downloadedIso -is [System.IO.FileInfo] -or $downloadedIso -eq $downloadPath) {
-        try {
-            $failureCategory = 'ISO mounting'
-            $mountStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-            Write-ProvisioningLog -Stage 'ISO mounting' -Message "Mounting '$downloadPath'."
-            $mountedImage = Mount-DiskImage -ImagePath $downloadPath -PassThru -ErrorAction Stop
-            $volume = $mountedImage | Get-Volume -ErrorAction Stop
-            if (-not $volume.DriveLetter) {
-                throw "Mounted SQL Server ISO '$downloadPath' has no drive letter."
-            }
-            $mountStopwatch.Stop()
-            Write-ProvisioningLog -Stage 'ISO mounting' -Message (
-                "Mounted ISO as '$($volume.DriveLetter):\' in $([math]::Round($mountStopwatch.Elapsed.TotalSeconds, 2)) seconds."
-            )
-        }
-        catch {
-            throw "ISO mounting failed for '$downloadPath'. $($_.Exception.ToString())"
-        }
-        $mediaRoot = "$($volume.DriveLetter):\"
-    }
-
     $failureCategory = 'SSAS media validation'
+    $mediaReport = Get-Content -LiteralPath $MediaAcquisitionReportPath -Raw | ConvertFrom-Json
+    if ($mediaReport.Outcome -ne 'Passed') {
+        throw 'Media acquisition did not pass; SQL Server setup will not run.'
+    }
+    $mediaDurationSeconds = $mediaReport.DownloadDurationSeconds
+    $setupProductVersion = Assert-SqlServerMediaRoot -MediaRoot $MediaRoot -ExpectedMajor $setupMajorVersions[$SsasVersion]
     $setupPath = Join-Path $mediaRoot 'setup.exe'
-    if (-not (Test-Path -LiteralPath $setupPath -PathType Leaf)) {
-        throw "The Microsoft SQL Server $SsasVersion media does not contain setup.exe at '$setupPath'."
-    }
-
-    $signature = Get-AuthenticodeSignature -FilePath $setupPath
-    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft') {
-        throw "SQL Server setup.exe did not have a valid Microsoft Authenticode signature (status: $($signature.Status))."
-    }
-    $setupProductVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($setupPath).ProductVersion
-    $expectedSetupPattern = '^\s*' + $setupMajorVersions[$SsasVersion] + '\.'
-    if ($setupProductVersion -notmatch $expectedSetupPattern) {
-        throw "The selected media contains SQL Server setup version '$setupProductVersion', not SQL Server $SsasVersion. This avoids installing a different release than the matrix label."
-    }
-    $mediaStopwatch.Stop()
-    $mediaDurationSeconds = [math]::Round($mediaStopwatch.Elapsed.TotalSeconds, 2)
     $failureCategory = 'SSAS installation'
     $setupStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     Write-ProvisioningLog -Stage $failureCategory -Message (
@@ -380,10 +249,6 @@ try {
 }
 catch {
     $failureMessage = $_.Exception.Message
-    if ($mediaStopwatch -and $mediaStopwatch.IsRunning) {
-        $mediaStopwatch.Stop()
-        $mediaDurationSeconds = [math]::Round($mediaStopwatch.Elapsed.TotalSeconds, 2)
-    }
     if ($setupStopwatch -and $setupStopwatch.IsRunning) {
         $setupStopwatch.Stop()
         $setupDurationSeconds = [math]::Round($setupStopwatch.Elapsed.TotalSeconds, 2)
@@ -406,7 +271,7 @@ catch {
         Error = $failureMessage
         ErrorDetails = $_.Exception.ToString()
         FailureCategory = $failureCategory
-        MediaHost = $MediaUri.Host
+        MediaSource = $mediaReport.Source
         SetupProductVersion = $setupProductVersion
         SetupResults = $setupResults
         MediaAcquisitionDurationSeconds = $mediaDurationSeconds
@@ -423,23 +288,6 @@ catch {
     throw
 }
 finally {
-    if ($mountedImage) {
-        try {
-            Dismount-DiskImage -ImagePath $downloadPath -ErrorAction Stop
-            Write-ProvisioningLog -Stage 'Cleanup' -Message "Dismounted '$downloadPath'."
-        }
-        catch {
-            Write-ProvisioningLog -Stage 'Cleanup' -Message "ISO dismount failed: $($_.Exception.ToString())"
-        }
-    }
-    if ($downloadPath -and (Test-Path -LiteralPath $downloadPath)) {
-        Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
-    }
-    foreach ($temporaryPath in @($bootstrapperPath, $mediaDirectory)) {
-        if (Test-Path -LiteralPath $temporaryPath) {
-            Remove-Item -LiteralPath $temporaryPath -Recurse -Force -ErrorAction SilentlyContinue
-        }
-    }
     Copy-SsasSetupLogs
 }
 
@@ -453,10 +301,9 @@ $provisioningState | ConvertTo-Json -Depth 7 |
     SsasVersion = $SsasVersion
     Mode = $Mode
     Outcome = $outcome
-    MediaHost = $MediaUri.Host
-    InstallationMedia = if ($isOfficialSql2022DeveloperBootstrapper) { 'SQL Server 2022 Developer' } else { 'Microsoft SQL Server ISO' }
+    MediaSource = $mediaReport.Source
+    InstallationMedia = 'Microsoft SQL Server ISO'
     SetupProductVersion = $setupProductVersion
-    Edition = if ($isOfficialSql2022DeveloperBootstrapper) { 'Developer' } else { $null }
     AnalysisServicesService = $analysisServicesServiceName
     SqlBrowserService = $browserServiceName
     InstanceName = $instanceName

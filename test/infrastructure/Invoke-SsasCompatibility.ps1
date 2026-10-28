@@ -28,7 +28,11 @@ param(
     [string]$SsasInstallationReportPath,
 
     [Parameter(Mandatory = $true)]
-    [string]$LogDirectory
+    [string]$LogDirectory,
+
+    [switch]$ProbeOnly,
+
+    [switch]$RequireExistingUtilityProbe
 )
 
 $ErrorActionPreference = 'Stop'
@@ -137,10 +141,20 @@ try {
         }
 
         $failureCategory = 'Deployment Utility compatibility'
-        & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `
-            -DeploymentUtilityPath $selectedPath -ModelPath $modelPath `
-            -Server $ssasServer -LogDirectory $LogDirectory
+        if (-not $RequireExistingUtilityProbe) {
+            & (Join-Path $PSScriptRoot 'Test-DeploymentUtilityCompatibility.ps1') `
+                -DeploymentUtilityPath $selectedPath -ModelPath $modelPath `
+                -Server $ssasServer -LogDirectory $LogDirectory
+        }
         $utilityProbe = Get-Content -LiteralPath (Join-Path $LogDirectory 'utility-probe\compatibility-probe.json') -Raw | ConvertFrom-Json
+        if ($utilityProbe.Outcome -ne 'Passed' -or $utilityProbe.Cleanup -ne 'Passed' -or
+            -not $utilityProbe.DatabaseExists -or $utilityProbe.CompatibilityLevel -ne 1500) {
+            throw 'The direct Deployment Utility probe and its cleanup must pass before DeployCube integration.'
+        }
+        if ($ProbeOnly) {
+            Write-Host 'Direct Deployment Utility probe, database verification, and cleanup passed. DeployCube integration has not run.'
+            return
+        }
 
         $env:COMPAT_SSAS_VERSION = $SsasVersion
         $env:COMPAT_SSAS_MODE = $Mode
