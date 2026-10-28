@@ -33,6 +33,7 @@ $report = @{
     CompatibilityLevel = $null
     Cleanup = 'NotRun'
     Error = $null
+    FailureCategory = 'Deployment Utility compatibility'
 }
 $connection = New-Object Microsoft.AnalysisServices.Server
 try {
@@ -50,6 +51,7 @@ try {
     if ($process.ExitCode -ne 0) {
         throw "Deployment Utility compatibility probe returned exit code $($process.ExitCode). See '$probeDirectory'."
     }
+    $report.FailureCategory = 'Database verification'
     $connection.Refresh($true)
     $database = $connection.Databases.FindByName($databaseName)
     $report.DatabaseExists = $null -ne $database
@@ -61,6 +63,7 @@ try {
         throw "Utility probe database compatibility level was $($database.CompatibilityLevel), expected 1500."
     }
     $report.Outcome = 'Passed'
+    $report.FailureCategory = $null
 }
 catch {
     $report.Error = $_.Exception.ToString()
@@ -83,6 +86,7 @@ finally {
     }
     catch {
         $report.Cleanup = 'Failed'
+        $report.FailureCategory = 'Cleanup'
         $report.Outcome = 'Failed'
         $report.Error = "$($report.Error)`nCleanup: $($_.Exception)"
         throw

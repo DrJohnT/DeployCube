@@ -61,6 +61,7 @@ Describe 'Direct Deployment Utility compatibility gate' {
 
         $report = Get-Content (Join-Path $script:logDirectory 'utility-probe/compatibility-probe.json') -Raw | ConvertFrom-Json
         $report.Outcome | Should -Be 'Passed'
+        $report.FailureCategory | Should -BeNullOrEmpty
         $report.DatabaseExists | Should -BeTrue
         $report.CompatibilityLevel | Should -Be 1500
         $report.Cleanup | Should -Be 'Passed'
@@ -102,6 +103,7 @@ Describe 'Direct Deployment Utility compatibility gate' {
         $report = Get-Content (Join-Path $script:logDirectory 'utility-probe/compatibility-probe.json') -Raw | ConvertFrom-Json
         $report.Outcome | Should -Be 'Failed'
         $report.Cleanup | Should -Be 'Failed'
+        $report.FailureCategory | Should -Be 'Cleanup'
         $script:mockConnection.Connected | Should -BeFalse
     }
 

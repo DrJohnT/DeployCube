@@ -21,12 +21,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $serverName = 'localhost\DCUBE'
 $serviceName = 'MSOLAP$DCUBE'
-$expectedProductMajor = @{
-    '2017' = 14
-    '2019' = 15
-    '2022' = 16
-    '2025' = 17
-}
+. (Join-Path $PSScriptRoot 'Get-SsasProductMajor.ps1')
+$expectedProductMajor = Get-SsasProductMajor -SsasVersion $SsasVersion
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $result = [ordered]@{
     Outcome = 'Failed'
@@ -80,8 +76,8 @@ try {
         }
     }
 
-    if ($result.ProductVersion -notmatch ('^' + $expectedProductMajor[$SsasVersion] + '\.')) {
-        throw "Expected SQL Server Analysis Services $SsasVersion product major $($expectedProductMajor[$SsasVersion]); server reports '$($result.ProductVersion)'."
+    if ($result.ProductVersion -notmatch ('^' + $expectedProductMajor + '\.')) {
+        throw "Expected SQL Server Analysis Services $SsasVersion product major $expectedProductMajor; server reports '$($result.ProductVersion)'."
     }
     if ($result.ActualMode -ne $Mode) {
         throw "Expected SSAS mode '$Mode'; server reports '$($result.ActualMode)'."

@@ -44,6 +44,21 @@ Run **Actions → SSAS compatibility → Run workflow**. The default `media-only
 
 The `media_urls_json` input maps versions to direct, public Microsoft installation ISO URLs, not bootstrapper URLs. Media acquisition is independent of SQL Setup and always runs before installing SSMS. `Acquire-SqlServerMedia.ps1` uses the runner's curl with a 30-second connection timeout, a 60-second inactivity limit (less than one byte/second), and a 20-minute overall download deadline. Transferred bytes are logged every 30 seconds; curl progress, HTTP status, effective URL, duration, and errors are retained. The downloader rejects images smaller than 1 GiB and files without ISO9660/UDF volume descriptors, and records the image's SHA-256. This computed hash is an audit identifier, not an independently published Microsoft checksum.
 
+### Phase E media and fixture selection
+
+Select `phase-e` for exactly **SSAS 2019 Tabular + SSMS 22** and **SSAS 2025 Tabular + SSMS 22**, on independent GitHub-hosted `windows-2022` runners with `fail-fast: false` and one SSMS installation each. The 2022 baseline is not part of this scope; `media-only`, `phase-c`, `phase-d`, and the explicitly selected `full-matrix` remain available. Phase E reuses the successful Phase D short absolute installer TEMP/log path and all existing media/setup/probe/integration scripts.
+
+Official media verified on 2026-10-28, before dispatch:
+
+| Release | Official bootstrapper source | Direct x64 English Developer ISO from its embedded `Manifest_Media_Dev_en-US.xml` | Manifest bytes / HTTPS HEAD |
+|---|---|---|---|
+| 2019 Developer | [Microsoft 2019 Developer fwlink](https://go.microsoft.com/fwlink/?linkid=866662) | [SQLServer2019-x64-ENU-Dev.iso](https://download.microsoft.com/download/8/4/c/84c6c430-e0f5-476d-bf43-eaaa222a72e0/SQLServer2019-x64-ENU-Dev.iso) | 1,433,974,784 / HTTP 200, identical Content-Length |
+| 2025 Enterprise Developer | [Microsoft Enterprise Developer fwlink](https://go.microsoft.com/fwlink/?linkid=2344711&clcid=0x409), linked by the [official downloads page](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) | [SQLServer2025-x64-ENU-EntDev.iso](https://download.microsoft.com/download/dea8c210-c44a-4a9d-9d80-0c81578860c5/ENU/SQLServer2025-x64-ENU-EntDev.iso) | 1,265,688,576 / HTTP 200, identical Content-Length |
+
+These are real manifest URLs, not guessed endpoints. The bootstrapper resources were read without executing the downloader. SQL Server 2025 offers Standard Developer and Enterprise Developer; **Enterprise Developer** is selected to remain comparable with the previous full-featured Developer editions. Evaluation media is not substituted. The existing downloader checks all three pinned ISO lengths and records SHA-256; for the 2025 ISO it additionally checks the SHA-256 published in Microsoft's embedded manifest: `f78f869d44e8c2cbf93be16ce6ea52dd811636f046ded29e7a74dd1352134851`. Media stays on each ephemeral runner, without caching or redistribution.
+
+The [Microsoft compatibility-level documentation](https://learn.microsoft.com/en-us/analysis-services/tabular-models/compatibility-level-for-tabular-models-in-analysis-services) lists **1500** for SQL Server 2019 and **1700** as the latest level for 2025. Phase E first tries the existing **1500** calculated-table fixture on both engines to keep scenarios comparable; newer engine capability alone is not treated as proof that the fixture deploys. TOM validation, real direct deployment, and actual database compatibility verification must all pass. No 2022 fixture changes or new fixture are made unless an actual engine rejects this level. All service and integration version gates now derive the expected product major from the requested release (2019=15, 2022=16, 2025=17) rather than hard-coding 2022; positive and wrong-release regression tests cover all three.
+
 ### Official SQL Server 2022 Developer media source
 
 The default is the [direct Microsoft SQL Server 2022 Developer English ISO](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SQLServer2022-x64-ENU-Dev.iso). This URL was obtained from Microsoft's own distribution metadata, not constructed from a guessed GUID or taken from a mirror:

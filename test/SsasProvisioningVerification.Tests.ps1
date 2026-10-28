@@ -31,18 +31,37 @@ Describe 'SSAS provisioning verification gate' {
         }
     }
 
-    It 'requires a running service and confirms product, edition and mode' {
-        . $script:verificationScript -SsasVersion 2022 -Mode Tabular `
+    It 'requires a running service and confirms product, edition and mode for <Release>' -ForEach @(
+        @{ Release = '2019'; ProductVersion = '15.0.1000.1' }
+        @{ Release = '2022'; ProductVersion = '16.0.1000.1' }
+        @{ Release = '2025'; ProductVersion = '17.0.1000.1' }
+    ) {
+        $script:connection.Version = [version]$ProductVersion
+        . $script:verificationScript -SsasVersion $Release -Mode Tabular `
             -InstallationReportPath (Join-Path $script:reportDirectory 'ssas-install.json') `
             -ReportPath $script:reportPath -LogPath $script:logPath
 
         $report = Get-Content -LiteralPath $script:reportPath -Raw | ConvertFrom-Json
         $report.Outcome | Should -Be 'Passed'
         $report.ServiceStatus | Should -Be 'Running'
-        $report.ProductVersion | Should -Be '16.0.1000.1'
+        $report.ProductVersion | Should -Be $ProductVersion
         $report.ActualMode | Should -Be 'Tabular'
         $report.Edition | Should -Be 'Developer Edition'
         $script:connection.Connected | Should -BeFalse
+    }
+
+    It 'rejects a different server release instead of silently substituting it for <Release>' -ForEach @(
+        @{ Release = '2019' }
+        @{ Release = '2025' }
+    ) {
+        {
+            . $script:verificationScript -SsasVersion $Release -Mode Tabular `
+                -InstallationReportPath (Join-Path $script:reportDirectory 'ssas-install.json') `
+                -ReportPath $script:reportPath -LogPath $script:logPath
+        } | Should -Throw '*SSAS provisioning verification failed*'
+        $report = Get-Content -LiteralPath $script:reportPath -Raw | ConvertFrom-Json
+        $report.Outcome | Should -Be 'Failed'
+        $report.Error | Should -Match "Expected SQL Server Analysis Services $Release product major"
     }
 
     It 'fails before the deployment gate when the server mode is wrong' {

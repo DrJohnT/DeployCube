@@ -1,4 +1,6 @@
 BeforeAll {
+    . (Join-Path $PSScriptRoot 'Get-SsasProductMajor.ps1')
+    $script:expectedProductMajor = Get-SsasProductMajor -SsasVersion $env:COMPAT_SSAS_VERSION
     $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
     Import-Module -Name (Join-Path $repositoryRoot 'DeployCube\DeployCube.psd1') -Force -ErrorAction Stop
     Import-Module SqlServer -ErrorAction Stop
@@ -25,7 +27,7 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
         $server = New-Object Microsoft.AnalysisServices.Server
         $server.Connect($script:ssasServer)
         try {
-            $server.Version.ToString() | Should -Match '^16\.'
+            $server.Version.ToString() | Should -Match ('^' + $script:expectedProductMajor + '\.')
             [string]$server.Edition | Should -Match 'Developer'
         }
         finally {
@@ -47,6 +49,7 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
                 Tee-Object -FilePath $script:deploymentLogPath -Append
         } | Should -Not -Throw
 
+        $env:COMPAT_FAILURE_CATEGORY = 'Database verification'
         Ping-SsasDatabase -Server $script:ssasServer -CubeDatabase $script:databaseName |
             Should -BeTrue
         $env:COMPAT_DATABASE_EXISTS = 'True'
@@ -56,6 +59,7 @@ Describe "DeployCube integration with SQL Server Analysis Services $env:COMPAT_S
     }
 
     It 'removes the test database with Unpublish-Cube' {
+        $env:COMPAT_FAILURE_CATEGORY = 'Cleanup'
         {
             Unpublish-Cube `
                 -Server $script:ssasServer `

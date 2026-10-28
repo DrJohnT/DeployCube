@@ -36,6 +36,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-SsasProductMajor.ps1')
+$expectedProductMajor = Get-SsasProductMajor -SsasVersion $SsasVersion
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $diagnostics = Get-Content -LiteralPath $DiagnosticsPath -Raw | ConvertFrom-Json
 $ssmsInstances = @(& (Join-Path $PSScriptRoot 'Get-InstalledSsmsInstances.ps1'))
@@ -95,8 +97,8 @@ try {
     if ($actualMode -ne $Mode) {
         throw "Expected SSAS mode '$Mode' but '$ssasServer' reports '$actualMode'."
     }
-    if ($actualSsasProductVersion -notmatch '^16\.') {
-        throw "Expected SQL Server Analysis Services 2022 product version 16.x, but '$ssasServer' reports '$actualSsasProductVersion'."
+    if ($actualSsasProductVersion -notmatch ('^' + $expectedProductMajor + '\.')) {
+        throw "Expected SQL Server Analysis Services $SsasVersion product version $expectedProductMajor.x, but '$ssasServer' reports '$actualSsasProductVersion'."
     }
     if ($analysisServicesEdition -notmatch 'Developer') {
         throw "Expected SSAS Developer Edition, but '$ssasServer' reports '$analysisServicesEdition'."
@@ -191,6 +193,9 @@ catch {
     $probeReportPath = Join-Path $LogDirectory 'utility-probe\compatibility-probe.json'
     if (Test-Path -LiteralPath $probeReportPath) {
         $utilityProbe = Get-Content -LiteralPath $probeReportPath -Raw | ConvertFrom-Json
+        if ($utilityProbe.FailureCategory) {
+            $failureCategory = $utilityProbe.FailureCategory
+        }
     }
 }
 
