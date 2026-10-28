@@ -42,7 +42,7 @@ DeployCube also searches the legacy SQL Server `Tools\Binn` tree, which can cont
 
 Run **Actions → SSAS compatibility → Run workflow**. The default `media-only` scope downloads, validates, and mounts installation media on `windows-2022` without installing SSMS or SSAS. Run this scope first when troubleshooting downloads. After it passes, select `phase-c` for SSAS 2022 Tabular with SSMS 20. Select `phase-d` to test SSAS 2022 Tabular against SSMS **20, 21, and 22** on three independent runners, with exactly one SSMS installation per runner. It reuses Phase C's media, provisioning, verification, direct utility probe, compatibility-1500 fixture, Publish-Cube, database verification, and Unpublish-Cube stages. `full-matrix` remains a separate explicit opt-in for the 16 combinations of SSAS 2017/2019/2022/2025, Tabular/Multidimensional, and SSMS 20/22; Phase D does not start it. Each combination has an independent timeout and artifact bundle, and `fail-fast: false` preserves the other results when one job fails. The workflow is manual-only. An SSMS installer failure (including historical SSMS 22 HRESULT `0x8013153B`) blocks subsequent stages for that cell and is not classified as Deployment Utility incompatibility.
 
-The `media_urls_json` input maps versions to direct, public Microsoft installation ISO URLs, not bootstrapper URLs. Media acquisition is independent of SQL Setup and always runs before installing SSMS. `Acquire-SqlServerMedia.ps1` uses the runner's curl with a 30-second connection timeout, a 60-second inactivity limit (less than one byte/second), and a 20-minute overall download deadline. Transferred bytes are logged every 30 seconds; curl progress, HTTP status, effective URL, duration, and errors are retained. The downloader rejects images smaller than 1 GiB and files without ISO9660/UDF volume descriptors, and records the image's SHA-256. This computed hash is an audit identifier, not an independently published Microsoft checksum.
+The `media_urls_json` input maps versions to direct, public Microsoft installation ISO URLs, not bootstrapper URLs. Media acquisition is independent of SQL Setup and always runs before installing SSMS. `Acquire-SqlServerMedia.ps1` uses the runner's curl with a 30-second connection timeout, a 60-second inactivity limit (less than one byte/second), and a 20-minute overall download deadline. Transferred bytes are logged every 30 seconds; curl progress, HTTP status, effective URL, duration, and errors are retained. The downloader rejects images smaller than 1 GiB and files without ISO9660/UDF volume descriptors, and records the image's SHA-256. For 2019/2022 this computed hash is an audit identifier, not an independently published Microsoft SHA-256; the pinned 2025 ISO additionally has a Microsoft manifest SHA-256 check.
 
 ### Phase E media and fixture selection
 
@@ -57,7 +57,7 @@ Official media verified on 2026-10-28, before dispatch:
 
 These are real manifest URLs, not guessed endpoints. The bootstrapper resources were read without executing the downloader. SQL Server 2025 offers Standard Developer and Enterprise Developer; **Enterprise Developer** is selected to remain comparable with the previous full-featured Developer editions. Evaluation media is not substituted. The existing downloader checks all three pinned ISO lengths and records SHA-256; for the 2025 ISO it additionally checks the SHA-256 published in Microsoft's embedded manifest: `f78f869d44e8c2cbf93be16ce6ea52dd811636f046ded29e7a74dd1352134851`. Media stays on each ephemeral runner, without caching or redistribution.
 
-The [Microsoft compatibility-level documentation](https://learn.microsoft.com/en-us/analysis-services/tabular-models/compatibility-level-for-tabular-models-in-analysis-services) lists **1500** for SQL Server 2019 and **1700** as the latest level for 2025. Phase E first tries the existing **1500** calculated-table fixture on both engines to keep scenarios comparable; newer engine capability alone is not treated as proof that the fixture deploys. TOM validation, real direct deployment, and actual database compatibility verification must all pass. No 2022 fixture changes or new fixture are made unless an actual engine rejects this level. All service and integration version gates now derive the expected product major from the requested release (2019=15, 2022=16, 2025=17) rather than hard-coding 2022; positive and wrong-release regression tests cover all three.
+The [Microsoft compatibility-level documentation](https://learn.microsoft.com/en-us/analysis-services/tabular-models/compatibility-level-for-tabular-models-in-analysis-services) lists **1500** for SQL Server 2019 and **1700** as the latest level for 2025. Phase E reuses the existing **1500** calculated-table fixture on both engines to keep scenarios comparable. TOM validation, real direct deployment, and actual database compatibility verification passed on both releases; 2025's acceptance of 1500 is confirmed by execution, not inferred merely from its newer maximum level. No 2022 fixture changes or new fixture were necessary. All service and integration version gates now derive the expected product major from the requested release (2019=15, 2022=16, 2025=17) rather than hard-coding 2022; positive and wrong-release regression tests cover all three.
 
 ### Official SQL Server 2022 Developer media source
 
@@ -105,6 +105,42 @@ Pester then verifies the local SSAS connection, actual product version and Devel
 
 The SSAS workflow records the exact SSAS version/mode, SSMS major, selected deployment utility major/path, model compatibility level, and test outcome in `compatibility-report.json`. Results apply only to that recorded tuple. A newer deployment utility is never assumed to work with an older SSAS server.
 
+### Phase E: SSAS 2019 and 2025 Tabular with SSMS 22
+
+[Run 40718431659](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659) **passed both independent Windows jobs** on 2026-10-28. Each runner inventoried one SSMS installation and one matching utility, verified **MSOLAP$DCUBE Running**, connected using AMO, and confirmed the requested engine release, **Developer64** edition, and **Tabular** mode. SQL Browser was also Running. The existing SSAS 2022 deployments were not repeated.
+
+| SSAS release / actual server version | Edition (media / AMO) | Mode | SSMS product version | Utility file version | Model level | Media download | SSMS install | SSAS setup | Direct probe | Publish-Cube | Database verification | Unpublish-Cube | Classification / run |
+|---|---|---|---|---|---:|---:|---:|---:|---|---|---|---|---|
+| 2019 / 15.0.32.50 | Developer / Developer64 | Tabular | 22.11.12324.101 | 22.1.17.0 | 1500 | 8.54 s | 708.23 s | 146.73 s | Passed; exit 0; probe DB level 1500 and removal verified | Passed | Exists; level 1500 | Passed; absence verified | **Passed** — [2019 job](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659/job/122922392315) |
+| 2025 / 17.0.25.218 | Enterprise Developer / Developer64 | Tabular | 22.11.12324.101 | 22.1.17.0 | 1500 | 24.09 s | 661.63 s | 97.85 s | Passed; exit 0; probe DB level 1500 and removal verified | Passed | Exists; level 1500 | Passed; absence verified | **Passed** — [2025 job](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659/job/122922391566) |
+
+Both use the inventoried utility at `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe` (file and product version **22.1.17.0**). Each cell passed **37 infrastructure guard tests** and **3 real integration tests**, with no failures or skipped integration tests: **6/6 real integration tests total**. Guard coverage includes the previous 2022 version gate, rejection of substituted releases, media validation/inactivity, utility selection, probe verification, and cleanup.
+
+| Media evidence | SQL Server 2019 Developer | SQL Server 2025 Enterprise Developer |
+|---|---|---|
+| Source | Official direct Microsoft ISO linked in the Phase E media table above | Official direct Microsoft ISO linked in the Phase E media table above |
+| Actual bytes | 1,433,974,784 | 1,265,688,576 |
+| Recorded SHA-256 | `53A7900C27B71D42A63EBCC89F8ADD2F2C6DB278153FC3FC3B2053BA547BCFD0` | `F78F869D44E8C2CBF93BE16CE6EA52DD811636F046DED29E7A74DD1352134851` (matches Microsoft manifest) |
+| Mounted setup product version | 15.0.2000.5 | 17.0.1000.7 |
+| Media validation | Passed ISO/UDF, exact size, x64 setup structure and Microsoft Authenticode signature | Passed ISO/UDF, exact size, x64 setup structure and Microsoft Authenticode signature |
+| SSAS setup result | Exit 0; 147.41 s including service readiness | Exit 0; 98.44 s including service readiness |
+
+In both jobs the direct probe's database and the real DeployCube database were separately created, queried, and removed. The checked-in 1500 model was not upgraded or altered. Media dismount/deletion and always-upload diagnostic steps passed; media was not included in artifacts. Reports include `media-acquisition.json`, `media-validation.json`, installation and service verification JSON, the direct probe JSON/log, `compatibility-report.json`, and NUnit test results.
+
+The initial [run 40715625533](https://github.com/DrJohnT/DeployCube/actions/runs/40715625533) is classified **Blocked by infrastructure**, not incompatible: both official ISO downloads passed, but the new unit-test guard mocked `Get-Service` before Windows PowerShell had loaded `System.ServiceProcess`, so `[System.ServiceProcess.ServiceControllerStatus]` could not resolve. No SSMS/SSAS installation or deployment occurred in that attempt. The test now explicitly loads that assembly; all 37 Windows guards passed on both runners in the successful follow-up. Both cells were rerun because neither had reached deployment; no already-verified 2022 job was rerun.
+
+#### Verified deployment matrix after Phase E
+
+| SSAS / mode | SSMS utility | Classification | Real deployment evidence |
+|---|---|---|---|
+| 2019 Tabular | SSMS 22 / 22.1.17.0 | **Passed** | [Phase E 40718431659](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659) |
+| 2022 Tabular | SSMS 20 / 20.0.3.0 | **Passed** (previously verified) | [Phase D 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) |
+| 2022 Tabular | SSMS 21 / 21.0.52.0 | **Passed** (previously verified) | [Phase D 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) |
+| 2022 Tabular | SSMS 22 / 22.1.17.0 | **Passed** (previously verified) | [Phase D 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) |
+| 2025 Tabular | SSMS 22 / 22.1.17.0 | **Passed** | [Phase E 40718431659](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659) |
+
+All five passes apply to the observed Developer builds and compatibility-1500 fixture only. Other combinations are **Not tested** unless separately documented; an installer/runner/media blocker is **Blocked by infrastructure**, and a completed failing deployment/verification is **Failed**, never a pass based only on an installer or utility exit code.
+
 ### Phase D: SSMS 20 / 21 / 22 against SSAS 2022 Tabular
 
 The focused [Phase D run 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) **passed all three independent Windows runner jobs** on 2026-10-28. Each artifact bundle inventories exactly one matching SSMS installation and one Deployment Utility. All three servers reported **16.0.42.209**, **Developer64**, **Tabular**, and **MSOLAP$DCUBE Running**, with successful AMO connectivity.
@@ -151,14 +187,14 @@ The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.
 | SSAS target | SSMS deployment utility | Current status |
 |---|---|---|
 | 2019 | 20 | Not yet tested |
-| 2019 | 22 | Not yet tested |
+| 2019 Tabular | 22 | Passed in run 40718431659: server 15.0.32.50, utility 22.1.17.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2022 Tabular | 20 | Passed in run 40682470858: server 16.0.42.209, utility 20.0.3.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2022 Tabular | 21 | Passed in run 40691182874: server 16.0.42.209, utility 21.0.52.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2022 Tabular | 22 | Passed in run 40691182874: server 16.0.42.209, utility 22.1.17.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
-| 2025 | 22 | Not yet tested |
+| 2025 Tabular | 22 | Passed in run 40718431659: server 17.0.25.218, utility 22.1.17.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2017 | 20 or 22 | Not yet tested |
 
-Only the exact SSAS 2022 Tabular / SSMS 20, 21, and 22 tuples recorded above have passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
+Only the exact five Phase C/D/E tuples recorded above have passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
 
 ## Runner limitations, resource use, and coverage gaps
 
@@ -168,7 +204,7 @@ Only the exact SSAS 2022 Tabular / SSMS 20, 21, and 22 tuples recorded above hav
 - The Phase C calculated-table fixture does not test relational data sources or processing. Those checks require a separate explicit fixture and additional local services.
 - Multidimensional model deployment and processing are uncovered until a real fixture is checked in and built.
 - The SSAS workflow does not certify every deployment utility against every SSAS release, model compatibility level, deployment option, or service pack. The selector unit tests are not server integration tests.
-- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C/D tuples remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
+- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C/D/E tuples remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
 
 ## Reports and artifacts
 
