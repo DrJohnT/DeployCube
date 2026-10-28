@@ -90,6 +90,32 @@ Pester then verifies the local SSAS connection, actual product version and Devel
 
 The SSAS workflow records the exact SSAS version/mode, SSMS major, selected deployment utility major/path, model compatibility level, and test outcome in `compatibility-report.json`. Results apply only to that recorded tuple. A newer deployment utility is never assumed to work with an older SSAS server.
 
+### Phase D: SSMS 20 / 21 / 22 against SSAS 2022 Tabular
+
+The focused [Phase D run 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) **passed all three independent Windows runner jobs** on 2026-10-28. Each artifact bundle inventories exactly one matching SSMS installation and one Deployment Utility. All three servers reported **16.0.42.209**, **Developer64**, **Tabular**, and **MSOLAP$DCUBE Running**, with successful AMO connectivity.
+
+| SSMS | Installed SSMS product version | Utility file/product version | SSMS installation | Media download | SSAS setup | Direct utility probe | Publish-Cube / database 1500 / Unpublish-Cube |
+|---|---|---|---:|---:|---:|---|---|
+| [20 job](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874/job/122826097825) | 20.2.37.0 | 20.0.3.0 | 1120.67 s | 7.25 s | 104.82 s | Passed; exit 0; database 1500; cleanup passed | Passed / passed / passed; 3/3 tests |
+| [21 job](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874/job/122826097490) | 21.6.36603.0 | 21.0.52.0 | 153.46 s | 11.93 s | 124.03 s | Passed; exit 0; database 1500; cleanup passed | Passed / passed / passed; 3/3 tests |
+| [22 job](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874/job/122826097783) | 22.11.12324.101 | 22.1.17.0 | 883.34 s | 27.56 s | 134.28 s | Passed; exit 0; database 1500; cleanup passed | Passed / passed / passed; 3/3 tests |
+
+Utility paths recorded by the real inventory:
+
+- SSMS 20: `C:\Program Files (x86)\Microsoft SQL Server Management Studio 20\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`
+- SSMS 21: `C:\Program Files\Microsoft SQL Server Management Studio 21\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`
+- SSMS 22: `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`
+
+Each cell passed **31 infrastructure guard tests** and **3 real integration tests** (9/9 real integration tests in total). The direct probe checked database existence and compatibility 1500 and removed its separate database. The DeployCube tests independently deployed the checked-in fixture, verified database existence and compatibility 1500, and verified database absence after real `Unpublish-Cube`. Media was dismounted/deleted, and diagnostics were uploaded in all cells. This does not certify external data sources, processing, other compatibility levels, or other SSAS versions/modes.
+
+#### Installer investigation, separate from utility compatibility
+
+[Run 40689319575](https://github.com/DrJohnT/DeployCube/actions/runs/40689319575) passed the SSMS 20 baseline but failed to install SSMS 21 and 22 with `-2146233029` (`0x8013153B`) after **38.20 s** and **63.15 s**, respectively. Their decompression logs showed successful extraction followed by failure in the extracted Visual Studio bootstrapper, before SSAS installation or utility execution. Both runners had 81 GB free. These are installer failures, not utility/server incompatibility.
+
+For Phase D only, the workflow now passes a short, absolute log/TEMP path (`RUNNER_TEMP/ssms-<major>-logs`) to the unchanged shared installer, instead of the long relative artifact path. Logs are copied into each cell's artifact directory in `finally`; an additional always-eligible failure step captures .NET Runtime, Application Error, Windows Error Reporting, and MSI Application events. With this isolated change, all three installations and real deployments passed in run 40691182874. This is a verified working installer configuration; the earlier logs alone do not establish which path property caused the .NET failure or prove all intermittent installer faults are eliminated. Phase C's installation path and the separate SSMS workflow remain unchanged.
+
+The first Phase D dispatch, [40688866364](https://github.com/DrJohnT/DeployCube/actions/runs/40688866364), stopped at guard configuration before installation because Pester's typed `Run.Path` option does not support `+=`. The workflow now assembles a string array before assigning it; all subsequent Windows guard suites passed. A pre-existing Windows-path assertion in the selector tests fails on Linux, so Windows runner results, not a Linux pass claim, validate that suite.
+
 ### Phase C runner attempt
 
 Phase C **passed in run 40682470858** as recorded above. The following earlier attempts document the blockers resolved before that pass. The SSAS 2022 Tabular test did not reach SQL Server media download or setup in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) or [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
@@ -112,11 +138,12 @@ The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.
 | 2019 | 20 | Not yet tested |
 | 2019 | 22 | Not yet tested |
 | 2022 Tabular | 20 | Passed in run 40682470858: server 16.0.42.209, utility 20.0.3.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
-| 2022 Tabular | 22 | Blocked before SSAS setup by SSMS installer failure; deployment not tested |
+| 2022 Tabular | 21 | Passed in run 40691182874: server 16.0.42.209, utility 21.0.52.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
+| 2022 Tabular | 22 | Passed in run 40691182874: server 16.0.42.209, utility 22.1.17.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2025 | 22 | Not yet tested |
 | 2017 | 20 or 22 | Not yet tested |
 
-Only the exact SSAS 2022 Tabular / SSMS 20 tuple above has passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
+Only the exact SSAS 2022 Tabular / SSMS 20, 21, and 22 tuples recorded above have passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
 
 ## Runner limitations, resource use, and coverage gaps
 
@@ -126,7 +153,7 @@ Only the exact SSAS 2022 Tabular / SSMS 20 tuple above has passed real deploymen
 - The Phase C calculated-table fixture does not test relational data sources or processing. Those checks require a separate explicit fixture and additional local services.
 - Multidimensional model deployment and processing are uncovered until a real fixture is checked in and built.
 - The SSAS workflow does not certify every deployment utility against every SSAS release, model compatibility level, deployment option, or service pack. The selector unit tests are not server integration tests.
-- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C tuple remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
+- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C/D tuples remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
 
 ## Reports and artifacts
 
