@@ -92,78 +92,7 @@ function Write-ProvisioningLog {
         Set-Content -LiteralPath $setupStatePath -Encoding UTF8
 }
 
-function Invoke-BoundedProcess {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$FilePath,
-
-        [Parameter(Mandatory = $true)]
-        [string[]]$ArgumentList,
-
-        [Parameter(Mandatory = $true)]
-        [int]$TimeoutSeconds,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Stage,
-
-        [Parameter(Mandatory = $true)]
-        [string]$StandardOutputPath,
-
-        [Parameter(Mandatory = $true)]
-        [string]$StandardErrorPath,
-
-        [string]$ObservedDirectory
-    )
-
-    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList `
-        -PassThru -RedirectStandardOutput $StandardOutputPath `
-        -RedirectStandardError $StandardErrorPath -ErrorAction Stop
-    $processStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    Write-ProvisioningLog -Stage $Stage -Message "Started process '$FilePath' (PID $($process.Id)); timeout ${TimeoutSeconds}s."
-
-    while (-not $process.WaitForExit(30000)) {
-        if ($processStopwatch.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
-            Write-ProvisioningLog -Stage $Stage -Message "Process PID $($process.Id) exceeded its timeout; terminating its process tree."
-            $taskkillPath = Join-Path $env:SystemRoot 'System32\taskkill.exe'
-            $killer = Start-Process -FilePath $taskkillPath `
-                -ArgumentList @('/PID', [string]$process.Id, '/T', '/F') `
-                -PassThru -WindowStyle Hidden -ErrorAction Stop
-            if (-not $killer.WaitForExit(30000)) {
-                $killer.Kill()
-                throw "Unable to terminate timed-out process tree for PID $($process.Id) using taskkill."
-            }
-            if (-not $process.WaitForExit(15000)) {
-                $process.Kill()
-                if (-not $process.WaitForExit(15000)) {
-                    throw "Timed-out process PID $($process.Id) did not exit after process-tree termination."
-                }
-            }
-            throw [System.TimeoutException]::new(
-                "Process '$FilePath' exceeded the $TimeoutSeconds-second timeout in stage '$Stage'."
-            )
-        }
-
-        $progressMessage = "Process PID $($process.Id) is still running after $([math]::Round($processStopwatch.Elapsed.TotalMinutes, 1)) minutes."
-        if ($ObservedDirectory -and (Test-Path -LiteralPath $ObservedDirectory -PathType Container)) {
-            $files = @(Get-ChildItem -LiteralPath $ObservedDirectory -File -Recurse -ErrorAction SilentlyContinue)
-            $totalBytes = ($files | Measure-Object -Property Length -Sum).Sum
-            $latestFile = $files | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
-            $progressMessage += " Media files: $($files.Count); bytes: $totalBytes; latest file: $($latestFile.FullName)."
-        }
-        Write-ProvisioningLog -Stage $Stage -Message $progressMessage
-    }
-
-    $process.Refresh()
-    $durationSeconds = [math]::Round($processStopwatch.Elapsed.TotalSeconds, 2)
-    Write-ProvisioningLog -Stage $Stage -Message (
-        "Process PID $($process.Id) exited with code $($process.ExitCode) after $durationSeconds seconds."
-    )
-    return [pscustomobject]@{
-        ExitCode = $process.ExitCode
-        DurationSeconds = $durationSeconds
-        ProcessId = $process.Id
-    }
-}
+. (Join-Path $PSScriptRoot 'Invoke-BoundedProcess.ps1')
 
 function Copy-SsasSetupLogs {
     try {
