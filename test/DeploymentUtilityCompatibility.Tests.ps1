@@ -4,6 +4,13 @@ BeforeAll {
 }
 
 Describe 'Direct Deployment Utility compatibility gate' {
+    It 'accepts all Phase D SSMS majors in the integration harness' {
+        $command = Get-Command (Join-Path $PSScriptRoot 'infrastructure/Invoke-SsasCompatibility.ps1')
+        $validation = $command.Parameters['SsmsMajor'].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
+        @($validation.ValidValues) -join ',' | Should -Be '20,21,22'
+    }
+
     BeforeEach {
         $script:logDirectory = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
         $script:exitCode = 0

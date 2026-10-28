@@ -9,7 +9,7 @@ param(
     [string]$Mode,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet('20', '22')]
+    [ValidateSet('20', '21', '22')]
     [string]$SsmsMajor,
 
     [Parameter(Mandatory = $true)]

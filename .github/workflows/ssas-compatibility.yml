@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Validate media without SSMS, run Phase C, or run the experimental matrix
+        description: Validate media, run Phase C (SSMS 20), Phase D (SSMS 20/21/22), or the experimental full matrix
         type: choice
         required: true
         default: media-only
         options:
           - media-only
           - phase-c
+          - phase-d
           - full-matrix
       media_urls_json:
         description: JSON map of SQL Server version to direct public Microsoft installation ISO URL
@@ -28,7 +29,7 @@ jobs:
     timeout-minutes: 240
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
+      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || inputs.scope == 'phase-d' && '{"ssas_version":["2022"],"mode":["Tabular"],"ssms_major":["20","21","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
     env:
       COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json }}
       COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
@@ -58,8 +59,8 @@ jobs:
             -LogDirectory "$env:ARTIFACT_DIRECTORY/media" `
             -TimeoutMinutes 20 -InactivityTimeoutSeconds 60
 
-      - name: Test media acquisition guards
-        if: success() && inputs.scope == 'media-only'
+      - name: Test infrastructure guards
+        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d')
         timeout-minutes: 5
         shell: powershell
         run: |
@@ -69,11 +70,14 @@ jobs:
           Import-Module Pester -RequiredVersion 5.7.1 -ErrorAction Stop
           $configuration = New-PesterConfiguration
           $configuration.Run.Path = @('test/SqlServerMedia.Tests.ps1', 'test/SqlServerMediaDownload.Tests.ps1', 'test/BoundedProcess.Tests.ps1')
+          if ('${{ inputs.scope }}' -eq 'phase-d') {
+            $configuration.Run.Path += @('test/DeploymentToolSelection.Tests.ps1', 'test/DeploymentUtilityCompatibility.Tests.ps1')
+          }
           $configuration.Run.PassThru = $true
           $configuration.TestResult.Enabled = $true
           $configuration.TestResult.OutputPath = "$env:ARTIFACT_DIRECTORY/media/nunit-media.xml"
           $result = Invoke-Pester -Configuration $configuration
-          if ($result.FailedCount -ne 0 -or $result.PassedCount -eq 0) { throw 'Media acquisition guard regression tests failed.' }
+          if ($result.FailedCount -ne 0 -or $result.PassedCount -eq 0) { throw 'Infrastructure guard regression tests failed.' }
 
       - name: Mount and validate SQL Server media
         id: validate-media
