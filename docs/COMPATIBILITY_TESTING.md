@@ -105,11 +105,47 @@ The fixture explicitly declares a `calculatedTableColumn` bound to `[Value]`, th
 
 Pester then verifies the local SSAS connection, actual product version and Developer edition, Tabular mode, real `Publish-Cube` deployment using the selected SSMS 20 utility, `Ping-SsasDatabase`, compatibility level 1500, and removal through `Unpublish-Cube`. Deployment utility output and NUnit-format Pester results are retained as artifacts. SSMS installation, media acquisition, SSAS installation/connectivity, fixture validation, utility compatibility, and DeployCube outcomes are recorded separately. The test deliberately does not claim data-source or processing compatibility.
 
-**Multidimensional is tested separately by Phase F.** Its AMO-built fixture and server-side object verification replace the former missing-fixture `Unsupported` gate. Until an actual Phase F combination passes, it is `Not tested`; building the fixture locally is not deployment evidence.
+**Multidimensional is tested separately by Phase F.** Its AMO-built fixture and server-side object verification replace the former missing-fixture `Unsupported` gate. The three recorded Phase F combinations passed real deployment; building the fixture locally alone is not deployment evidence.
 
 ## Cross-version results and support claims
 
 The SSAS workflow records the exact SSAS version/mode, SSMS major, selected deployment utility major/path, model compatibility level, and test outcome in `compatibility-report.json`. Results apply only to that recorded tuple. A newer deployment utility is never assumed to work with an older SSAS server.
+
+### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
+
+**Passed:** [workflow run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), executing commit `5704468` on `feature/ssms-ssas-compatibility`. All three independent GitHub-hosted Windows Server 2022 jobs passed on the first attempt. Each installed exactly one SSMS product; no Tabular matrix or full matrix was dispatched. There were **9/9 real integration tests**, plus **50/50 infrastructure guards on each runner**. Local validation also passed 44 focused Pester tests, YAML/manual-trigger/matrix checks, embedded PowerShell parsing and actual AMO fixture validation/XML round-trip.
+
+| SSAS release / actual server version / edition | Server mode | SSMS product version | Deployment Utility file version | Model level | Media download | SSMS install | SSAS setup / total provision | Direct utility + probe metadata + removal | `Publish-Cube` | Database + cube metadata | `Unpublish-Cube` + verified absence | Status | Run |
+|---|---|---|---|---:|---:|---:|---:|---|---|---|---|---|---|
+| 2019 / `15.0.32.50` / `Developer64` | Multidimensional | `22.11.12324.101` | `22.1.17.0` | 1100 | 21.43 s | 700.93 s | 148.73 / 149.64 s | Passed | Passed | Passed | Passed | **Passed** | [40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201) |
+| 2022 / `16.0.42.209` / `Developer64` | Multidimensional | `22.11.12324.101` | `22.1.17.0` | 1100 | 11.31 s | 876.42 s | 160.69 / 161.13 s | Passed | Passed | Passed | Passed | **Passed** | [40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201) |
+| 2025 / `17.0.25.218` / `Developer64` | Multidimensional | `22.11.12324.101` | `22.1.17.0` | 1100 | 12.80 s | 725.74 s | 97.37 / 97.77 s | Passed | Passed | Passed | Passed | **Passed** | [40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201) |
+
+All three runners reported service `MSOLAP$DCUBE` **Running** and AMO confirmed the requested release, `Developer64` edition and `Multidimensional` mode. SQL Server 2025 uses the official **Enterprise Developer** image. Every runner identified the utility at:
+
+```text
+C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe
+```
+
+Its file and product versions were both `22.1.17.0`. SSMS `Ssms.exe` reported file version `22.11.12324.101 built by: stable`, product version `22.11.12324.101`.
+
+The existing official Microsoft x64 English Developer ISO sources were reused without caching or redistribution. ISO size/format, mounted media structure, setup signature and requested product major passed; setup versions were `15.0.2000.5`, `16.0.1000.6` and `17.0.1000.7`, respectively. Recorded sizes and SHA-256 values:
+
+| SQL Server media | Bytes | Recorded SHA-256 |
+|---|---:|---|
+| 2019 Developer | 1,433,974,784 | `53A7900C27B71D42A63EBCC89F8ADD2F2C6DB278153FC3FC3B2053BA547BCFD0` |
+| 2022 Developer | 1,163,053,056 | `80D2CD75DD2B28098C0182F50AD86BD44F9B3A9F357C30FF617480A1497DAFFD` |
+| 2025 Enterprise Developer | 1,265,688,576 | `F78F869D44E8C2CBF93BE16CE6EA52DD811636F046DED29E7A74DD1352134851` |
+
+The 2025 SHA-256 was also compared with Microsoft's embedded manifest. The 2019/2022 values are recorded audit hashes, not claims of independently published Microsoft SHA-256 verification. Exact source URLs and provenance are documented above and retained in each `media-acquisition.json`.
+
+The same bound AMO fixture worked unmodified on all three server releases: one database, `LocalFixture` data source, `FixtureView` DSV, `Item` dimension/key, `FixtureCube`, `Fact` measure group/partition, `Amount` Sum measure and default MDX calculation script. LocalDB `15.0.4382.1` created an actual isolated database with one row and verified `SUM(Amount)=10` on every runner. No version-specific project or deployment-option workaround was needed; the unchanged compatibility-1500 Tabular fixture was not reused as a Multidimensional model.
+
+For each release, the direct utility created `DeployCubeUtilityCompatibilityProbe`; refreshed AMO metadata verified every expected object and compatibility 1100, then the probe was dropped and its absence verified. Next, the real `Publish-Cube -ProcessingOption DoNotProcess` created the distinct `DeployCubeCompatibilityTest` database. Server-side AMO verified the database, cube, dimension, key, measure group, measure, partition and bindings. `Unpublish-Cube` then removed that database and the final test verified absence. Utility exit code zero alone was not accepted as deployment success.
+
+**This establishes metadata deployment compatibility only.** Both deployed cubes reported `Unprocessed`; processing was not requested or needed to validate deployment. SSAS-service access to runner-account LocalDB, provider connectivity, processing and measure-query results remain Phase G work. There were no failed, unsupported or infrastructure-blocked Phase F cells in this run. Other server/utility tuples remain `Not tested` unless separately recorded.
+
+The three downloaded artifact bundles were checked against `compatibility-report.json`, `utility-probe/compatibility-probe.json`, `fixture-source.json`, `fixture-validation.json`, `published-metadata.json`, media reports and both NUnit reports. Installer/setup logs and deployment logs are preserved with the artifacts. No public API, production deployment logic or separate SSMS compatibility workflow changed.
 
 ### Phase E: SSAS 2019 and 2025 Tabular with SSMS 22
 
@@ -200,7 +236,7 @@ The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.
 | 2025 Tabular | 22 | Passed in run 40718431659: server 17.0.25.218, utility 22.1.17.0, compatibility-1500 fixture, Publish-Cube, verification, and Unpublish-Cube |
 | 2017 | 20 or 22 | Not yet tested |
 
-Only the exact five Phase C/D/E tuples recorded above have passed real deployment on this branch. Failures and explicit unsupported cells are reported separately from passes. Full-matrix artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
+Only the exact eight Phase C/D/E/F tuples recorded above have passed real deployment on this branch: five Tabular and three Multidimensional. Failures and explicit unsupported cells are reported separately from passes. Per-job artifacts are the source of truth for actual installed paths and file versions; the paths documented for one SSMS release are not used to predict paths for another.
 
 ## Runner limitations, resource use, and coverage gaps
 
@@ -210,7 +246,7 @@ Only the exact five Phase C/D/E tuples recorded above have passed real deploymen
 - The Phase C calculated-table fixture does not test relational data sources or processing. Those checks require a separate explicit fixture and additional local services.
 - Multidimensional metadata deployment uses the Phase F fixture; processing remains outside this phase.
 - The SSAS workflow does not certify every deployment utility against every SSAS release, model compatibility level, deployment option, or service pack. The selector unit tests are not server integration tests.
-- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C/D/E tuples remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
+- SSMS 18/19 installations and SSAS combinations other than the recorded Phase C/D/E/F tuples remain untested. Individual install/discovery results do not establish deployment compatibility with an SSAS server or processing option.
 
 ## Reports and artifacts
 
