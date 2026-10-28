@@ -24,7 +24,7 @@ jobs:
   ssas-compatibility:
     name: SQL Server ${{ matrix.ssas_version }} ${{ matrix.mode }} + SSMS ${{ matrix.ssms_major }}
     runs-on: windows-2022
-    timeout-minutes: 180
+    timeout-minutes: 330
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
@@ -104,6 +104,7 @@ jobs:
       - name: Install SSAS ${{ matrix.ssas_version }} ${{ matrix.mode }}
         id: install-ssas
         if: always() && steps.install-ssms.outcome == 'success'
+        timeout-minutes: 260
         shell: powershell
         run: |
           $mediaMap = ConvertFrom-Json -InputObject $env:COMPAT_MEDIA_URLS_JSON -ErrorAction Stop
@@ -114,10 +115,35 @@ jobs:
             -Mode $env:COMPAT_SSAS_MODE `
             -MediaUri $mediaUri `
             -LogDirectory "$artifactDirectory/sql-setup" `
-            -MinimumFreeSpaceGB 20
+            -MinimumFreeSpaceGB 20 `
+            -MediaTimeoutMinutes 90 `
+            -SetupTimeoutMinutes 120 `
+            -ServiceReadinessTimeoutMinutes 15
+
+      - name: Verify SSAS service, version and mode
+        id: verify-ssas
+        if: always() && steps.install-ssas.outcome == 'success'
+        timeout-minutes: 30
+        shell: powershell
+        run: |
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          ./test/infrastructure/Verify-SsasInstallation.ps1 `
+            -SsasVersion $env:COMPAT_SSAS_VERSION `
+            -Mode $env:COMPAT_SSAS_MODE `
+            -InstallationReportPath "$artifactDirectory/sql-setup/ssas-install.json" `
+            -ReportPath "$artifactDirectory/ssas-verification.json" `
+            -LogPath "$artifactDirectory/sql-setup/ssas-verification.log"
+
+      - name: Capture SSAS provisioning diagnostics
+        if: always() && (steps.install-ssas.outcome != 'success' || steps.verify-ssas.outcome != 'success')
+        shell: powershell
+        run: |
+          $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
+          ./test/infrastructure/Get-SsasProvisioningDiagnostics.ps1 `
+            -OutputPath "$artifactDirectory/sql-setup/runner-provisioning-diagnostics.json"
 
       - name: Run DeployCube SSAS integration tests
-        if: always() && steps.install-ssas.outcome == 'success'
+        if: always() && steps.verify-ssas.outcome == 'success'
         shell: powershell
         run: |
           $artifactDirectory = 'artifacts/ssas/${{ matrix.ssas_version }}/${{ matrix.mode }}/ssms-${{ matrix.ssms_major }}'
@@ -133,10 +159,10 @@ jobs:
             -LogDirectory "$artifactDirectory/model-build"
 
       - name: Record setup or prerequisite failure
-        if: always() && (steps.install-ssms.outcome != 'success' || steps.install-ssas.outcome != 'success')
+        if: always() && (steps.install-ssms.outcome != 'success' || steps.install-ssas.outcome != 'success' || steps.verify-ssas.outcome != 'success')
         shell: powershell
         run: |
-          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "## SSAS $env:COMPAT_SSAS_VERSION $env:COMPAT_SSAS_MODE / SSMS $env:COMPAT_SSMS_MAJOR`n`nSetup or a required prerequisite failed. See artifacts for runner diagnostics and installer logs. No compatibility success is claimed." -Encoding UTF8
+          Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "## SSAS $env:COMPAT_SSAS_VERSION $env:COMPAT_SSAS_MODE / SSMS $env:COMPAT_SSMS_MAJOR`n`nProvisioning or a required prerequisite failed. The Deployment Utility probe and DeployCube integration are gated on successful service/version/mode verification. See artifacts for current stage, diagnostics, and installer logs. No compatibility success is claimed." -Encoding UTF8
 
       - name: Upload SQL setup logs, reports and test results
         if: always()

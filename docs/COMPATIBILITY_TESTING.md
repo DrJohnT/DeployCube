@@ -44,7 +44,7 @@ Run **Actions → SSAS compatibility → Run workflow**. The default scope is th
 
 The `media_urls_json` input may map versions to direct, public Microsoft ISO URLs. For the Phase C 2022 cell, the default is Microsoft's official SQL Server 2022 Developer bootstrapper (`https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409`), which downloads ISO media using `/Action=Download /MediaType=ISO` in quiet mode after accepting the SQL Server license terms. `ISO` is the option specified by the bootstrapper's embedded `SettingSampleMediaTypeFull` help resource; `Full` is not used as the media-type argument. The installer and `setup.exe` signatures are validated and their product version is checked before installation. The workflow does not place SQL setup media in the repository or use production credentials.
 
-Before setup, the script checks the Windows Server release, media source, Microsoft signatures, and setup executable product major (SQL Server 2017/2019/2022/2025 correspond to setup majors 14/15/16/17). It installs a named `DCUBE` Analysis Services instance in the selected Tabular or Multidimensional mode, starts the service, and records setup logs and installation duration. The Phase C run uses SQL Server 2022 Developer media for non-production testing only. It does not install the Database Engine and creates no external or production connections.
+Before setup, the script checks the Windows Server release, media source, Microsoft signatures, and setup executable product major (SQL Server 2017/2019/2022/2025 correspond to setup majors 14/15/16/17). It installs a named `DCUBE` Analysis Services instance in the selected Tabular or Multidimensional mode, starts the service, and records setup logs and installation duration. Media acquisition, SQL Setup, and service readiness have independent 90-, 120-, and 15-minute limits; the bootstrapper and SQL Setup process trees are terminated on timeout. A separate workflow step confirms the Windows service is Running and AMO reports SQL Server 2022 Developer, product version 16.x, and the requested server mode. Only that step's success permits the utility probe or DeployCube integration. The job-level timeout is 330 minutes, and installer logs, stage state, Windows service/process/drive diagnostics, SQL Setup logs, and installer events are uploaded with `if: always()` when the runner remains available. The Phase C run uses SQL Server 2022 Developer media for non-production testing only. It does not install the Database Engine and creates no external or production connections.
 
 For SSAS 2022 Tabular, the integration uses the checked-in self-contained compatibility-1500 fixture under `test/infrastructure/fixtures/Tabular1500`. Its calculated table requires neither a local SQL source nor Analysis Services Projects build targets. Phase C reuses the unchanged `Install-Ssms.ps1` SSMS 20 installation path that passed the independent matrix in [run 40528965611](https://github.com/DrJohnT/DeployCube/actions/runs/40528965611) (14/14 discovery/selection tests; utility `20.0.3.0`). The separate SSMS compatibility workflow is unchanged.
 
@@ -62,11 +62,14 @@ The SSAS workflow records the exact SSAS version/mode, SSMS major, selected depl
 
 ### Phase C runner attempt
 
-Phase C has **not passed**. The SSAS 2022 Tabular test did not reach SQL Server media download or setup because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The failure is recorded in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) (initial attempt and retry) and [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) (after adding the documented `SSMS.22.SSMS.Release` channel ID). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
+Phase C has **not passed**. The SSAS 2022 Tabular test did not reach SQL Server media download or setup in [run 40533721392](https://github.com/DrJohnT/DeployCube/actions/runs/40533721392) or [run 40572068520](https://github.com/DrJohnT/DeployCube/actions/runs/40572068520) because the SSMS 22 bootstrapper repeatedly exited with `-2146233029` (`0x8013153b`). The three observed installer durations were 40.14, 42.32, and 44.20 seconds. Runner diagnostics showed at least 16 GB physical memory and 78–81 GB free on C:. The installer extraction log recorded the launched Visual Studio bootstrapper's exit as `0x8013153b`; redirected stdout/stderr were empty.
+
+The SSMS 20 replacement run, [40588588717](https://github.com/DrJohnT/DeployCube/actions/runs/40588588717), installed SSMS successfully in 12m 32s. Its SSAS installation step started at 2026-10-27 21:52:18 UTC and remained in progress when the job ended at 2026-10-28 00:44:31 UTC. The workflow at that revision had a 180-minute job timeout; the 180-minute deadline from the 21:39:31 UTC job start was 00:39:31 UTC, five minutes before the Actions job finished cancellation handling. GitHub recorded the conclusion as `cancelled`, not `timed_out`; logs and artifacts were unavailable, so the exact blocked sub-operation and any external cancellation actor cannot be proven. The timing strongly indicates the job timeout, and the old installer had no bounded child-process wait. No SSAS version, service status, media/setup completion, or deployment result can be inferred from that run.
 
 | SSAS target | SSMS deployment utility | Observed outcome |
 |---|---|---|
 | 2022 Tabular | SSMS 22 | Blocked before SSAS setup; deployment utility version/path not inventoried in these runs; no deployment attempted |
+| 2022 Tabular | SSMS 20 | SSMS installation passed; SSAS step remained active until the 180-minute job-timeout window; installer logs/artifacts unavailable; SSAS version, service, and deployment not verified |
 
 The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.0` at `C:\Program Files\Microsoft SQL Server Management Studio 22\Release\Common7\IDE\Microsoft.AnalysisServices.Deployment.exe`, but that is not evidence that the Phase C runner installed the utility or that a model deploys to SSAS 2022.
 
@@ -74,7 +77,7 @@ The earlier individual SSMS 22 matrix did install and discover utility `22.1.17.
 |---|---|---|
 | 2019 | 20 | Not yet tested |
 | 2019 | 22 | Not yet tested |
-| 2022 | 20 | Not yet tested |
+| 2022 | 20 | Provisioning timed out/cancelled before verification; no Deployment Utility probe or DeployCube deployment |
 | 2022 Tabular | 22 | Blocked before SSAS setup by SSMS installer failure; deployment not tested |
 | 2025 | 22 | Not yet tested |
 | 2017 | 20 or 22 | Not yet tested |
@@ -84,7 +87,7 @@ No combination is declared supported by this branch. Failures and explicit unsup
 ## Runner limitations, resource use, and coverage gaps
 
 - SSMS 22 lists Windows Server 2022 as a supported OS, but Microsoft also lists non-persistent VM environments as unsupported. GitHub-hosted runners are ephemeral; these results are experimental and are not a claim of Microsoft support for that runner arrangement.
-- SSAS setup requires large SQL Server media and installation space. SSMS single-install jobs require 8 GB free; SSAS setup currently requires 20 GB free after installing SSMS. Runner diagnostics capture available disk and physical memory before installation. Installation durations are recorded per SSMS release; actual disk consumption is not certified.
+- SSAS setup requires large SQL Server media and installation space. SSMS single-install jobs require 8 GB free; SSAS setup currently requires 20 GB free after installing SSMS. Runner diagnostics capture available disk and physical memory before installation. Media acquisition, SQL Setup, service readiness, and total SSAS installation durations are reported separately; actual disk consumption is not certified.
 - The SSAS workflow uses Microsoft's official SQL Server 2022 Developer bootstrapper for Phase C; other release media must be supplied as direct Microsoft ISO URLs. The workflow does not automate download-center registration for those releases.
 - The Phase C calculated-table fixture does not test relational data sources or processing. Those checks require a separate explicit fixture and additional local services.
 - Multidimensional model deployment and processing are uncovered until a real fixture is checked in and built.
