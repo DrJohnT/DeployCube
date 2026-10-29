@@ -65,7 +65,7 @@ jobs:
             -TimeoutMinutes 20 -InactivityTimeoutSeconds 60
 
       - name: Test infrastructure guards
-        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e' || inputs.scope == 'phase-f' || inputs.scope == 'phase-g')
+        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e' || inputs.scope == 'phase-f' || inputs.scope == 'phase-g' || inputs.scope == 'phase-g2')
         timeout-minutes: 5
         shell: powershell
         run: |

@@ -64,6 +64,34 @@ function Assert-SsasProcessingTarget {
     return $major
 }
 
+function Get-ProcessingSourceReadEvidence {
+    param(
+        [Parameter(Mandatory = $true)][string]$Xml,
+        [Parameter(Mandatory = $true)][string]$ServiceAccount,
+        [Parameter(Mandatory = $true)][string]$Database
+    )
+    [xml]$document = $Xml
+    $events = $document.SelectNodes("//*[local-name()='RingBufferTarget']/*[local-name()='event']")
+    $result = foreach ($event in $events) {
+        $principal = $event.SelectSingleNode(
+            ".//*[local-name()='action' and @name='server_principal_name']/*[local-name()='value']")
+        $databaseNode = $event.SelectSingleNode(
+            ".//*[local-name()='action' and @name='database_name']/*[local-name()='value']")
+        $statement = $event.SelectSingleNode(
+            ".//*[local-name()='data' and @name='statement']/*[local-name()='value']")
+        $evidence = [pscustomobject]@{
+            Principal = if ($principal) { $principal.InnerText } else { $null }
+            Database = if ($databaseNode) { $databaseNode.InnerText } else { $null }
+            Statement = if ($statement) { $statement.InnerText } else { $null }
+        }
+        if ($evidence.Principal -ieq $ServiceAccount -and $evidence.Database -eq $Database -and
+            $evidence.Statement -match '(?i)\bFact\b') {
+            $evidence
+        }
+    }
+    return @($result)
+}
+
 function Invoke-RecordedProcessFull {
     param(
         [Parameter(Mandatory = $true)]$Server,

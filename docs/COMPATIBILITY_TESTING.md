@@ -157,10 +157,10 @@ G2 reuses the successful Phase G source provisioning and processing harness. Tar
 
 | SSAS target | Source version | Processing / MDX | Negative tests | Cleanup | Classification | GitHub Actions |
 |---|---|---|---|---|---|---|
-| 2019 Multidimensional + SSMS 22 | SQL Server 2022 Developer | Not tested | Not tested | Not tested | **Not tested** | Pending |
-| 2025 Multidimensional + SSMS 22 | SQL Server 2022 Developer | Not tested | Not tested | Not tested | **Not tested** | Pending |
+| 2019 Multidimensional + SSMS 22 | SQL Server 2022 Developer 16.0.1000.6 | `Publish-Cube -ProcessingOption Full`; cube, dimension and partition `Processed`; MDX returned numeric 10 | Invalid source and missing table: both expected, actionable failures | `Unpublish-Cube`; no test database remained; source/login removed and service stopped | **Passed** | [40843845999](https://github.com/DrJohnT/DeployCube/actions/runs/40843845999) |
+| 2025 Multidimensional + SSMS 22 | SQL Server 2022 Developer 16.0.1000.6 | Deployment passed; dimension `Processed`; processing/MDX not tested. Harness failed while parsing optional SQL Extended Events XML nodes (null dereference), before source-read evidence was recorded | Not tested | **Passed**; no test SSAS databases remained; source cleanup passed | **Failed — harness evidence parsing; retry required** | [40843845999](https://github.com/DrJohnT/DeployCube/actions/runs/40843845999) |
 
-Replace these pending classifications only with evidence from completed, real runner artifacts that satisfy the full Phase G pass criteria.
+Run 40843845999 recorded SSAS 2019 **15.0.32.50** and SSAS 2025 **17.0.25.218**, both Developer64/Multidimensional, with SSMS 22 Deployment Utility **22.1.17.0**. SSMS installation took 740.60 s (2019) and 934.65 s (2025); SSAS setup took 117.64 s and 94.28 s respectively. The SQL source was SQL Server 2022 Developer and confirmed one `(1,10)` row; the SSAS identity `NT SERVICE\\MSOLAP$DCUBE` had SELECT but neither sysadmin nor INSERT privileges. Source access was verified in the SQL event trace for the 2019 pass. For 2025, the dimension processed but the harness dereferenced absent optional XML nodes while extracting source-read events, so the trace was not validated and no processing or MDX compatibility claim is made. The report confirms cleanup passed and `RemainingTestDatabases` was empty; the fallback cleanup step itself incorrectly returned failure because it rethrew the preserved processing outcome. The follow-up hardens optional-node parsing, saves raw event XML for diagnosis, and makes cleanup-only status depend on cleanup. G2 will be rerun before assigning a final 2025 classification.
 
 ### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
 

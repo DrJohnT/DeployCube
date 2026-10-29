@@ -76,26 +76,18 @@ try {
         $dimensionState = [string]$server.Databases.FindByName($names[0]).Dimensions.Find('Item').State
         if ($dimensionState -ne 'Processed') { throw "Dimension state is '$dimensionState', expected Processed." }
         $report.DimensionState = $dimensionState
+        $report.FailureCategory = 'Source connectivity evidence'
         $events = Invoke-ProcessingSourceSql -Query @'
 SELECT CONVERT(nvarchar(max),t.target_data) AS Events FROM sys.dm_xe_sessions s
 JOIN sys.dm_xe_session_targets t ON s.address=t.event_session_address
 WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
 '@
-        [xml]$eventXml = $events.Rows[0].Events
-        $reads = @($eventXml.RingBufferTarget.event | Where-Object {
-            $_.SelectSingleNode("action[@name='server_principal_name']/value").InnerText -ieq 'NT SERVICE\MSOLAP$DCUBE' -and
-            $_.SelectSingleNode("action[@name='database_name']/value").InnerText -eq 'DeployCubeFixtureSource' -and
-            $_.SelectSingleNode("data[@name='statement']/value").InnerText -match 'Fact'
-        })
+        $eventXmlText = [string]$events.Rows[0].Events
+        $eventXmlText | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads-raw.xml') -Encoding UTF8
+        $reads = @(Get-ProcessingSourceReadEvidence -Xml $eventXmlText `
+            -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
         if ($reads.Count -eq 0) { throw 'No SQL-side read by the actual SSAS service account was captured; service connectivity is not proven.' }
-        $readEvidence = @($reads | ForEach-Object {
-            [pscustomobject]@{
-                Principal = $_.SelectSingleNode("action[@name='server_principal_name']/value").InnerText
-                Database = $_.SelectSingleNode("action[@name='database_name']/value").InnerText
-                Statement = $_.SelectSingleNode("data[@name='statement']/value").InnerText
-            }
-        })
-        $readEvidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads.json') -Encoding UTF8
+        $reads | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads.json') -Encoding UTF8
         $report.SourceConnectivity = @{ Outcome = 'Passed'; ServiceAccount = $report.Source.ServiceAccount; SqlReadCount = $reads.Count }
 
         $report.FailureCategory = 'Cube processing'
@@ -207,6 +199,6 @@ finally {
         Save-ProcessingReport
     }
 }
-if ($report.Outcome -ne 'Passed') {
+if ($report.Outcome -ne 'Passed' -and (-not $CleanupOnly -or $report.Cleanup -ne 'Passed')) {
     throw "Phase G $($report.Outcome) at '$($report.FailureCategory)'. See '$reportPath'. $($report.Error)"
 }

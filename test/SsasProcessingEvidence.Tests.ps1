@@ -21,6 +21,22 @@ Describe 'Phase G actual data assertions' {
         { Assert-SsasProcessingTarget -SsasVersion 2025 -ProductVersion '17.0.25.218' `
             -ServerMode Tabular -Edition Developer64 } | Should -Throw '*Expected SSAS 2025*'
     }
+    It 'extracts SSAS service reads from a namespace-qualified ring buffer and ignores missing fields' {
+        $xml = @'
+<RingBufferTarget xmlns="urn:sql:xevent"><event><action name="server_principal_name"><value>NT SERVICE\MSOLAP$DCUBE</value></action><action name="database_name"><value>DeployCubeFixtureSource</value></action><data name="statement"><value>SELECT ItemKey, Amount FROM dbo.Fact</value></data></event><event><action name="server_principal_name"><value>other</value></action></event></RingBufferTarget>
+'@
+        $events = @(Get-ProcessingSourceReadEvidence -Xml $xml `
+            -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
+        $events.Count | Should -Be 1
+        $events[0].Principal | Should -Be 'NT SERVICE\MSOLAP$DCUBE'
+        $events[0].Statement | Should -Match 'dbo.Fact'
+    }
+    It 'does not claim source access when the service principal is absent' {
+        $xml = '<RingBufferTarget><event><action name="database_name"><value>DeployCubeFixtureSource</value></action><data name="statement"><value>SELECT * FROM dbo.Fact</value></data></event></RingBufferTarget>'
+        $events = @(Get-ProcessingSourceReadEvidence -Xml $xml `
+            -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
+        $events.Count | Should -Be 0
+    }
     It 'accepts exactly the expected source schema and row' {
         { Assert-ProcessingSource -Row ([pscustomobject]@{
             TableCount = 1; ColumnCount = 2; SourceRecordCount = 1; ItemKey = 1; SumAmount = 10
