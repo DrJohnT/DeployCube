@@ -166,6 +166,16 @@ Earlier G2 attempts were diagnostic failures, not deployment incompatibilities: 
 
 **Recommended next step:** prioritize a single deterministic Tabular processing baseline (one SSAS version, isolated SQL source, service-account connectivity, actual processing and a DAX query) before final CI consolidation. Tabular deployment compatibility is verified, but Tabular source processing is not; adding that evidence closes the remaining functional gap before consolidating workflows.
 
+### Phase H: SSAS 2022 Tabular processing and DAX
+
+The manual `phase-h` scope targets exactly one GitHub-hosted Windows Server 2022 runner: SSAS 2022 Developer in Tabular mode with SSMS 22. It reuses the Phase G isolated SQL Server 2022 Developer source, deterministic `(1,10)` row, SQL Extended Events session, source permission check and cleanup. The original deployment-only `Tabular1500` fixture remains unchanged. A separate TOM-generated compatibility-1500 project defines an imported `Fact` table, provider data source impersonating the SSAS service, query partition, and `Total Amount = SUM(Fact[Amount])`.
+
+The test gates a pass on the actual SQL service-account read, successful `Publish-Cube -ProcessingOption Full`, server-side TOM table/partition state, DAX query `EVALUATE ROW("TotalAmount", [Total Amount])` returning a numeric 10, both isolated expected processing failures, and verified SSAS/SQL cleanup.
+
+| Target | Status | GitHub Actions |
+|---|---|---|
+| SSAS 2022 Tabular + SSMS 22 | **Pending real runner validation** | Pending |
+
 ### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
 
 **Passed:** [workflow run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), executing commit `5704468` on `feature/ssms-ssas-compatibility`. All three independent GitHub-hosted Windows Server 2022 jobs passed on the first attempt. Each installed exactly one SSMS product; no Tabular matrix or full matrix was dispatched. There were **9/9 real integration tests**, plus **50/50 infrastructure guards on each runner**. Local validation also passed 44 focused Pester tests, YAML/manual-trigger/matrix checks, embedded PowerShell parsing and actual AMO fixture validation/XML round-trip.
