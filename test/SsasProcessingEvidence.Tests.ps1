@@ -7,6 +7,20 @@ BeforeAll {
 }
 
 Describe 'Phase G actual data assertions' {
+    It 'accepts the exact SSAS <Release> Multidimensional Developer target' -ForEach @(
+        @{ Release = '2019'; Version = '15.0.32.50' }
+        @{ Release = '2022'; Version = '16.0.42.209' }
+        @{ Release = '2025'; Version = '17.0.25.218' }
+    ) {
+        { Assert-SsasProcessingTarget -SsasVersion $Release -ProductVersion $Version `
+            -ServerMode Multidimensional -Edition Developer64 } | Should -Not -Throw
+    }
+    It 'rejects a substituted version or mode' {
+        { Assert-SsasProcessingTarget -SsasVersion 2019 -ProductVersion '16.0.42.209' `
+            -ServerMode Multidimensional -Edition Developer64 } | Should -Throw '*Expected SSAS 2019*'
+        { Assert-SsasProcessingTarget -SsasVersion 2025 -ProductVersion '17.0.25.218' `
+            -ServerMode Tabular -Edition Developer64 } | Should -Throw '*Expected SSAS 2025*'
+    }
     It 'accepts exactly the expected source schema and row' {
         { Assert-ProcessingSource -Row ([pscustomobject]@{
             TableCount = 1; ColumnCount = 2; SourceRecordCount = 1; ItemKey = 1; SumAmount = 10

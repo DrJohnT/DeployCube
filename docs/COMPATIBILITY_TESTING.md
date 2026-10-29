@@ -149,6 +149,19 @@ The second attempt, [40837504852](https://github.com/DrJohnT/DeployCube/actions/
 
 Extend only Phase G's focused matrix to SSAS 2019 Multidimensional + SSMS 22, reusing the same fixture, local SQL Engine provisioning, service-account permissions, `ProcessFull`, MDX/negative assertions and cleanup. Keep SSAS 2025 out until that single added cell passes.
 
+### Phase G2: SSAS 2019 and 2025 processing extension
+
+The manual `phase-g2` scope adds only SSAS 2019 and SSAS 2025 Multidimensional, both with SSMS 22. Its two jobs use independent hosted Windows runners, `fail-fast: false`, and `max-parallel: 1` with the 2019 cell listed first. This limits troubleshooting overlap while preserving one SSMS installation and one SSAS instance per runner. It does not dispatch the full matrix or rerun C–G.
+
+G2 reuses the successful Phase G source provisioning and processing harness. Target-release SQL Server media provisions SSAS; a separately downloaded and validated official SQL Server 2022 Developer ISO provisions the same isolated database-engine source on both runners. The harness now explicitly checks the requested SSAS product major (2019→15, 2025→17), Developer edition and Multidimensional mode before deployment. Both use the same validated compatibility-1100 AMO fixture and SQL Engine connection; no release-specific fixture downgrade or production API change is expected or assumed.
+
+| SSAS target | Source version | Processing / MDX | Negative tests | Cleanup | Classification | GitHub Actions |
+|---|---|---|---|---|---|---|
+| 2019 Multidimensional + SSMS 22 | SQL Server 2022 Developer | Not tested | Not tested | Not tested | **Not tested** | Pending |
+| 2025 Multidimensional + SSMS 22 | SQL Server 2022 Developer | Not tested | Not tested | Not tested | **Not tested** | Pending |
+
+Replace these pending classifications only with evidence from completed, real runner artifacts that satisfy the full Phase G pass criteria.
+
 ### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
 
 **Passed:** [workflow run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), executing commit `5704468` on `feature/ssms-ssas-compatibility`. All three independent GitHub-hosted Windows Server 2022 jobs passed on the first attempt. Each installed exactly one SSMS product; no Tabular matrix or full matrix was dispatched. There were **9/9 real integration tests**, plus **50/50 infrastructure guards on each runner**. Local validation also passed 44 focused Pester tests, YAML/manual-trigger/matrix checks, embedded PowerShell parsing and actual AMO fixture validation/XML round-trip.

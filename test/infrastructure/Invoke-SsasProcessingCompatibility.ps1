@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$LogDirectory,
     [Parameter(Mandatory = $true)][string]$SourceReportPath,
+    [Parameter(Mandatory = $true)][ValidateSet('2019', '2022', '2025')][string]$SsasVersion,
     [switch]$CleanupOnly
 )
 
@@ -53,10 +54,9 @@ try {
         $report.ActualSsasVersion = [string]$server.Version
         $report.ActualMode = [string]$server.ServerMode
         $report.Edition = [string]$server.Edition
-        if ($server.Version.ToString() -notmatch '^16\.' -or $server.ServerMode.ToString() -ne 'Multidimensional' -or
-            $server.Edition.ToString() -notmatch 'Developer') {
-            throw 'Phase G requires SSAS 2022 Developer in Multidimensional mode.'
-        }
+        $expectedMajor = Assert-SsasProcessingTarget -SsasVersion $SsasVersion `
+            -ProductVersion $server.Version.ToString() -ServerMode ([string]$server.ServerMode) `
+            -Edition ([string]$server.Edition)
         $report.DeploymentUtility = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1') |
             Where-Object ProductMajorVersion -eq 22)
         if ($report.DeploymentUtility.Count -ne 1) { throw 'Expected exactly one SSMS 22 Deployment Utility.' }

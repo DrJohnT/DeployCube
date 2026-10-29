@@ -49,6 +49,21 @@ function Get-ProcessFullXmla {
     return "<Process xmlns='http://schemas.microsoft.com/analysisservices/2003/engine'><Object><DatabaseID>$id</DatabaseID>$dimension</Object><Type>ProcessFull</Type></Process>"
 }
 
+function Assert-SsasProcessingTarget {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet('2019', '2022', '2025')][string]$SsasVersion,
+        [Parameter(Mandatory = $true)][string]$ProductVersion,
+        [Parameter(Mandatory = $true)][string]$ServerMode,
+        [Parameter(Mandatory = $true)][string]$Edition
+    )
+    $major = @{ '2019' = 15; '2022' = 16; '2025' = 17 }[$SsasVersion]
+    if ($ProductVersion -notmatch ('^' + $major + '\.') -or $ServerMode -ne 'Multidimensional' -or
+        $Edition -notmatch 'Developer') {
+        throw "Expected SSAS $SsasVersion Developer Multidimensional (major $major), but received $ProductVersion $Edition $ServerMode."
+    }
+    return $major
+}
+
 function Invoke-RecordedProcessFull {
     param(
         [Parameter(Mandatory = $true)]$Server,
