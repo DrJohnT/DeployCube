@@ -183,12 +183,16 @@ function Get-TabularDaxResult {
     param(
         [Parameter(Mandatory = $true)][string]$DatabaseName,
         [Parameter(Mandatory = $true)][string]$Query,
-        [Parameter(Mandatory = $true)][string]$MeasureColumn
+        [Parameter(Mandatory = $true)][string]$MeasureColumn,
+        [string]$ResponsePath
     )
     $xmla = New-TabularDaxXmlaQuery -DatabaseName $DatabaseName -Query $Query
     $response = Invoke-ASCmd -Server 'localhost\DCUBE' -Database $DatabaseName `
         -Query $xmla -QueryTimeout 120 -ConnectionTimeout 30 -ErrorAction Stop
     $responseXml = [string]($response | Out-String)
+    if ($ResponsePath) {
+        $responseXml | Set-Content -LiteralPath $ResponsePath -Encoding UTF8
+    }
     return ConvertFrom-TabularDaxResponse -Xml $responseXml -MeasureColumn $MeasureColumn
 }
 
@@ -198,7 +202,10 @@ function ConvertFrom-TabularDaxResponse {
     $rows = $document.SelectNodes("//*[local-name()='row']")
     if ($rows.Count -ne 1) { throw "DAX query must return exactly one row, got $($rows.Count)." }
     $valueNode = $rows[0].SelectSingleNode("*[local-name()='$MeasureColumn']")
-    if (-not $valueNode) { throw "DAX result did not contain the '$MeasureColumn' column." }
+    if (-not $valueNode) {
+        $columns = @($rows[0].ChildNodes | ForEach-Object { $_.LocalName })
+        throw "DAX result did not contain the '$MeasureColumn' column. Returned columns: '$($columns -join ', ')'."
+    }
     $schemaColumn = $document.SelectSingleNode(
         "//*[local-name()='schema']//*[local-name()='element' and @name='$MeasureColumn']")
     $typeName = if ($schemaColumn) { $schemaColumn.GetAttribute('type') } else { $null }

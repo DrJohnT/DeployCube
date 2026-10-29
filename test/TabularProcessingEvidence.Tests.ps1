@@ -81,6 +81,14 @@ Describe 'Phase H Tabular processing fixture and DAX assertions' {
         $result.Type | Should -Be 'xsd:long'
     }
 
+    It 'reports returned DAX columns when the requested alias is absent' {
+        $xml = @'
+<root xmlns="urn:schemas-microsoft-com:xml-analysis:rowset" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><xsd:schema><xsd:element name="row"><xsd:complexType><xsd:sequence><xsd:element name="ActualAlias" type="xsd:long" minOccurs="0"/></xsd:sequence></xsd:complexType></xsd:element></xsd:schema><row><ActualAlias>10</ActualAlias></row></root>
+'@
+        { ConvertFrom-TabularDaxResponse -Xml $xml -MeasureColumn 'TotalAmount' } |
+            Should -Throw "*Returned columns: 'ActualAlias'*"
+    }
+
     It 'rejects a non-numeric DAX rowset column type' {
         $xml = @'
 <root xmlns="urn:schemas-microsoft-com:xml-analysis:rowset" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><xsd:schema><xsd:element name="row"><xsd:complexType><xsd:sequence><xsd:element name="TotalAmount" type="xsd:string" minOccurs="0"/></xsd:sequence></xsd:complexType></xsd:element></xsd:schema><row><TotalAmount>10</TotalAmount></row></root>

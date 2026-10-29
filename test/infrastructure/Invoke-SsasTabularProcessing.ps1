@@ -296,7 +296,8 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
 
     $report.FailureCategory = 'DAX query execution and result validation'
     $daxResult = Get-TabularDaxResult -DatabaseName $databaseNames[0] `
-        -Query $report.DaxQuery -MeasureColumn 'TotalAmount'
+        -Query $report.DaxQuery -MeasureColumn 'TotalAmount' `
+        -ResponsePath (Join-Path $LogDirectory 'dax-response.xml')
     $report.DaxResult = $daxResult.Value
     $report.DaxResultType = $daxResult.Type
     $report.DaxOutcome = 'Passed'
