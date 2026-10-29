@@ -164,17 +164,25 @@ Both cells ran in the focused [Phase G2 run 40856087729](https://github.com/DrJo
 
 Earlier G2 attempts were diagnostic failures, not deployment incompatibilities: [40843845999](https://github.com/DrJohnT/DeployCube/actions/runs/40843845999) exposed a null dereference on an optional XML field, and [40849983585](https://github.com/DrJohnT/DeployCube/actions/runs/40849983585) showed an empty XE buffer when queried immediately. The parser now tolerates absent optional fields and preserves raw event XML; bounded polling fixes the observation race without weakening the service-account/read assertion. Cleanup-only verification now reports cleanup independently of the preserved processing failure.
 
-**Recommended next step:** prioritize a single deterministic Tabular processing baseline (one SSAS version, isolated SQL source, service-account connectivity, actual processing and a DAX query) before final CI consolidation. Tabular deployment compatibility is verified, but Tabular source processing is not; adding that evidence closes the remaining functional gap before consolidating workflows.
+**Recommended next step:** Phase H has now established the deterministic Tabular processing baseline. Extend it to SSAS 2019 and 2025 in Phase H2 as the next focused step; after those cells pass, prioritize final CI consolidation and pull-request preparation.
 
 ### Phase H: SSAS 2022 Tabular processing and DAX
 
 The manual `phase-h` scope targets exactly one GitHub-hosted Windows Server 2022 runner: SSAS 2022 Developer in Tabular mode with SSMS 22. It reuses the Phase G isolated SQL Server 2022 Developer source, deterministic `(1,10)` row, SQL Extended Events session, source permission check and cleanup. The original deployment-only `Tabular1500` fixture remains unchanged. A separate TOM-generated compatibility-1500 project defines an imported `Fact` table, provider data source impersonating the SSAS service, query partition, and `Total Amount = SUM(Fact[Amount])`.
 
-The test gates a pass on the actual SQL service-account read, successful `Publish-Cube -ProcessingOption Full`, server-side TOM table/partition state, DAX query `EVALUATE ROW("TotalAmount", [Total Amount])` returning a numeric 10, both isolated expected processing failures, and verified SSAS/SQL cleanup.
+The test gates a pass on the actual SQL service-account read, successful `Publish-Cube -ProcessingOption Full`, the server-side partition processing state, DAX query `EVALUATE ROW("TotalAmount", [Total Amount])` returning a numeric 10, both isolated expected processing failures, and verified SSAS/SQL cleanup. TOM does not expose a table-level processing state for this model; the `Fact` table is verified through its `Ready` partition, the captured SSAS service-account read of `dbo.Fact`, and the DAX result from that processed model.
 
-| Target | Status | GitHub Actions |
-|---|---|---|
-| SSAS 2022 Tabular + SSMS 22 | **Pending real runner validation** | Pending |
+| Target | Actual server / mode | SSMS / Deployment Utility | Source / security | Processing and DAX | Negative tests | Cleanup | Status |
+|---|---|---|---|---|---|---|---|
+| SSAS 2022 Tabular + SSMS 22 | SSAS **16.0.42.209**, Developer64, Tabular; service `MSOLAP$DCUBE` Running. SSAS setup **100.67 s**, total install/readiness **101.10 s**. | SSMS **22.11.12324.101** (install **1030.46 s**); Deployment Utility **22.1.17.0**. | SQL Server 2022 Developer **16.0.1000.6** (setup **107.19 s**, source provisioning **112.73 s**). One `(ItemKey=1, Amount=10)` row; sum **10**. `NT SERVICE\MSOLAP$DCUBE` had SELECT only: no INSERT/UPDATE/DELETE/ALTER and not sysadmin. SQL Extended Events captured the exact `SELECT ItemKey, Amount FROM dbo.Fact` under that identity. | Compatibility **1500**; `Publish-Cube -ProcessingOption Full` passed; `Fact` partition `Ready`; processing **5.22 s**. DAX `EVALUATE ROW("TotalAmount", [Total Amount])` returned numeric **10** (`xsd:long`) from the deployed model. | Invalid source failed as expected (`HYT00`/`08001`, connection refused); missing table failed as expected (`42S02`, invalid object). | `Unpublish-Cube` cleanup passed; no Phase H SSAS databases remain. SQL source database/login removed and SQL service stopped. | **Passed** — [run 40895275965](https://github.com/DrJohnT/DeployCube/actions/runs/40895275965) |
+
+The successful run was manual-only, used one GitHub-hosted Windows Server 2022 runner, one SSMS installation and only the single Phase H matrix cell. Media acquisition took **12.56 s**; SSAS service readiness took **0.04 s**. The DAX response and query, deployment transcript, source-read XML, processing report, installer logs and cleanup reports are in the run's `ssas-2022-Tabular-ssms-22` artifact. The connection used Windows integrated authentication and contains no embedded SQL credentials.
+
+The focused workflow also verified the requested server version/mode before deployment. Both expected-negative deployments were isolated from the successful model, and the final machine-readable report recorded `Publish-Cube`, DAX, both negative outcomes, `Unpublish-Cube`, zero remaining SSAS test databases, source database/login removal, and a stopped source service as passed.
+
+Diagnostic reruns before the passing run exposed and fixed test-harness issues only: the initial target guard expected Multidimensional mode; one repeated schema check used `OBJECT_ID` from the wrong database context; TOM did not expose a table-level state; the XMLA rowset encoded the DAX alias and required schema content; and the always-run cleanup wrapper discarded dynamic report fields. None indicated an SSAS provisioning or DeployCube deployment failure. Each failed harness attempt ran its cleanup path; the final run is the passing evidence.
+
+**Recommended next step:** Phase H2 should add only SSAS 2019 Tabular + SSMS 22 and SSAS 2025 Tabular + SSMS 22, reusing this fixture and harness. Keep the 2022 baseline unchanged; after both new cells pass, consolidate CI scopes and prepare the feature-branch pull request.
 
 ### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
 
