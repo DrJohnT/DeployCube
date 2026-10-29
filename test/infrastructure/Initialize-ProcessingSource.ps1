@@ -94,6 +94,13 @@ SELECT (SELECT COUNT(*) FROM sys.tables WHERE object_id=OBJECT_ID('dbo.Fact')) A
  (SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID('dbo.Fact') AND name IN ('ItemKey','Amount') AND system_type_id=56 AND is_nullable=0) AS ColumnCount,
  COUNT(*) AS SourceRecordCount, MIN(ItemKey) AS ItemKey, SUM(Amount) AS SumAmount FROM dbo.Fact;
 '@
+    $report.SourceValidation = @{
+        TableCount = [int]$data.Rows[0].TableCount
+        ColumnCount = [int]$data.Rows[0].ColumnCount
+        RecordCount = [int]$data.Rows[0].SourceRecordCount
+        SampleItemKey = [int]$data.Rows[0].ItemKey
+        MeasureSum = [int]$data.Rows[0].SumAmount
+    }
     Assert-ProcessingSource -Row $data.Rows[0]
     $report.RecordCount = [int]$data.Rows[0].SourceRecordCount
     $report.ExpectedSum = [int]$data.Rows[0].SumAmount

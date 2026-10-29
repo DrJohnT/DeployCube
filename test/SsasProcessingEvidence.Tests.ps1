@@ -9,17 +9,17 @@ BeforeAll {
 Describe 'Phase G actual data assertions' {
     It 'accepts exactly the expected source schema and row' {
         { Assert-ProcessingSource -Row ([pscustomobject]@{
-            TableCount = 1; ColumnCount = 2; RowCount = 1; ItemKey = 1; SumAmount = 10
+            TableCount = 1; ColumnCount = 2; SourceRecordCount = 1; ItemKey = 1; SumAmount = 10
         }) } | Should -Not -Throw
     }
     It 'rejects incorrect source <Field>' -ForEach @(
         @{ Field = 'TableCount'; Value = 0 }
         @{ Field = 'ColumnCount'; Value = 1 }
-        @{ Field = 'RowCount'; Value = 2 }
+        @{ Field = 'SourceRecordCount'; Value = 2 }
         @{ Field = 'ItemKey'; Value = 2 }
         @{ Field = 'SumAmount'; Value = 20 }
     ) {
-        $row = [pscustomobject]@{ TableCount = 1; ColumnCount = 2; RowCount = 1; ItemKey = 1; SumAmount = 10 }
+        $row = [pscustomobject]@{ TableCount = 1; ColumnCount = 2; SourceRecordCount = 1; ItemKey = 1; SumAmount = 10 }
         $row.$Field = $Value
         { Assert-ProcessingSource -Row $row } | Should -Throw '*Source database validation failed*'
     }

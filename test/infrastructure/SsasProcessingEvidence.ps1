@@ -18,7 +18,7 @@ function Invoke-ProcessingSourceSql {
 function Assert-ProcessingSource {
     param([Parameter(Mandatory = $true)]$Row)
     if ($Row.TableCount -ne 1 -or $Row.ColumnCount -ne 2 -or
-        $Row.RowCount -ne 1 -or $Row.ItemKey -ne 1 -or $Row.SumAmount -ne 10) {
+        $Row.SourceRecordCount -ne 1 -or $Row.ItemKey -ne 1 -or $Row.SumAmount -ne 10) {
         throw 'Source database validation failed: expected dbo.Fact(ItemKey int, Amount int), exactly one row (1,10) and sum 10.'
     }
 }
