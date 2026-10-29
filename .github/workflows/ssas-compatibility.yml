@@ -112,7 +112,7 @@ jobs:
         shell: powershell
         run: |
           $logDirectory = "$env:ARTIFACT_DIRECTORY/ssms-installation"
-          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g')) {
+          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2')) {
             $logDirectory = Join-Path $env:RUNNER_TEMP "ssms-$env:COMPAT_SSMS_MAJOR-logs"
           }
           try {
@@ -122,7 +122,7 @@ jobs:
               -MinimumFreeSpaceGB 8
           }
           finally {
-            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g') -and (Test-Path -LiteralPath $logDirectory)) {
+            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2') -and (Test-Path -LiteralPath $logDirectory)) {
               New-Item -ItemType Directory -Path "$env:ARTIFACT_DIRECTORY/ssms-installation" -Force | Out-Null
               Copy-Item -Path (Join-Path $logDirectory '*') -Destination "$env:ARTIFACT_DIRECTORY/ssms-installation" -Recurse -Force -ErrorAction Stop
             }
