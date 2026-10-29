@@ -121,7 +121,33 @@ DeployCube already supports `Publish-Cube -ProcessingOption Full`. Phase G first
 
 Two independent SSAS databases test expected processing failures: a local-only nonexistent shared-memory instance and a partition query against `dbo.DeployCubePhaseGMissingTable`. Their errors must identify connectivity/provider failure and the missing object, respectively; an arbitrary exception is not accepted. Each starts from a fresh known-good model. All owned SSAS databases are removed using `Unpublish-Cube`, absence is verified, the SQL source database/login/event session are removed and its service is stopped. Separate `always()` cleanup steps provide fallback after child-process failure; disposable runner teardown removes installed binaries.
 
-Artifacts include `phase-g-report.json`, source provisioning/permission/cleanup reports, processing outcome/duration and utility diagnostics, XMLA dimension/negative processing reports, actual SQL service-account read evidence, MDX XML/result, Publish/Unpublish output and installation logs. Processing has a ten-minute process-tree deadline, AMO/MDX operations have 120-second timeouts, source SQL queries have 30-second deadlines, and source setup has a 20-minute deadline. A complete pass requires all positive checks, both expected negative failures and verified cleanup. Before real runner execution this combination is **Not tested**; Phase F metadata-only passes do not certify processing.
+Artifacts include `phase-g-report.json`, source provisioning/permission/cleanup reports, processing outcome/duration and utility diagnostics, XMLA dimension/negative processing reports, actual SQL service-account read evidence, MDX XML/result, Publish/Unpublish output and installation logs. Processing has a ten-minute process-tree deadline, AMO/MDX operations have 120-second timeouts, source SQL queries have 30-second deadlines, and source setup has a 20-minute deadline. A complete pass requires all positive checks, both expected negative failures and verified cleanup. Phase F metadata-only passes do not certify processing.
+
+**Passed:** [focused Phase G run 40840026414](https://github.com/DrJohnT/DeployCube/actions/runs/40840026414), on the single SSAS 2022 Multidimensional + SSMS 22 hosted Windows Server 2022 runner. The server was `16.0.42.209`, `Developer64`, mode `Multidimensional`; `MSOLAP$DCUBE` was Running with identity `NT Service\MSOLAP$DCUBE`. SSMS `22.11.12324.101` installed in 691.28 s; its actual `Microsoft.AnalysisServices.Deployment.exe` was `22.1.17.0`. Official SQL Server 2022 Developer media downloaded in 18.78 s (1,163,053,056 bytes; SHA-256 `80D2CD75DD2B28098C0182F50AD86BD44F9B3A9F357C30FF617480A1497DAFFD`) and passed mounted-media validation. SSAS setup took 138.07 s (138.67 s total provisioning). The isolated SQL Server 2022 Developer Engine reported `16.0.1000.6`; source setup took 99.17 s.
+
+| Phase G check | Actual evidence | Classification |
+|---|---|---|
+| Source schema and data | `DeployCubeFixtureSource.dbo.Fact`; expected `int NOT NULL` columns `ItemKey`, `Amount`; table count 1; row count 1; key 1; sum 10 | **Passed** |
+| Least-privilege SSAS login | `NT SERVICE\MSOLAP$DCUBE`; `IsSysadmin=0`, `CanSelect=1`, `CanInsert=0`; no saved credentials | **Passed** |
+| SSAS-process source connectivity | Dimension `ProcessFull` succeeded; SQL Extended Events recorded a source read as the SSAS service principal (1 read) | **Passed** |
+| DeployCube deployment | `Publish-Cube` first deployed the actual multidimensional fixture with `DoNotProcess`; later `Publish-Cube -ProcessingOption Full -PreferredVersion 22` completed successfully | **Passed** |
+| Actual processing | `ProcessFull`; 2.40 s; cube, dimension and partition all `Processed`; no processing warnings recorded | **Passed** |
+| MDX data result | `SELECT {[Measures].[Amount]} ON COLUMNS FROM [Fixture Cube]`; saved XML reports `xsi:type="xsd:int"` and value `10` | **Passed** |
+| Invalid source negative test | Isolated nonexistent shared-memory instance failed with `HYT00` / shared-memory connection error; expected actionable connection failure | **Passed (expected failure)** |
+| Missing source object negative test | Isolated `dbo.DeployCubePhaseGMissingTable` query failed with SQLSTATE `42S02`, `Invalid object name` | **Passed (expected failure)** |
+| Cleanup | `Unpublish-Cube` removed all three owned SSAS databases; absence verified. SQL database and login removed, Extended Events session dropped, SQL Engine service stopped. | **Passed** |
+
+Infrastructure guards passed **62/62** on the runner. The required pass chain was source validation → deployment/metadata → service-account read → full processing → numeric MDX result → both expected negative outcomes → complete cleanup. No production API or deployment logic was changed.
+
+#### Phase G diagnostic retries
+
+The first attempt, [40829423030](https://github.com/DrJohnT/DeployCube/actions/runs/40829423030), stopped during source validation because the harness used SQL's reserved `RowCount` as an unquoted alias; SQL Engine and SSAS provisioning had succeeded. The source cleanup report confirms the temporary database/login were removed and the service stopped.
+
+The second attempt, [40837504852](https://github.com/DrJohnT/DeployCube/actions/runs/40837504852), installed SQL Engine and validated its version and data, then its permission check failed because `USE` changed database context inside `EXECUTE AS`, preventing `REVERT`. The always-run cleanup again removed the temporary source and stopped its service. The harness was corrected to use fully qualified object names without changing database context and the exact Phase G cell was rerun. These were test-harness errors, not SSAS deployment or processing compatibility failures; the passing evidence above is from the subsequent complete run.
+
+#### Smallest next step
+
+Extend only Phase G's focused matrix to SSAS 2019 Multidimensional + SSMS 22, reusing the same fixture, local SQL Engine provisioning, service-account permissions, `ProcessFull`, MDX/negative assertions and cleanup. Keep SSAS 2025 out until that single added cell passes.
 
 ### Phase F: SSAS 2019, 2022 and 2025 Multidimensional with SSMS 22
 
