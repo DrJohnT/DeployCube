@@ -321,14 +321,14 @@ jobs:
         timeout-minutes: 5
         shell: powershell
         run: |
-          $arguments = @(
-            '-LogDirectory', "$env:ARTIFACT_DIRECTORY/tabular-processing",
-            '-SourceReportPath', "$env:ARTIFACT_DIRECTORY/processing-source/source-provisioning.json",
-            '-SsasVersion', $env:COMPAT_SSAS_VERSION,
-            '-CleanupOnly'
-          )
+          $arguments = @{
+            LogDirectory = "$env:ARTIFACT_DIRECTORY/tabular-processing"
+            SourceReportPath = "$env:ARTIFACT_DIRECTORY/processing-source/source-provisioning.json"
+            SsasVersion = $env:COMPAT_SSAS_VERSION
+            CleanupOnly = $true
+          }
           $phaseName = '${{ inputs.scope }}'
-          if ($phaseName -eq 'phase-h2') { $arguments += '-PhaseH2' }
+          if ($phaseName -eq 'phase-h2') { $arguments.PhaseH2 = $true }
           ./test/infrastructure/Invoke-SsasTabularProcessing.ps1 `
             @arguments
 
