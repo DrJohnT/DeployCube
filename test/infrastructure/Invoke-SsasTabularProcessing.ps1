@@ -25,7 +25,11 @@ $report = @{
     Source = $null
     Fixture = 'Not tested'
     PublishCube = 'Not tested'
+    ProcessingCommand = 'Publish-Cube -ProcessingOption Full'
     Processing = 'Not tested'
+    ProcessingDurationSeconds = $null
+    SourceReadEvidence = @()
+    SourceReadEvidenceWaitSeconds = $null
     DaxQuery = 'EVALUATE ROW("TotalAmount", [Total Amount])'
     DaxResult = $null
     NegativeTests = @()
@@ -246,21 +250,48 @@ REVERT;
     $table = if ($tabularDatabase) { $tabularDatabase.Model.Tables.Find('Fact') }
     $partition = if ($table) { $table.Partitions.Find('Fact') }
     $measure = if ($table) { $table.Measures.Find('Total Amount') }
+    $report.TabularMetadata = @{
+        DatabaseExists = [bool]$tabularDatabase
+        CompatibilityLevel = if ($tabularDatabase) { $tabularDatabase.CompatibilityLevel } else { $null }
+        Table = if ($table) { $table.Name } else { $null }
+        TableState = if ($table) { [string]$table.State } else { $null }
+        Partition = if ($partition) { $partition.Name } else { $null }
+        PartitionState = if ($partition) { [string]$partition.State } else { $null }
+        Measure = if ($measure) { $measure.Name } else { $null }
+        MeasureExpression = if ($measure) { $measure.Expression } else { $null }
+    }
+    $report.SourceReadEvidenceWaitSeconds = $null
+    $sourceReadWatch = [Diagnostics.Stopwatch]::StartNew()
+    $sourceReadQuery = @'
+SELECT CONVERT(nvarchar(max),t.target_data) AS Events
+FROM sys.dm_xe_sessions s
+JOIN sys.dm_xe_session_targets t ON s.address=t.event_session_address
+WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
+'@
+    do {
+        $eventResult = Invoke-TabularSourceSql -Query $sourceReadQuery
+        if ($eventResult.Rows.Count -gt 0 -and $eventResult.Rows[0].Events -isnot [DBNull]) {
+            $eventXml = [string]$eventResult.Rows[0].Events
+            if ($eventXml) {
+                $eventXml | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads-raw.xml') -Encoding UTF8
+                $report.SourceReadEvidence = @(Get-ProcessingSourceReadEvidence -Xml $eventXml `
+                    -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
+            }
+        }
+        if ($report.SourceReadEvidence.Count -eq 0) { Start-Sleep -Seconds 2 }
+    } while ($report.SourceReadEvidence.Count -eq 0 -and $sourceReadWatch.Elapsed.TotalSeconds -lt 20)
+    $report.SourceReadEvidenceWaitSeconds = [math]::Round($sourceReadWatch.Elapsed.TotalSeconds, 2)
+    $report.TabularMetadata.SourceReadCount = $report.SourceReadEvidence.Count
+    Save-TabularProcessingReport
     if (-not $tabularDatabase -or $tabularDatabase.CompatibilityLevel -ne 1500 -or
         -not $table -or -not $partition -or -not $measure -or
         $table.State -ne [Microsoft.AnalysisServices.Tabular.ObjectState]::Ready -or
         $partition.State -ne [Microsoft.AnalysisServices.Tabular.ObjectState]::Ready) {
-        throw 'TOM server metadata did not confirm the compatibility-1500 Fact table and partition are processed.'
+        throw "TOM processing verification failed. Observed metadata: $($report.TabularMetadata | ConvertTo-Json -Compress)."
     }
-    $report.TabularMetadata = @{
-        DatabaseExists = $true
-        CompatibilityLevel = $tabularDatabase.CompatibilityLevel
-        Table = $table.Name
-        TableState = [string]$table.State
-        Partition = $partition.Name
-        PartitionState = [string]$partition.State
-        Measure = $measure.Name
-        MeasureExpression = $measure.Expression
+    if ($report.SourceReadEvidence.Count -eq 0) {
+        $report.FailureCategory = 'SQL source connectivity and processing evidence'
+        throw 'Processing produced no SQL Extended Events proving a source read by the SSAS service identity.'
     }
     $report.Processing = 'Passed'
 
