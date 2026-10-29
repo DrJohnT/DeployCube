@@ -254,7 +254,7 @@ REVERT;
         DatabaseExists = [bool]$tabularDatabase
         CompatibilityLevel = if ($tabularDatabase) { $tabularDatabase.CompatibilityLevel } else { $null }
         Table = if ($table) { $table.Name } else { $null }
-        TableState = if ($table) { [string]$table.State } else { $null }
+        TableState = 'Not exposed by TOM'
         Partition = if ($partition) { $partition.Name } else { $null }
         PartitionState = if ($partition) { [string]$partition.State } else { $null }
         Measure = if ($measure) { $measure.Name } else { $null }
@@ -274,7 +274,7 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
             $eventXml = [string]$eventResult.Rows[0].Events
             if ($eventXml) {
                 $eventXml | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads-raw.xml') -Encoding UTF8
-                $report.SourceReadEvidence = @(Get-ProcessingSourceReadEvidence -Xml $eventXml `
+                $report.SourceReadEvidence = @(Get-TabularFactSourceReadEvidence -Xml $eventXml `
                     -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
             }
         }
@@ -285,7 +285,6 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
     Save-TabularProcessingReport
     if (-not $tabularDatabase -or $tabularDatabase.CompatibilityLevel -ne 1500 -or
         -not $table -or -not $partition -or -not $measure -or
-        $table.State -ne [Microsoft.AnalysisServices.Tabular.ObjectState]::Ready -or
         $partition.State -ne [Microsoft.AnalysisServices.Tabular.ObjectState]::Ready) {
         throw "TOM processing verification failed. Observed metadata: $($report.TabularMetadata | ConvertTo-Json -Compress)."
     }
@@ -301,6 +300,8 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
     $report.DaxResult = $daxResult.Value
     $report.DaxResultType = $daxResult.Type
     $report.DaxOutcome = 'Passed'
+    $report.TabularMetadata.TableProcessed = $true
+    $report.TabularMetadata.TableProcessingEvidence = 'Ready partition, SSAS service source read, and DAX result 10'
     @{
         Query = $report.DaxQuery
         Column = 'TotalAmount'

@@ -116,6 +116,19 @@ function Assert-TabularProcessingModel {
     }
 }
 
+function Get-TabularFactSourceReadEvidence {
+    param(
+        [Parameter(Mandatory = $true)][string]$Xml,
+        [Parameter(Mandatory = $true)][string]$ServiceAccount,
+        [Parameter(Mandatory = $true)][string]$Database
+    )
+    $events = @(Get-ProcessingSourceReadEvidence -Xml $Xml `
+        -ServiceAccount $ServiceAccount -Database $Database)
+    return @($events | Where-Object {
+        $_.Statement -match '(?i)^\s*SELECT\s+ItemKey\s*,\s*Amount\s+FROM\s+dbo\.Fact\s*;?\s*$'
+    })
+}
+
 function Assert-TabularDaxResult {
     param([Parameter(Mandatory = $true)]$Value)
 

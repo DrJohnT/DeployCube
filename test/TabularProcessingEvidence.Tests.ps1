@@ -1,4 +1,5 @@
 BeforeAll {
+    . (Join-Path $PSScriptRoot 'infrastructure/SsasProcessingEvidence.ps1')
     . (Join-Path $PSScriptRoot 'infrastructure/TabularProcessingEvidence.ps1')
 }
 
@@ -44,6 +45,16 @@ Describe 'Phase H Tabular processing fixture and DAX assertions' {
         $script:model.model.tables[0].partitions[0].source.query = 'SELECT ItemKey, Amount FROM dbo.Fact'
         { Assert-TabularProcessingModel -Model $script:model -DatabaseName 'DeployCubeTabularProcessingGood' `
             -AllowInvalidSource } | Should -Throw '*isolated nonexistent source object*'
+    }
+
+    It 'counts only the exact fact-table source query as SSAS read evidence' {
+        $xml = @'
+<RingBufferTarget xmlns="urn:sql:xevent"><event><action name="server_principal_name"><value>NT SERVICE\MSOLAP$DCUBE</value></action><action name="database_name"><value>DeployCubeFixtureSource</value></action><data name="statement"><value>SELECT HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','SELECT')</value></data></event><event><action name="server_principal_name"><value>NT SERVICE\MSOLAP$DCUBE</value></action><action name="database_name"><value>DeployCubeFixtureSource</value></action><data name="statement"><value>SELECT ItemKey, Amount FROM dbo.Fact</value></data></event></RingBufferTarget>
+'@
+        $reads = @(Get-TabularFactSourceReadEvidence -Xml $xml `
+            -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
+        $reads.Count | Should -Be 1
+        $reads[0].Statement | Should -Be 'SELECT ItemKey, Amount FROM dbo.Fact'
     }
 
     It 'accepts a numeric DAX result of 10' {
