@@ -113,10 +113,10 @@ SELECT (SELECT COUNT(*) FROM sys.tables WHERE object_id=OBJECT_ID('dbo.Fact')) A
     $report.FailureCategory = 'SSAS service account permissions'
     $permission = Invoke-ProcessingSourceSql -Query @'
 EXECUTE AS LOGIN = 'NT SERVICE\MSOLAP$DCUBE';
-USE DeployCubeFixtureSource;
 SELECT ORIGINAL_LOGIN() AS AdminLogin, SUSER_SNAME() AS SourceLogin, IS_SRVROLEMEMBER('sysadmin') AS IsSysadmin,
- HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','SELECT') AS CanSelect,
- HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','INSERT') AS CanInsert, COUNT(*) AS SourceRecordCount FROM dbo.Fact;
+ HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','SELECT') AS CanSelect,
+ HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','INSERT') AS CanInsert,
+ (SELECT COUNT(*) FROM DeployCubeFixtureSource.dbo.Fact) AS SourceRecordCount;
 REVERT;
 '@
     $p = $permission.Rows[0]
