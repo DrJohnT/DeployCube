@@ -2,6 +2,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$LogDirectory,
     [Parameter(Mandatory = $true)][string]$SourceReportPath,
+    [ValidateSet('2019', '2022', '2025')][string]$SsasVersion = '2022',
+    [switch]$PhaseH2,
     [switch]$CleanupOnly
 )
 
@@ -9,16 +11,18 @@ $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
 $LogDirectory = (Resolve-Path -LiteralPath $LogDirectory).Path
 $reportPath = Join-Path $LogDirectory 'tabular-processing-report.json'
+$databasePrefix = if ($PhaseH2) { "DeployCubeTabularProcessing$SsasVersion" } else { 'DeployCubeTabularProcessing' }
 $databaseNames = @(
-    'DeployCubeTabularProcessingGood',
-    'DeployCubeTabularProcessingInvalidSource',
-    'DeployCubeTabularProcessingMissingTable'
+    "${databasePrefix}Good",
+    "${databasePrefix}InvalidSource",
+    "${databasePrefix}MissingTable"
 )
 $report = @{
     Outcome = 'Failed'
     FailureCategory = 'Prerequisites'
     Error = $null
     RunUrl = "https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+    TargetSsasVersion = $SsasVersion
     SsasVersion = $null
     Edition = $null
     ServerMode = $null
@@ -125,6 +129,8 @@ Import-Module (Join-Path $PSScriptRoot '../../DeployCube/DeployCube.psd1') -Forc
 Import-Module SqlServer -ErrorAction Stop
 . (Join-Path $PSScriptRoot 'TabularProcessingEvidence.ps1')
 . (Join-Path $PSScriptRoot 'SsasProcessingEvidence.ps1')
+$compatibilityLevel = Get-TabularProcessingCompatibilityLevel -SsasVersion $SsasVersion
+$report.ModelCompatibilityLevel = $compatibilityLevel
 
 if ($CleanupOnly) {
     if (Test-Path -LiteralPath $reportPath) {
@@ -161,7 +167,7 @@ try {
     $report.SsasVersion = $server.Version.ToString()
     $report.ServerMode = [string]$server.ServerMode
     $report.Edition = [string]$server.Edition
-    Assert-SsasProcessingTarget -SsasVersion '2022' -ProductVersion $report.SsasVersion `
+    Assert-SsasProcessingTarget -SsasVersion $SsasVersion -ProductVersion $report.SsasVersion `
         -ServerMode $report.ServerMode -Edition $report.Edition -ExpectedMode Tabular | Out-Null
 
     $report.FailureCategory = 'Deployment Utility verification'
@@ -234,10 +240,11 @@ REVERT;
     }
     $report.FailureCategory = 'Tabular fixture build or validation'
     $modelPath = & (Join-Path $PSScriptRoot 'Build-TabularProcessingModel.ps1') `
-        -LogDirectory (Join-Path $LogDirectory 'fixtures') -DatabaseName $databaseNames[0]
+        -LogDirectory (Join-Path $LogDirectory 'fixtures') -DatabaseName $databaseNames[0] `
+        -CompatibilityLevel $compatibilityLevel
     $report.Fixture = Get-Content -LiteralPath (Join-Path (Split-Path -Parent $modelPath) 'fixture-validation.json') -Raw |
         ConvertFrom-Json
-    $report.ModelCompatibilityLevel = 1500
+    $report.ModelCompatibilityLevel = $compatibilityLevel
 
     $report.OwnedDatabases += $databaseNames[0]
     Save-TabularProcessingReport
@@ -288,7 +295,7 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
     $report.SourceReadEvidenceWaitSeconds = [math]::Round($sourceReadWatch.Elapsed.TotalSeconds, 2)
     $report.TabularMetadata.SourceReadCount = $report.SourceReadEvidence.Count
     Save-TabularProcessingReport
-    if (-not $tabularDatabase -or $tabularDatabase.CompatibilityLevel -ne 1500 -or
+    if (-not $tabularDatabase -or $tabularDatabase.CompatibilityLevel -ne $compatibilityLevel -or
         -not $table -or -not $partition -or -not $measure -or
         $partition.State -ne [Microsoft.AnalysisServices.Tabular.ObjectState]::Ready) {
         throw "TOM processing verification failed. Observed metadata: $($report.TabularMetadata | ConvertTo-Json -Compress)."
@@ -326,6 +333,7 @@ WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
         $options = @{
             LogDirectory = Join-Path $LogDirectory 'fixtures'
             DatabaseName = $name
+            CompatibilityLevel = $compatibilityLevel
         }
         if ($scenario -eq 'InvalidSource') {
             $options.SourceConnectionString = 'Provider=MSOLEDBSQL;Data Source=tcp:127.0.0.1,1;Initial Catalog=NoSuchDatabase;Integrated Security=SSPI;Connect Timeout=3;'

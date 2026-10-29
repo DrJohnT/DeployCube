@@ -21,6 +21,17 @@ Describe 'Phase H Tabular processing fixture and DAX assertions' {
         $script:model.model.tables[0].measures[0].expression | Should -Be 'SUM(Fact[Amount])'
     }
 
+    It 'uses compatibility 1500 for SSAS 2019/2022 and 1700 for SSAS 2025' {
+        Get-TabularProcessingCompatibilityLevel -SsasVersion 2019 | Should -Be 1500
+        Get-TabularProcessingCompatibilityLevel -SsasVersion 2022 | Should -Be 1500
+        Get-TabularProcessingCompatibilityLevel -SsasVersion 2025 | Should -Be 1700
+        $model2025 = New-TabularProcessingModel -DatabaseName 'DeployCubeTabularProcessing2025Good' `
+            -CompatibilityLevel (Get-TabularProcessingCompatibilityLevel -SsasVersion 2025)
+        { Assert-TabularProcessingModel -Model $model2025 `
+            -DatabaseName 'DeployCubeTabularProcessing2025Good' -ExpectedCompatibilityLevel 1700 } |
+            Should -Not -Throw
+    }
+
     It 'requires the DAX measure to use the exact Fact table and Amount column' {
         $script:model.model.tables[0].measures[0].expression = 'SUM(Other[Amount])'
         { Assert-TabularProcessingModel -Model $script:model `

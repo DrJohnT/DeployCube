@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: Validate media, Phase C/D/E (Tabular), Phase F (Multidimensional), Phase G/G2/H (processing), or the experimental full matrix
+        description: Validate media, Phases C-F, G/G2, H/H2 processing, or the experimental full matrix
         type: choice
         required: true
         default: media-only
@@ -17,6 +17,7 @@ on:
           - phase-g
           - phase-g2
           - phase-h
+          - phase-h2
           - full-matrix
       media_urls_json:
         description: JSON map of SQL Server version to direct public Microsoft installation ISO URL
@@ -33,9 +34,9 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 240
     strategy:
-      fail-fast: false
+      fail-fast: ${{ inputs.scope != 'phase-h2' }}
       max-parallel: ${{ inputs.scope == 'phase-g2' && 1 || 256 }}
-      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || inputs.scope == 'phase-h' && '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}' || inputs.scope == 'phase-g2' && '{"include":[{"ssas_version":"2019","mode":"Multidimensional","ssms_major":"22"},{"ssas_version":"2025","mode":"Multidimensional","ssms_major":"22"}]}' || inputs.scope == 'phase-g' && '{"include":[{"ssas_version":"2022","mode":"Multidimensional","ssms_major":"22"}]}' || inputs.scope == 'phase-f' && '{"ssas_version":["2019","2022","2025"],"mode":["Multidimensional"],"ssms_major":["22"]}' || inputs.scope == 'phase-e' && '{"ssas_version":["2019","2025"],"mode":["Tabular"],"ssms_major":["22"]}' || inputs.scope == 'phase-d' && '{"ssas_version":["2022"],"mode":["Tabular"],"ssms_major":["20","21","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
+      matrix: ${{ fromJSON(inputs.scope == 'full-matrix' && '{"ssas_version":["2017","2019","2022","2025"],"mode":["Tabular","Multidimensional"],"ssms_major":["20","22"]}' || inputs.scope == 'phase-h2' && '{"include":[{"ssas_version":"2019","mode":"Tabular","ssms_major":"22"},{"ssas_version":"2025","mode":"Tabular","ssms_major":"22"}]}' || inputs.scope == 'phase-h' && '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"22"}]}' || inputs.scope == 'phase-g2' && '{"include":[{"ssas_version":"2019","mode":"Multidimensional","ssms_major":"22"},{"ssas_version":"2025","mode":"Multidimensional","ssms_major":"22"}]}' || inputs.scope == 'phase-g' && '{"include":[{"ssas_version":"2022","mode":"Multidimensional","ssms_major":"22"}]}' || inputs.scope == 'phase-f' && '{"ssas_version":["2019","2022","2025"],"mode":["Multidimensional"],"ssms_major":["22"]}' || inputs.scope == 'phase-e' && '{"ssas_version":["2019","2025"],"mode":["Tabular"],"ssms_major":["22"]}' || inputs.scope == 'phase-d' && '{"ssas_version":["2022"],"mode":["Tabular"],"ssms_major":["20","21","22"]}' || '{"include":[{"ssas_version":"2022","mode":"Tabular","ssms_major":"20"}]}') }}
     env:
       COMPAT_MEDIA_URLS_JSON: ${{ inputs.media_urls_json }}
       COMPAT_SSAS_VERSION: ${{ matrix.ssas_version }}
@@ -66,7 +67,7 @@ jobs:
             -TimeoutMinutes 20 -InactivityTimeoutSeconds 60
 
       - name: Test infrastructure guards
-        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e' || inputs.scope == 'phase-f' || inputs.scope == 'phase-g' || inputs.scope == 'phase-g2' || inputs.scope == 'phase-h')
+        if: success() && (inputs.scope == 'media-only' || inputs.scope == 'phase-d' || inputs.scope == 'phase-e' || inputs.scope == 'phase-f' || inputs.scope == 'phase-g' || inputs.scope == 'phase-g2' || inputs.scope == 'phase-h' || inputs.scope == 'phase-h2')
         timeout-minutes: 5
         shell: powershell
         run: |
@@ -88,7 +89,7 @@ jobs:
           if ('${{ inputs.scope }}' -in @('phase-g', 'phase-g2')) {
             $testPaths += @('test/DeploymentUtilityCompatibility.Tests.ps1', 'test/MultidimensionalMetadata.Tests.ps1', 'test/SsasProcessingEvidence.Tests.ps1', 'test/SsasProvisioningVerification.Tests.ps1')
           }
-          if ('${{ inputs.scope }}' -eq 'phase-h') {
+          if ('${{ inputs.scope }}' -in @('phase-h', 'phase-h2')) {
             $testPaths += @('test/DeploymentToolSelection.Tests.ps1', 'test/DeploymentUtilityCompatibility.Tests.ps1', 'test/SsasProcessingEvidence.Tests.ps1', 'test/SsasProvisioningVerification.Tests.ps1', 'test/TabularProcessingEvidence.Tests.ps1')
           }
           $configuration.Run.Path = $testPaths
@@ -116,7 +117,7 @@ jobs:
         shell: powershell
         run: |
           $logDirectory = "$env:ARTIFACT_DIRECTORY/ssms-installation"
-          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2', 'phase-h')) {
+          if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2', 'phase-h', 'phase-h2')) {
             $logDirectory = Join-Path $env:RUNNER_TEMP "ssms-$env:COMPAT_SSMS_MAJOR-logs"
           }
           try {
@@ -126,7 +127,7 @@ jobs:
               -MinimumFreeSpaceGB 8
           }
           finally {
-            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2', 'phase-h') -and (Test-Path -LiteralPath $logDirectory)) {
+            if ('${{ inputs.scope }}' -in @('phase-d', 'phase-e', 'phase-f', 'phase-g', 'phase-g2', 'phase-h', 'phase-h2') -and (Test-Path -LiteralPath $logDirectory)) {
               New-Item -ItemType Directory -Path "$env:ARTIFACT_DIRECTORY/ssms-installation" -Force | Out-Null
               Copy-Item -Path (Join-Path $logDirectory '*') -Destination "$env:ARTIFACT_DIRECTORY/ssms-installation" -Recurse -Force -ErrorAction Stop
             }
@@ -170,7 +171,7 @@ jobs:
 
       - name: Acquire SQL Server 2022 Developer source media
         id: acquire-source-media
-        if: success() && inputs.scope == 'phase-g2'
+        if: success() && (inputs.scope == 'phase-g2' || inputs.scope == 'phase-h2')
         timeout-minutes: 22
         shell: powershell
         run: |
@@ -182,7 +183,7 @@ jobs:
 
       - name: Mount and validate SQL Server 2022 source media
         id: validate-source-media
-        if: success() && inputs.scope == 'phase-g2'
+        if: success() && (inputs.scope == 'phase-g2' || inputs.scope == 'phase-h2')
         timeout-minutes: 5
         shell: powershell
         env:
@@ -201,7 +202,7 @@ jobs:
 
       - name: Probe Deployment Utility compatibility
         id: utility-probe
-        if: success() && inputs.scope != 'media-only' && inputs.scope != 'phase-g' && inputs.scope != 'phase-h'
+        if: success() && inputs.scope != 'media-only' && inputs.scope != 'phase-g' && inputs.scope != 'phase-h' && inputs.scope != 'phase-h2'
         timeout-minutes: 10
         shell: powershell
         run: |
@@ -215,7 +216,7 @@ jobs:
             -LogDirectory "$env:ARTIFACT_DIRECTORY/model-build" -ProbeOnly
 
       - name: Run DeployCube SSAS integration tests
-        if: success() && inputs.scope != 'media-only' && inputs.scope != 'phase-g' && inputs.scope != 'phase-h' && steps.utility-probe.outcome == 'success'
+        if: success() && inputs.scope != 'media-only' && inputs.scope != 'phase-g' && inputs.scope != 'phase-h' && inputs.scope != 'phase-h2' && steps.utility-probe.outcome == 'success'
         timeout-minutes: 10
         shell: powershell
         run: |
@@ -230,11 +231,11 @@ jobs:
 
       - name: Provision isolated SQL Engine processing source
         id: processing-source
-        if: success() && (inputs.scope == 'phase-g' || inputs.scope == 'phase-g2' || inputs.scope == 'phase-h')
+        if: success() && (inputs.scope == 'phase-g' || inputs.scope == 'phase-g2' || inputs.scope == 'phase-h' || inputs.scope == 'phase-h2')
         timeout-minutes: 25
         shell: powershell
         env:
-          SQL_MEDIA_ROOT: ${{ inputs.scope == 'phase-g2' && steps.validate-source-media.outputs.media-root || steps.validate-media.outputs.media-root }}
+          SQL_MEDIA_ROOT: ${{ (inputs.scope == 'phase-g2' || inputs.scope == 'phase-h2') && steps.validate-source-media.outputs.media-root || steps.validate-media.outputs.media-root }}
         run: |
           ./test/infrastructure/Initialize-ProcessingSource.ps1 `
             -MediaRoot $env:SQL_MEDIA_ROOT -LogDirectory "$env:ARTIFACT_DIRECTORY/processing-source"
@@ -296,7 +297,7 @@ jobs:
 
       - name: Deploy, process, query and test isolated Tabular model
         id: tabular-processing-tests
-        if: success() && inputs.scope == 'phase-h'
+        if: success() && (inputs.scope == 'phase-h' || inputs.scope == 'phase-h2')
         timeout-minutes: 18
         shell: powershell
         run: |
@@ -306,31 +307,40 @@ jobs:
           $logs = [IO.Path]::GetFullPath("$env:ARTIFACT_DIRECTORY/tabular-processing")
           New-Item -ItemType Directory -Path $logs -Force | Out-Null
           $source = [IO.Path]::GetFullPath("$env:ARTIFACT_DIRECTORY/processing-source/source-provisioning.json")
+          $phaseName = '${{ inputs.scope }}'
+          $arguments = @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', "`"$script`"", '-LogDirectory', "`"$logs`"", '-SourceReportPath', "`"$source`"", '-SsasVersion', $env:COMPAT_SSAS_VERSION)
+          if ($phaseName -eq 'phase-h2') { $arguments += '-PhaseH2' }
           $result = Invoke-BoundedProcess -FilePath "$PSHOME/powershell.exe" `
-            -ArgumentList @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', "`"$script`"", '-LogDirectory', "`"$logs`"", '-SourceReportPath', "`"$source`"") `
-            -TimeoutSeconds 900 -Stage 'Phase H Tabular processing' `
+            -ArgumentList $arguments `
+            -TimeoutSeconds 900 -Stage "$phaseName Tabular processing" `
             -StandardOutputPath "$logs/harness.stdout.log" -StandardErrorPath "$logs/harness.stderr.log"
-          if ($result.ExitCode -ne 0) { throw "Phase H Tabular processing failed with exit $($result.ExitCode); inspect tabular-processing-report.json and harness logs." }
+          if ($result.ExitCode -ne 0) { throw "$phaseName Tabular processing failed with exit $($result.ExitCode); inspect tabular-processing-report.json and harness logs." }
 
       - name: Verify fallback Tabular cleanup
-        if: always() && inputs.scope == 'phase-h' && steps.tabular-processing-tests.outcome != 'skipped'
+        if: always() && (inputs.scope == 'phase-h' || inputs.scope == 'phase-h2') && steps.tabular-processing-tests.outcome != 'skipped'
         timeout-minutes: 5
         shell: powershell
         run: |
+          $arguments = @(
+            '-LogDirectory', "$env:ARTIFACT_DIRECTORY/tabular-processing",
+            '-SourceReportPath', "$env:ARTIFACT_DIRECTORY/processing-source/source-provisioning.json",
+            '-SsasVersion', $env:COMPAT_SSAS_VERSION,
+            '-CleanupOnly'
+          )
+          $phaseName = '${{ inputs.scope }}'
+          if ($phaseName -eq 'phase-h2') { $arguments += '-PhaseH2' }
           ./test/infrastructure/Invoke-SsasTabularProcessing.ps1 `
-            -LogDirectory "$env:ARTIFACT_DIRECTORY/tabular-processing" `
-            -SourceReportPath "$env:ARTIFACT_DIRECTORY/processing-source/source-provisioning.json" `
-            -CleanupOnly
+            @arguments
 
       - name: Clean up isolated Tabular SQL source
-        if: always() && inputs.scope == 'phase-h' && (steps.processing-source.outcome == 'success' || steps.processing-source.outcome == 'failure' || steps.processing-source.outcome == 'cancelled')
+        if: always() && (inputs.scope == 'phase-h' || inputs.scope == 'phase-h2') && (steps.processing-source.outcome == 'success' || steps.processing-source.outcome == 'failure' || steps.processing-source.outcome == 'cancelled')
         timeout-minutes: 5
         shell: powershell
         run: |
           ./test/infrastructure/Initialize-ProcessingSource.ps1 -Cleanup -LogDirectory "$env:ARTIFACT_DIRECTORY/processing-source"
 
       - name: Record complete Phase H outcome
-        if: always() && inputs.scope == 'phase-h'
+        if: always() && (inputs.scope == 'phase-h' || inputs.scope == 'phase-h2')
         shell: powershell
         run: |
           $reports = @{}
@@ -351,9 +361,11 @@ jobs:
             $reports.Processing.DaxOutcome -eq 'Passed' -and $reports.Processing.DaxResult -eq 10 -and
             $reports.Processing.NegativeTests.Count -eq 2 -and $reports.Processing.Cleanup -eq 'Passed'
           $reports.Outcome = if ($reports.Source.Outcome -ne 'Passed') { 'Blocked by infrastructure' } elseif ($processingPassed -and $reports.SourceCleanup.Outcome -eq 'Passed') { 'Passed' } else { 'Failed' }
-          $reports | ConvertTo-Json -Depth 18 | Set-Content -LiteralPath "$env:ARTIFACT_DIRECTORY/phase-h-report.json" -Encoding UTF8
-          "Phase H: $($reports.Outcome); see phase-h-report.json for deployment, processing, DAX, negative tests and cleanup." | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
-          if ($reports.Outcome -ne 'Passed') { throw "Phase H outcome: $($reports.Outcome)" }
+          $reportName = if ('${{ inputs.scope }}' -eq 'phase-h2') { 'phase-h2-report.json' } else { 'phase-h-report.json' }
+          $reports | ConvertTo-Json -Depth 18 | Set-Content -LiteralPath "$env:ARTIFACT_DIRECTORY/$reportName" -Encoding UTF8
+          $phaseName = '${{ inputs.scope }}'.ToUpperInvariant().Replace('PHASE-', '')
+          "Phase $phaseName`: $($reports.Outcome); see $reportName for deployment, processing, DAX, negative tests and cleanup." | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          if ($reports.Outcome -ne 'Passed') { throw "Phase $phaseName outcome: $($reports.Outcome)" }
 
       - name: Capture SSAS provisioning diagnostics
         if: always() && inputs.scope != 'media-only' && (failure() || cancelled())
@@ -373,7 +385,7 @@ jobs:
           Remove-Item -LiteralPath $env:ISO_PATH -Force -ErrorAction Stop
 
       - name: Dismount SQL Server 2022 source media
-        if: always() && inputs.scope == 'phase-g2' && steps.acquire-source-media.outcome == 'success'
+        if: always() && (inputs.scope == 'phase-g2' || inputs.scope == 'phase-h2') && steps.acquire-source-media.outcome == 'success'
         shell: powershell
         env:
           SOURCE_ISO_PATH: ${{ steps.acquire-source-media.outputs.iso-path }}

@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$LogDirectory,
     [Parameter(Mandatory = $true)][string]$DatabaseName,
+    [ValidateSet(1500, 1700)][int]$CompatibilityLevel = 1500,
     [string]$SourceConnectionString = 'Provider=MSOLEDBSQL;Data Source=lpc:.\DCUBESOURCE;Initial Catalog=DeployCubeFixtureSource;Integrated Security=SSPI;Connect Timeout=5;',
     [string]$SourceQuery = 'SELECT ItemKey, Amount FROM dbo.Fact',
     [switch]$AllowInvalidSource
@@ -14,14 +15,15 @@ Import-Module SqlServer -ErrorAction Stop
 $outputDirectory = Join-Path $LogDirectory $DatabaseName
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
 $model = New-TabularProcessingModel -DatabaseName $DatabaseName `
-    -SourceConnectionString $SourceConnectionString -SourceQuery $SourceQuery
-Assert-TabularProcessingModel -Model $model -DatabaseName $DatabaseName -AllowInvalidSource:$AllowInvalidSource
+    -CompatibilityLevel $CompatibilityLevel -SourceConnectionString $SourceConnectionString -SourceQuery $SourceQuery
+Assert-TabularProcessingModel -Model $model -DatabaseName $DatabaseName `
+    -ExpectedCompatibilityLevel $CompatibilityLevel -AllowInvalidSource:$AllowInvalidSource
 $modelPath = Join-Path $outputDirectory 'Model.asdatabase'
 $json = $model | ConvertTo-Json -Depth 30
 $json | Set-Content -LiteralPath $modelPath -Encoding UTF8
 
 $tom = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($json)
-if ($tom.CompatibilityLevel -ne 1500 -or $tom.Name -ne $DatabaseName) {
+if ($tom.CompatibilityLevel -ne $CompatibilityLevel -or $tom.Name -ne $DatabaseName) {
     throw 'TOM rejected the processing fixture database identity or compatibility level.'
 }
 $table = $tom.Model.Tables.Find('Fact')

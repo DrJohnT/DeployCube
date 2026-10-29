@@ -1,10 +1,20 @@
+function Get-TabularProcessingCompatibilityLevel {
+    param([Parameter(Mandatory = $true)][ValidateSet('2019', '2022', '2025')][string]$SsasVersion)
+    if ($SsasVersion -eq '2025') { return 1700 }
+    return 1500
+}
+
 function New-TabularProcessingModel {
     param(
         [Parameter(Mandatory = $true)][string]$DatabaseName,
+        [int]$CompatibilityLevel = 1500,
         [string]$SourceConnectionString = 'Provider=MSOLEDBSQL;Data Source=lpc:.\DCUBESOURCE;Initial Catalog=DeployCubeFixtureSource;Integrated Security=SSPI;Connect Timeout=5;',
         [string]$SourceQuery = 'SELECT ItemKey, Amount FROM dbo.Fact'
     )
 
+    if ($CompatibilityLevel -notin @(1500, 1700)) {
+        throw "Unsupported Phase H Tabular compatibility level '$CompatibilityLevel'."
+    }
     if ($SourceConnectionString -match '(?i)(?:^|;)\s*(?:password|pwd|user\s*id|uid)\s*=') {
         throw 'The Tabular processing fixture must not contain SQL credentials.'
     }
@@ -12,7 +22,7 @@ function New-TabularProcessingModel {
     return [pscustomobject]@{
         name = $DatabaseName
         id = $DatabaseName
-        compatibilityLevel = 1500
+        compatibilityLevel = $CompatibilityLevel
         model = [pscustomobject]@{
             culture = 'en-US'
             dataSources = @(
@@ -74,11 +84,14 @@ function Assert-TabularProcessingModel {
     param(
         [Parameter(Mandatory = $true)]$Model,
         [Parameter(Mandatory = $true)][string]$DatabaseName,
+        [int]$ExpectedCompatibilityLevel = 1500,
         [switch]$AllowInvalidSource
     )
 
-    if ($Model.compatibilityLevel -ne 1500 -or $Model.name -ne $DatabaseName -or $Model.id -ne $DatabaseName) {
-        throw 'Tabular fixture must target the requested database at compatibility level 1500.'
+    if ($ExpectedCompatibilityLevel -notin @(1500, 1700) -or
+        $Model.compatibilityLevel -ne $ExpectedCompatibilityLevel -or
+        $Model.name -ne $DatabaseName -or $Model.id -ne $DatabaseName) {
+        throw "Tabular fixture must target the requested database at compatibility level $ExpectedCompatibilityLevel."
     }
     if (@($Model.model.dataSources).Count -ne 1 -or $Model.model.dataSources[0].name -ne 'ProcessingSource' -or
         $Model.model.dataSources[0].impersonationMode -ne 'impersonateServiceAccount') {
