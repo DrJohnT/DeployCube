@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$LogDirectory
+    [string]$LogDirectory,
+
+    [ValidateSet('LocalDB', 'SqlEngine')]
+    [string]$SourceType = 'LocalDB'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,6 +24,9 @@ $validationServer = New-Object Microsoft.AnalysisServices.Server
 $validationServer.Databases.Add($database) | Out-Null
 $dataSource = New-Object Microsoft.AnalysisServices.RelationalDataSource('Local fixture', 'LocalFixture')
 $dataSource.ConnectionString = 'Provider=MSOLEDBSQL;Data Source=(localdb)\DeployCubeFixture;Initial Catalog=DeployCubeFixtureSource;Integrated Security=SSPI;'
+if ($SourceType -eq 'SqlEngine') {
+    $dataSource.ConnectionString = 'Provider=MSOLEDBSQL;Data Source=lpc:.\DCUBESOURCE;Initial Catalog=DeployCubeFixtureSource;Integrated Security=SSPI;Connect Timeout=5;'
+}
 $dataSource.ImpersonationInfo = New-Object Microsoft.AnalysisServices.ImpersonationInfo(
     [Microsoft.AnalysisServices.ImpersonationMode]::ImpersonateServiceAccount)
 $database.DataSources.Add($dataSource) | Out-Null
