@@ -77,18 +77,33 @@ try {
         if ($dimensionState -ne 'Processed') { throw "Dimension state is '$dimensionState', expected Processed." }
         $report.DimensionState = $dimensionState
         $report.FailureCategory = 'Source connectivity evidence'
-        $events = Invoke-ProcessingSourceSql -Query @'
+$sourceReadQuery = @'
 SELECT CONVERT(nvarchar(max),t.target_data) AS Events FROM sys.dm_xe_sessions s
 JOIN sys.dm_xe_session_targets t ON s.address=t.event_session_address
 WHERE s.name='DeployCubeSourceReads' AND t.target_name='ring_buffer';
 '@
-        $eventXmlText = [string]$events.Rows[0].Events
-        $eventXmlText | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads-raw.xml') -Encoding UTF8
-        $reads = @(Get-ProcessingSourceReadEvidence -Xml $eventXmlText `
-            -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
-        if ($reads.Count -eq 0) { throw 'No SQL-side read by the actual SSAS service account was captured; service connectivity is not proven.' }
+        $readEvidenceWatch = [Diagnostics.Stopwatch]::StartNew()
+        $eventXmlText = $null
+        $reads = @()
+        do {
+            Start-Sleep -Seconds 1
+            $events = Invoke-ProcessingSourceSql -Query $sourceReadQuery
+            if ($events.Rows.Count -gt 0 -and $events.Rows[0].Events -isnot [DBNull]) {
+                $eventXmlText = [string]$events.Rows[0].Events
+                if ($eventXmlText) {
+                    $eventXmlText | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads-raw.xml') -Encoding UTF8
+                    $reads = @(Get-ProcessingSourceReadEvidence -Xml $eventXmlText `
+                        -ServiceAccount 'NT SERVICE\MSOLAP$DCUBE' -Database 'DeployCubeFixtureSource')
+                }
+            }
+        } while ($reads.Count -eq 0 -and $readEvidenceWatch.Elapsed.TotalSeconds -lt 15)
+        $report.SourceReadEvidenceWaitSeconds = [math]::Round($readEvidenceWatch.Elapsed.TotalSeconds, 2)
+        if ($reads.Count -eq 0) { throw 'No SQL-side read by the actual SSAS service account was captured after 15 seconds of bounded event polling; service connectivity is not proven.' }
         $reads | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $LogDirectory 'ssas-service-source-reads.json') -Encoding UTF8
-        $report.SourceConnectivity = @{ Outcome = 'Passed'; ServiceAccount = $report.Source.ServiceAccount; SqlReadCount = $reads.Count }
+        $report.SourceConnectivity = @{
+            Outcome = 'Passed'; ServiceAccount = $report.Source.ServiceAccount
+            SqlReadCount = $reads.Count; EvidenceWaitSeconds = $report.SourceReadEvidenceWaitSeconds
+        }
 
         $report.FailureCategory = 'Cube processing'
         $watch = [Diagnostics.Stopwatch]::StartNew()
