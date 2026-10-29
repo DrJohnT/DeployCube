@@ -92,10 +92,10 @@ GRANT SELECT ON OBJECT::dbo.Fact TO [NT SERVICE\MSOLAP$DCUBE];
     $data = Invoke-ProcessingSourceSql -Database 'DeployCubeFixtureSource' -Query @'
 SELECT (SELECT COUNT(*) FROM sys.tables WHERE object_id=OBJECT_ID('dbo.Fact')) AS TableCount,
  (SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID('dbo.Fact') AND name IN ('ItemKey','Amount') AND system_type_id=56 AND is_nullable=0) AS ColumnCount,
- COUNT(*) AS RowCount, MIN(ItemKey) AS ItemKey, SUM(Amount) AS SumAmount FROM dbo.Fact;
+ COUNT(*) AS SourceRecordCount, MIN(ItemKey) AS ItemKey, SUM(Amount) AS SumAmount FROM dbo.Fact;
 '@
     Assert-ProcessingSource -Row $data.Rows[0]
-    $report.RecordCount = [int]$data.Rows[0].RowCount
+    $report.RecordCount = [int]$data.Rows[0].SourceRecordCount
     $report.ExpectedSum = [int]$data.Rows[0].SumAmount
     $report.Database = 'DeployCubeFixtureSource'
     $report.SourceType = 'SQL Server 2022 Developer named instance; local shared memory; Windows authentication'
@@ -109,11 +109,11 @@ EXECUTE AS LOGIN = 'NT SERVICE\MSOLAP$DCUBE';
 USE DeployCubeFixtureSource;
 SELECT ORIGINAL_LOGIN() AS AdminLogin, SUSER_SNAME() AS SourceLogin, IS_SRVROLEMEMBER('sysadmin') AS IsSysadmin,
  HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','SELECT') AS CanSelect,
- HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','INSERT') AS CanInsert, COUNT(*) AS RowCount FROM dbo.Fact;
+ HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','INSERT') AS CanInsert, COUNT(*) AS SourceRecordCount FROM dbo.Fact;
 REVERT;
 '@
     $p = $permission.Rows[0]
-    if ($p.IsSysadmin -ne 0 -or $p.CanSelect -ne 1 -or $p.CanInsert -ne 0 -or $p.RowCount -ne 1) {
+    if ($p.IsSysadmin -ne 0 -or $p.CanSelect -ne 1 -or $p.CanInsert -ne 0 -or $p.SourceRecordCount -ne 1) {
         throw 'SSAS source login must be non-sysadmin with SELECT and no INSERT privilege.'
     }
     $report.PermissionCheck = @{ Login = [string]$p.SourceLogin; IsSysadmin = [int]$p.IsSysadmin; CanSelect = [int]$p.CanSelect; CanInsert = [int]$p.CanInsert }
