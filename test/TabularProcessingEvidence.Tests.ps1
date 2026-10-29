@@ -57,6 +57,21 @@ Describe 'Phase H Tabular processing fixture and DAX assertions' {
         $reads[0].Statement | Should -Be 'SELECT ItemKey, Amount FROM dbo.Fact'
     }
 
+    It 'preserves dynamic result fields when restoring a report for cleanup' {
+        $report = @{ Outcome = 'Failed'; Cleanup = 'Not tested' }
+        $saved = [pscustomobject]@{
+            Outcome = 'Passed'
+            DaxOutcome = 'Passed'
+            DaxResultType = 'xsd:long'
+            TabularMetadata = @{ PartitionState = 'Ready' }
+        }
+        $restored = Restore-TabularProcessingReport -Report $report -SavedReport $saved
+        $restored.DaxOutcome | Should -Be 'Passed'
+        $restored.DaxResultType | Should -Be 'xsd:long'
+        $restored.TabularMetadata.PartitionState | Should -Be 'Ready'
+        $restored.Cleanup | Should -Be 'Not tested'
+    }
+
     It 'accepts a numeric DAX result of 10' {
         Assert-TabularDaxResult -Value ([long]10) | Should -Be 10
     }

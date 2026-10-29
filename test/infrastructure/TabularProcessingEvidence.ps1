@@ -129,6 +129,17 @@ function Get-TabularFactSourceReadEvidence {
     })
 }
 
+function Restore-TabularProcessingReport {
+    param(
+        [Parameter(Mandatory = $true)][hashtable]$Report,
+        [Parameter(Mandatory = $true)]$SavedReport
+    )
+    foreach ($property in $SavedReport.PSObject.Properties) {
+        $Report[$property.Name] = $property.Value
+    }
+    return $Report
+}
+
 function Assert-TabularDaxResult {
     param([Parameter(Mandatory = $true)]$Value)
 

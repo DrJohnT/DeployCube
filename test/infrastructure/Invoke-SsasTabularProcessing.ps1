@@ -20,18 +20,25 @@ $report = @{
     Error = $null
     RunUrl = "https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
     SsasVersion = $null
+    Edition = $null
     ServerMode = $null
+    ServiceAccount = $null
     DeploymentUtility = $null
     Source = $null
+    SourcePermissionVerification = $null
     Fixture = 'Not tested'
+    ModelCompatibilityLevel = $null
     PublishCube = 'Not tested'
     ProcessingCommand = 'Publish-Cube -ProcessingOption Full'
     Processing = 'Not tested'
     ProcessingDurationSeconds = $null
+    TabularMetadata = $null
     SourceReadEvidence = @()
     SourceReadEvidenceWaitSeconds = $null
     DaxQuery = 'EVALUATE ROW("TotalAmount", [Total Amount])'
     DaxResult = $null
+    DaxResultType = $null
+    DaxOutcome = $null
     NegativeTests = @()
     OwnedDatabases = @()
     RemainingTestDatabases = @()
@@ -122,9 +129,7 @@ Import-Module SqlServer -ErrorAction Stop
 if ($CleanupOnly) {
     if (Test-Path -LiteralPath $reportPath) {
         $saved = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
-        foreach ($property in $saved.PSObject.Properties) {
-            if ($report.ContainsKey($property.Name)) { $report[$property.Name] = $property.Value }
-        }
+        $report = Restore-TabularProcessingReport -Report $report -SavedReport $saved
     }
     $cleanupServer = New-Object Microsoft.AnalysisServices.Server
     try {
