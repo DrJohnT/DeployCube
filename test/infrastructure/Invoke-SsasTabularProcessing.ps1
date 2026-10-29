@@ -153,7 +153,7 @@ try {
     $report.ServerMode = [string]$server.ServerMode
     $report.Edition = [string]$server.Edition
     Assert-SsasProcessingTarget -SsasVersion '2022' -ProductVersion $report.SsasVersion `
-        -ServerMode $report.ServerMode -Edition $report.Edition | Out-Null
+        -ServerMode $report.ServerMode -Edition $report.Edition -ExpectedMode Tabular | Out-Null
 
     $report.FailureCategory = 'Deployment Utility verification'
     $inventory = @(& (Join-Path $PSScriptRoot 'Get-DeploymentToolInventory.ps1') |

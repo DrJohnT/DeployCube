@@ -21,6 +21,10 @@ Describe 'Phase G actual data assertions' {
         { Assert-SsasProcessingTarget -SsasVersion 2025 -ProductVersion '17.0.25.218' `
             -ServerMode Tabular -Edition Developer64 } | Should -Throw '*Expected SSAS 2025*'
     }
+    It 'validates Tabular mode when explicitly requested' {
+        { Assert-SsasProcessingTarget -SsasVersion 2022 -ProductVersion '16.0.42.209' `
+            -ServerMode Tabular -Edition Developer64 -ExpectedMode Tabular } | Should -Not -Throw
+    }
     It 'extracts SSAS service reads from a namespace-qualified ring buffer and ignores missing fields' {
         $xml = @'
 <RingBufferTarget xmlns="urn:sql:xevent"><event><action name="server_principal_name"><value>NT SERVICE\MSOLAP$DCUBE</value></action><action name="database_name"><value>DeployCubeFixtureSource</value></action><data name="statement"><value>SELECT ItemKey, Amount FROM dbo.Fact</value></data></event><event><action name="server_principal_name"><value>other</value></action></event></RingBufferTarget>

@@ -54,12 +54,13 @@ function Assert-SsasProcessingTarget {
         [Parameter(Mandatory = $true)][ValidateSet('2019', '2022', '2025')][string]$SsasVersion,
         [Parameter(Mandatory = $true)][string]$ProductVersion,
         [Parameter(Mandatory = $true)][string]$ServerMode,
-        [Parameter(Mandatory = $true)][string]$Edition
+        [Parameter(Mandatory = $true)][string]$Edition,
+        [ValidateSet('Multidimensional', 'Tabular')][string]$ExpectedMode = 'Multidimensional'
     )
     $major = @{ '2019' = 15; '2022' = 16; '2025' = 17 }[$SsasVersion]
-    if ($ProductVersion -notmatch ('^' + $major + '\.') -or $ServerMode -ne 'Multidimensional' -or
+    if ($ProductVersion -notmatch ('^' + $major + '\.') -or $ServerMode -ne $ExpectedMode -or
         $Edition -notmatch 'Developer') {
-        throw "Expected SSAS $SsasVersion Developer Multidimensional (major $major), but received $ProductVersion $Edition $ServerMode."
+        throw "Expected SSAS $SsasVersion Developer $ExpectedMode (major $major), but received $ProductVersion $Edition $ServerMode."
     }
     return $major
 }
