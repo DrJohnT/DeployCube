@@ -43,7 +43,7 @@ function Save-TabularProcessingReport {
 function Invoke-TabularSourceSql {
     param([Parameter(Mandatory = $true)][string]$Query)
     $connection = New-Object System.Data.SqlClient.SqlConnection(
-        'Data Source=lpc:.\DCUBESOURCE;Initial Catalog=master;Integrated Security=True;Connect Timeout=15')
+        'Data Source=lpc:.\DCUBESOURCE;Initial Catalog=DeployCubeFixtureSource;Integrated Security=True;Connect Timeout=15')
     try {
         $connection.Open()
         $command = $connection.CreateCommand()
@@ -187,21 +187,21 @@ try {
         throw 'SQL source report did not prove SQL Server 2022 Developer, one row summing to 10, and least-privilege SSAS access.'
     }
     $sourceData = Invoke-TabularSourceSql -Query @'
-SELECT (SELECT COUNT(*) FROM sys.tables WHERE object_id=OBJECT_ID('DeployCubeFixtureSource.dbo.Fact')) AS TableCount,
- (SELECT COUNT(*) FROM DeployCubeFixtureSource.sys.columns
-   WHERE object_id=OBJECT_ID('DeployCubeFixtureSource.dbo.Fact')
+SELECT (SELECT COUNT(*) FROM sys.tables WHERE object_id=OBJECT_ID('dbo.Fact')) AS TableCount,
+ (SELECT COUNT(*) FROM sys.columns
+   WHERE object_id=OBJECT_ID('dbo.Fact')
      AND name IN ('ItemKey','Amount') AND system_type_id=56 AND is_nullable=0) AS ColumnCount,
  COUNT(*) AS SourceRecordCount, MIN(ItemKey) AS ItemKey, SUM(Amount) AS SumAmount
-FROM DeployCubeFixtureSource.dbo.Fact;
+FROM dbo.Fact;
 '@
     Assert-ProcessingSource -Row $sourceData.Rows[0]
     $permission = Invoke-TabularSourceSql -Query @'
 EXECUTE AS LOGIN = 'NT SERVICE\MSOLAP$DCUBE';
-SELECT HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','SELECT') AS CanSelect,
- HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','INSERT') AS CanInsert,
- HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','UPDATE') AS CanUpdate,
- HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','DELETE') AS CanDelete,
- HAS_PERMS_BY_NAME('DeployCubeFixtureSource.dbo.Fact','OBJECT','ALTER') AS CanAlter,
+SELECT HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','SELECT') AS CanSelect,
+ HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','INSERT') AS CanInsert,
+ HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','UPDATE') AS CanUpdate,
+ HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','DELETE') AS CanDelete,
+ HAS_PERMS_BY_NAME('dbo.Fact','OBJECT','ALTER') AS CanAlter,
  IS_SRVROLEMEMBER('sysadmin') AS IsSysadmin;
 REVERT;
 '@
