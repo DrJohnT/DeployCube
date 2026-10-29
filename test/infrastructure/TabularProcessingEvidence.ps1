@@ -170,7 +170,7 @@ function New-TabularDaxXmlaQuery {
     $propertyList.AppendChild($catalog) | Out-Null
     foreach ($property in @(
         @{ Name = 'Format'; Value = 'Tabular' }
-        @{ Name = 'Content'; Value = 'Data' }
+        @{ Name = 'Content'; Value = 'SchemaData' }
     )) {
         $element = $document.CreateElement($property.Name, $execute.NamespaceURI)
         $element.InnerText = $property.Value
@@ -201,13 +201,24 @@ function ConvertFrom-TabularDaxResponse {
     [xml]$document = $Xml
     $rows = $document.SelectNodes("//*[local-name()='row']")
     if ($rows.Count -ne 1) { throw "DAX query must return exactly one row, got $($rows.Count)." }
-    $valueNode = $rows[0].SelectSingleNode("*[local-name()='$MeasureColumn']")
+    $normalizeColumnName = {
+        param([string]$Name)
+        $decoded = [System.Xml.XmlConvert]::DecodeName($Name)
+        if ($decoded.StartsWith('[') -and $decoded.EndsWith(']')) {
+            return $decoded.Substring(1, $decoded.Length - 2)
+        }
+        return $decoded
+    }
+    $valueNode = $rows[0].ChildNodes | Where-Object {
+        (& $normalizeColumnName $_.LocalName) -eq $MeasureColumn
+    } | Select-Object -First 1
     if (-not $valueNode) {
         $columns = @($rows[0].ChildNodes | ForEach-Object { $_.LocalName })
         throw "DAX result did not contain the '$MeasureColumn' column. Returned columns: '$($columns -join ', ')'."
     }
-    $schemaColumn = $document.SelectSingleNode(
-        "//*[local-name()='schema']//*[local-name()='element' and @name='$MeasureColumn']")
+    $schemaColumn = $document.SelectNodes("//*[local-name()='schema']//*[local-name()='element']") |
+        Where-Object { (& $normalizeColumnName $_.GetAttribute('name')) -eq $MeasureColumn } |
+        Select-Object -First 1
     $typeName = if ($schemaColumn) { $schemaColumn.GetAttribute('type') } else { $null }
     if ($typeName -notmatch '(^|:)(byte|short|int|integer|long|unsignedByte|unsignedShort|unsignedInt|unsignedLong|decimal|float|double)$') {
         throw "DAX result column '$MeasureColumn' is not declared numeric (XML type '$typeName')."

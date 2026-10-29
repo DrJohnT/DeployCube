@@ -69,16 +69,17 @@ Describe 'Phase H Tabular processing fixture and DAX assertions' {
         $xmla.Execute.Properties.PropertyList.Catalog |
             Should -Be 'DeployCubeTabularProcessingGood'
         $xmla.Execute.Properties.PropertyList.Format | Should -Be 'Tabular'
-        $xmla.Execute.Properties.PropertyList.Content | Should -Be 'Data'
+        $xmla.Execute.Properties.PropertyList.Content | Should -Be 'SchemaData'
     }
 
     It 'reads and validates the numeric measure from an XMLA DAX rowset' {
         $xml = @'
-<root xmlns="urn:schemas-microsoft-com:xml-analysis:rowset" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><xsd:schema><xsd:element name="row"><xsd:complexType><xsd:sequence><xsd:element name="TotalAmount" type="xsd:long" minOccurs="0"/></xsd:sequence></xsd:complexType></xsd:element></xsd:schema><row><TotalAmount>10</TotalAmount></row></root>
+<root xmlns="urn:schemas-microsoft-com:xml-analysis:rowset" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><xsd:schema><xsd:element name="row"><xsd:complexType><xsd:sequence><xsd:element name="_x005B_TotalAmount_x005D_" type="xsd:long" minOccurs="0"/></xsd:sequence></xsd:complexType></xsd:element></xsd:schema><row><_x005B_TotalAmount_x005D_>10</_x005B_TotalAmount_x005D_></row></root>
 '@
         $result = ConvertFrom-TabularDaxResponse -Xml $xml -MeasureColumn 'TotalAmount'
         $result.Value | Should -Be 10
         $result.Type | Should -Be 'xsd:long'
+        $result.Xml | Should -Be $xml
     }
 
     It 'reports returned DAX columns when the requested alias is absent' {
