@@ -1,5 +1,5 @@
 [![PowerShell Gallery Version](https://img.shields.io/powershellgallery/v/DeployCube.svg)](https://www.powershellgallery.com/packages/DeployCube)
-[![Build status](https://dev.azure.com/drjohnt/DeployCube/_apis/build/status/DeployCube-CI)](https://dev.azure.com/drjohnt/DeployCube/_build/latest?definitionId=5)
+[![CI](https://github.com/DrJohnT/DeployCube/actions/workflows/ci.yml/badge.svg)](https://github.com/DrJohnT/DeployCube/actions/workflows/ci.yml)
 ### DeployCube
 
 # Deploy a SSAS Tabular or Multidimensional cube using the Analysis Services Deployment Utility
@@ -106,6 +106,16 @@ For CI senarios, **Publish-Cube** has been packaged as an extension for Azure Pi
 
 An example tabular model is provided as a Visual Studio solution alongside a SQL database which acts as the cubes source.  The
 DACPAC is provided in the .\example folder.  You can use this to test that deployments work correctly.  Note that the SSDT Visual Studio solution is configured to deploy to SQL Server 2016.  Open the Visual Studio solution and change the target version and rebuild the solution if you have a different version of SQL Server installed.
+
+## Contributing and validation
+
+Pull requests and pushes to `master` run syntax checks, PSScriptAnalyzer, infrastructure-free
+Pester tests, command coverage (minimum 75%), and a local-only package build on Windows
+PowerShell 5.1. See [the testing guide](test/README.md) for local commands, coverage scope,
+release gates, and required environment protection.
+
+Real SSMS/SSAS compatibility tests remain manual-only on GitHub-hosted Windows runners;
+see [compatibility testing](docs/COMPATIBILITY_TESTING.md).
 
 ## Issue Reporting
 

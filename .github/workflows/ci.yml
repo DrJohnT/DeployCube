@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_call:
+    inputs:
+      release_tag:
+        description: Exact release tag to compare with the module manifest
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: Windows PowerShell 5.1 validation
+    runs-on: windows-2022
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Windows PowerShell 5.1
+        run: |
+          New-Item -ItemType Directory TestResults -Force | Out-Null
+          $versionText = $PSVersionTable | Out-String
+          $versionText | Set-Content TestResults/powershell-version.txt -Encoding UTF8
+          Write-Host $versionText
+          if ($PSVersionTable.PSEdition -ne 'Desktop' -or $PSVersionTable.PSVersion.Major -ne 5 -or $PSVersionTable.PSVersion.Minor -ne 1) {
+            throw 'Validation requires Windows PowerShell Desktop 5.1.'
+          }
+
+      - name: Install pinned test dependencies
+        id: dependencies
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+          Get-PackageProvider -Name NuGet -ForceBootstrap -ErrorAction Stop | Out-Null
+          ./test/bootstrap.ps1
+          Get-Module Pester,PSScriptAnalyzer | Select-Object Name,Version |
+            Format-Table | Out-String | Set-Content TestResults/dependencies.txt -Encoding UTF8
+
+      - name: Validate PowerShell syntax
+        run: ./test/Test-PowerShellSyntax.ps1
+
+      - name: PSScriptAnalyzer
+        run: ./test/Invoke-DeployCubeTests.ps1 -Type Analyzer -CI
+
+      - name: Unit tests and coverage
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: ./test/Invoke-DeployCubeTests.ps1 -Type Unit -CodeCoverage -CI
+
+      - name: Build and inspect release package (local repository only)
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: ./test/Build-ReleasePackage.ps1 -Tag $env:RELEASE_TAG
+
+      - name: Upload reports and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validation-windows-powershell-5.1
+          path: |
+            TestResults/*.xml
+            TestResults/*.json
+            TestResults/*.txt
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload validated package source and local package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-package
+          path: TestResults/package/
+          if-no-files-found: error
+          retention-days: 14
