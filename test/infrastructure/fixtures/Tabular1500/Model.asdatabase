@@ -1,0 +1,37 @@
+{
+  "name": "DeployCubeCompatibility",
+  "compatibilityLevel": 1500,
+  "model": {
+    "culture": "en-US",
+    "dataSources": [],
+    "tables": [
+      {
+        "name": "CompatibilityProbe",
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "Value",
+            "dataType": "int64",
+            "sourceColumn": "[Value]"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "CompatibilityProbe",
+            "source": {
+              "type": "calculated",
+              "expression": "ROW(\"Value\", 1)"
+            }
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "ClientCompatibilityLevel",
+        "value": "600"
+      }
+    ]
+  },
+  "id": "DeployCubeCompatibility"
+}

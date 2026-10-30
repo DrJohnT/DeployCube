@@ -20,6 +20,14 @@ Describe "Get-AnalysisServicesDeploymentExePath"  -Tag "Round1" {
         It "Should have Version as a mandatory parameter" {
             (Get-Command Get-AnalysisServicesDeploymentExePath).Parameters['Version'].Attributes.mandatory | Should -BeTrue;
         }
+
+        It "Accepts deployment utility versions 18 through 22" {
+            $validateSet = (Get-Command Get-AnalysisServicesDeploymentExePath).Parameters['Version'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
+            foreach ($version in @('18', '19', '20', '21', '22')) {
+                $validateSet.ValidValues | Should -Contain $version
+            }
+        }
     }
 
     Context "Finding Microsoft.AnalysisServices.Deployment.exe version" {

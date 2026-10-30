@@ -16,8 +16,9 @@ function Get-AnalysisServicesDeploymentExePath {
 
     .PARAMETER Version
     The version of Microsoft.AnalysisServices.Deployment.exe to find.
-    Valid values for -Version are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
+    Valid values for -Version are: ('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11') which translate as follows:
     
+    * 22, 21, 20, 19, 18: SSMS deployment utility product versions 22, 21, 20, 19, and 18
     * 16: SQL Server 2022
     * 15: SQL Server 2019
     * 14: SQL Server 2017
@@ -52,7 +53,7 @@ function Get-AnalysisServicesDeploymentExePath {
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('22', '20', '16', '15', '14', '13', '12', '11')]
+        [ValidateSet('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11')]
         [string]$Version
     )
 
@@ -78,9 +79,13 @@ function Get-AnalysisServicesDeploymentExePath {
 
     foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
         $ExePath = $AnalysisServicesDeploymentExe.FullName;
-        [string] $ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.SubString(0,2);
+        $ProductMajorVersion = Get-AnalysisServicesDeploymentExeProductMajorVersion `
+            -DeploymentExe $AnalysisServicesDeploymentExe
+        if ($null -eq $ProductMajorVersion) {
+            continue
+        }
        
-        if ($ProductVersion -eq $Version) {
+        if ($ProductMajorVersion -eq $Version) {
             $AnalysisServicesDeploymentExePath = $ExePath;
             Write-Verbose "$ExeName version $Version found here: $AnalysisServicesDeploymentExePath";       
             break;
@@ -88,5 +93,3 @@ function Get-AnalysisServicesDeploymentExePath {
     }
     return $AnalysisServicesDeploymentExePath;
 }
-
-

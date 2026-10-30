@@ -1,3 +1,19 @@
+function Get-AnalysisServicesDeploymentExeProductMajorVersion {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.FileSystemInfo]$DeploymentExe
+    )
+
+    $productVersion = $DeploymentExe.VersionInfo.ProductVersion
+    if ($productVersion -notmatch '^\s*(\d+)') {
+        Write-Warning "Skipping '$($DeploymentExe.FullName)' because it has no readable product major version."
+        return $null
+    }
+
+    return $matches[1]
+}
+
 function Find-AnalysisServicesDeploymentExeLocations {
     [CmdletBinding()]
     param()
@@ -56,11 +72,23 @@ function Find-AnalysisServicesDeploymentExeLocations {
         }
         
         
-        # list all the locations found
+        $seenPaths = @{}
+
+        # list all the unique locations found
         foreach ($AnalysisServicesDeploymentExe in $AnalysisServicesDeploymentExes) {
-            [string]$ProductVersion = $AnalysisServicesDeploymentExe.VersionInfo.ProductVersion.Substring(0,2);
-            Write-Debug "Found '$ExeName': '$($AnalysisServicesDeploymentExe.FullName)' (product version $ProductVersion).";
-            Write-Output "$ProductVersion  $AnalysisServicesDeploymentExe";
+            $fullPath = [System.IO.Path]::GetFullPath($AnalysisServicesDeploymentExe.FullName)
+            if ($seenPaths.ContainsKey($fullPath)) {
+                continue
+            }
+            $seenPaths[$fullPath] = $true
+
+            $ProductMajorVersion = Get-AnalysisServicesDeploymentExeProductMajorVersion `
+                -DeploymentExe $AnalysisServicesDeploymentExe
+            if ($null -eq $ProductMajorVersion) {
+                continue
+            }
+            Write-Debug "Found '$ExeName': '$fullPath' (product major version $ProductMajorVersion).";
+            Write-Output "$ProductMajorVersion  $fullPath";
         }
     }
     catch {

@@ -47,8 +47,9 @@ Returns the SQL Server 2017 version of Microsoft.AnalysisServices.Deployment.exe
 
 ### -Version
 The version of Microsoft.AnalysisServices.Deployment.exe to find.
-Valid values for -Version are: ('22', '20', '16', '15', '14', '13', '12', '11') which translate as follows:
+Valid values for -Version are: ('22', '21', '20', '19', '18', '16', '15', '14', '13', '12', '11') which translate as follows:
 
+* 22, 21, 20, 19, 18: SSMS deployment utility product versions 22, 21, 20, 19, and 18
 * 16: SQL Server 2022
 * 15: SQL Server 2019
 * 14: SQL Server 2017
@@ -86,4 +87,3 @@ This PowerShell script is released under the MIT license http://www.opensource.o
 ## RELATED LINKS
 
 [https://github.com/DrJohnT/DeployCube](https://github.com/DrJohnT/DeployCube)
-
