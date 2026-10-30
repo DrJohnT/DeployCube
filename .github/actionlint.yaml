@@ -1,0 +1,5 @@
+# Configuration for actionlint (https://github.com/rhysd/actionlint).
+self-hosted-runner:
+  # Custom label of the optional self-hosted SSAS integration runner used by ci.yml.
+  labels:
+    - ssas

@@ -5,10 +5,20 @@ How to: Use Azure PowerShell to create a service principal with a certificate
     https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-authenticate-service-principal-powershell
 #>
 
-BeforeAll { 
-    $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-    $ModulePath = Resolve-Path "$CurrentFolder\DeployCube\DeployCube.psd1";
-    import-Module -Name $ModulePath; 
+BeforeDiscovery {
+    . (Join-Path -Path (Split-Path -Parent $PSScriptRoot) -ChildPath 'TestHelpers.ps1')
+    # Requires an Azure Analysis Services server and an Azure SQL database; never runs unless explicitly enabled.
+    $skipAzure = -not (Test-DeployCubeAzureIntegrationEnabled) -or ("" -eq "$Env:AzureAsServer")
+}
+
+BeforeAll {
+    . (Join-Path -Path (Split-Path -Parent $PSScriptRoot) -ChildPath 'TestHelpers.ps1')
+    Import-DeployCubeForTest
+    $Settings = Get-DeployCubeIntegrationSettings
+    $SavedErrorActionPreference = $global:ErrorActionPreference
+    # These tests deploy and then DROP the database, so always use a uniquely named, test-owned database rather than a
+    # configurable name: pointing them at an existing cube would overwrite and delete it. AzureAsCube is ignored.
+    $script:AzureTestCubeDatabase = "DeployCubeTest_$([guid]::NewGuid().ToString('N'))"
 
     function Get-AzureAsServer {
         
@@ -20,11 +30,10 @@ BeforeAll {
             return $data;
         }
         
-        $CurrentFolder = Split-Path -Parent $PSScriptRoot;
-        $data.PathToCubeProject = "$CurrentFolder\examples\CubeAtCompatibility1500\bin\Model.asdatabase";
+        $data.PathToCubeProject = $Settings.AsDatabasePath1500;
         
         $data.AzureAsServer = $Env:AzureAsServer;
-        $data.CubeDatabase = $Env:AzureAsCube;  
+        $data.CubeDatabase = $script:AzureTestCubeDatabase;
 
         $data.UserID = $Env:AzureAsUserID;
         $data.Password = $Env:AzureAsPassword;
@@ -53,7 +62,7 @@ BeforeAll {
     }
 }
 
-Describe "Azure AS Integration Tests" -Tag "Azure" {
+Describe "Azure AS Integration Tests" -Tag 'Integration', 'Azure' -Skip:$skipAzure {
     Context "Deploy Cube, update connection and process" {
         
         It "Deploy cube should not throw" {
@@ -94,5 +103,17 @@ Describe "Azure AS Integration Tests" -Tag "Azure" {
 }
 
 AfterAll {
-    Remove-Module -Name DeployCube;
+    if ((Test-DeployCubeAzureIntegrationEnabled) -and "$Env:AzureAsServer" -ne "") {
+        # Best-effort cleanup if a test failed before the drop step.
+        try {
+            $aasData = Get-AzureAsServer
+            if (Ping-SsasDatabase -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential) {
+                Unpublish-Cube -Server $aasData.AzureAsServer -CubeDatabase $aasData.CubeDatabase -Credential $aasData.Credential
+            }
+        }
+        catch {
+            Write-Warning "Could not clean up Azure test database $($script:AzureTestCubeDatabase): $_"
+        }
+    }
+    $global:ErrorActionPreference = $SavedErrorActionPreference
 }

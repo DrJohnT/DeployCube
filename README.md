@@ -107,6 +107,20 @@ For CI senarios, **Publish-Cube** has been packaged as an extension for Azure Pi
 An example tabular model is provided as a Visual Studio solution alongside a SQL database which acts as the cubes source.  The
 DACPAC is provided in the .\example folder.  You can use this to test that deployments work correctly.  Note that the SSDT Visual Studio solution is configured to deploy to SQL Server 2016.  Open the Visual Studio solution and change the target version and rebuild the solution if you have a different version of SQL Server installed.
 
+## Testing and CI
+
+Unit tests and the PSScriptAnalyzer gate need no SQL Server or Analysis Services. They run on every pull request
+in GitHub Actions on Windows PowerShell 5.1. To run them locally:
+
+```powershell
+./test/bootstrap.ps1                                  # installs the pinned Pester / PSScriptAnalyzer versions
+./test/Invoke-DeployCubeTests.ps1 -Type Analyzer, Unit
+```
+
+Live SSAS integration tests are opt-in (`-Type Integration`) and need a dedicated SSAS Tabular instance. See
+[test/README.md](test/README.md) for prerequisites, configuration, and how to run them from GitHub Actions on a
+self-hosted runner.
+
 ## Issue Reporting
 
 If you are facing problems in making this PowerShell module work, please report any

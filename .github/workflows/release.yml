@@ -1,49 +1,78 @@
 name: Release
 
+# Publishes DeployCube to the PowerShell Gallery when a v* tag is pushed.
+# Publishing only happens after the same validation gate as CI (PSScriptAnalyzer + Pester unit tests on
+# Windows PowerShell 5.1) and the tag/manifest checks have passed. Live SSAS integration tests are not part of
+# the release gate because hosted runners have no Analysis Services; run them beforehand via the CI workflow.
+
 on:
   push:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  release:
-    runs-on: windows-latest
+  validate:
+    name: Validate
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
 
+  check-version:
+    name: Check tag and manifest
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: powershell
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up PowerShell modules
-        shell: pwsh
+      - name: Tag must match manifest version
         run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser
-
-      - name: Validate module version
-        shell: pwsh
-        run: |
-          $manifest = Import-PowerShellDataFile ./DeployCube/DeployCube.psd1
+          $manifest = Test-ModuleManifest -Path ./DeployCube/DeployCube.psd1 -ErrorAction Stop
           $expectedVersion = $env:GITHUB_REF_NAME -replace '^v', ''
-          if ($manifest.ModuleVersion -ne $expectedVersion) {
-            throw "Tag version '$expectedVersion' does not match manifest version '$($manifest.ModuleVersion)'."
+          if ("$($manifest.Version)" -ne $expectedVersion) {
+            throw "Tag version '$expectedVersion' does not match manifest version '$($manifest.Version)'."
           }
-          Test-ModuleManifest -Path ./DeployCube/DeployCube.psd1 -ErrorAction Stop | Out-Null
+          Write-Host "Releasing DeployCube $($manifest.Version)"
 
-      - name: Run tests
-        shell: pwsh
-        run: Invoke-Pester -Path ./test -CI
+  publish:
+    name: Publish to PowerShell Gallery
+    needs: [validate, check-version]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    # Configure required reviewers and the PSGALLERY_API_KEY secret on this environment.
+    environment: psgallery
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Publish module to PSGallery
         shell: pwsh
         env:
           PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
-        run: Publish-Module -Path ./DeployCube -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:PSGALLERY_API_KEY)) {
+            throw 'The PSGALLERY_API_KEY secret is not configured for the psgallery environment.'
+          }
+          Publish-Module -Path ./DeployCube -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force
 
       - name: Create GitHub release
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME --generate-notes --verify-tag
+        run: |
+          gh release create $env:GITHUB_REF_NAME --generate-notes --verify-tag
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE" }

@@ -1,10 +1,9 @@
-BeforeAll { 
-    $ModulePath = Split-Path -Parent $PSScriptRoot;
-    $ModulePath = Resolve-Path "$ModulePath\DeployCube\DeployCube.psd1";
-    import-Module -Name $ModulePath;
+BeforeAll {
+    . (Join-Path -Path (Split-Path -Parent $PSScriptRoot) -ChildPath 'TestHelpers.ps1')
+    Import-DeployCubeForTest
 }
 
-Describe "Get-SqlAsPath"  -Tag "Round1" {
+Describe "Get-SqlAsPath"  -Tag 'Unit' {
     Context "Testing Inputs" {
         It "Should have Server as a mandatory parameter" {
             (Get-Command Get-SqlAsPath).Parameters['Server'].Attributes.mandatory | Should -BeTrue;
