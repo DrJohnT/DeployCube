@@ -30,8 +30,9 @@ try {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($packages[0].FullName)
     try {
+        $entries = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/') })
         foreach ($required in @('DeployCube.psd1', 'DeployCube.psm1', 'public/Publish-Cube.ps1')) {
-            if ($required -notin $archive.Entries.FullName) { throw "Package is missing $required." }
+            if ($required -notin $entries) { throw "Package is missing $required." }
         }
     } finally { $archive.Dispose() }
     Write-Information "Built and inspected $($packages[0].Name) without publishing to PowerShell Gallery." -InformationAction Continue

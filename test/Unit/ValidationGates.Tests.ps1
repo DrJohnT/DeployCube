@@ -148,6 +148,21 @@ Describe 'Non-publishing release package validation' {
         }
         { & $script:buildScript -OutputPath $script:outputPath } | Should -Throw '*Package is missing*'
     }
+
+    It 'accepts Windows .NET Framework ZIP entry separators' {
+        Mock Publish-Module {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $version = (Import-PowerShellDataFile (Join-Path $Path 'DeployCube.psd1')).ModuleVersion
+            $package = Join-Path (Split-Path $Path -Parent) "feed/DeployCube.$version.nupkg"
+            $archive = [IO.Compression.ZipFile]::Open($package, [IO.Compression.ZipArchiveMode]::Create)
+            try {
+                foreach ($name in @('DeployCube.psd1', 'DeployCube.psm1', 'public\Publish-Cube.ps1')) {
+                    $null = $archive.CreateEntry($name)
+                }
+            } finally { $archive.Dispose() }
+        }
+        { & $script:buildScript -OutputPath $script:outputPath } | Should -Not -Throw
+    }
 }
 
 Describe 'Workflow release and integration boundaries' {
