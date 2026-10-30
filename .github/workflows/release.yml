@@ -6,44 +6,89 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  release:
-    runs-on: windows-latest
-
+  release-policy:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: powershell
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
+      - name: Check out release policy validation
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
-      - name: Set up PowerShell modules
-        shell: pwsh
+      - name: Require existing environment protection (no publication credentials)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser
+          $json = gh api "repos/$env:GITHUB_REPOSITORY/environments/psgallery"
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify psgallery environment protection. Configure it before releasing.' }
+          . ./test/Assert-ReleaseEnvironment.ps1
+          Assert-ReleaseEnvironment -Environment ($json | ConvertFrom-Json)
 
-      - name: Validate module version
-        shell: pwsh
+  validate:
+    uses: ./.github/workflows/ci.yml
+    with:
+      release_tag: ${{ github.ref_name }}
+    permissions:
+      contents: read
+
+  publish:
+    needs: [validate, release-policy]
+    if: ${{ success() && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: windows-2022
+    timeout-minutes: 15
+    environment: psgallery
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Download validated package from this run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-package
+          path: package
+
+      - name: Recheck version before publication
         run: |
-          $manifest = Import-PowerShellDataFile ./DeployCube/DeployCube.psd1
-          $expectedVersion = $env:GITHUB_REF_NAME -replace '^v', ''
-          if ($manifest.ModuleVersion -ne $expectedVersion) {
-            throw "Tag version '$expectedVersion' does not match manifest version '$($manifest.ModuleVersion)'."
+          $manifest = Test-ModuleManifest ./package/DeployCube/DeployCube.psd1 -ErrorAction Stop
+          if ($env:GITHUB_REF_NAME -cne "v$($manifest.Version)") {
+            throw 'Release tag does not match validated package version.'
           }
-          Test-ModuleManifest -Path ./DeployCube/DeployCube.psd1 -ErrorAction Stop | Out-Null
-
-      - name: Run tests
-        shell: pwsh
-        run: Invoke-Pester -Path ./test -CI
 
       - name: Publish module to PSGallery
-        shell: pwsh
         env:
           PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
-        run: Publish-Module -Path ./DeployCube -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force
+        run: |
+          if (-not $env:PSGALLERY_API_KEY) { throw 'The psgallery environment requires PSGALLERY_API_KEY.' }
+          [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+          Get-PackageProvider -Name NuGet -ForceBootstrap -ErrorAction Stop | Out-Null
+          Publish-Module -Path ./package/DeployCube -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Force -ErrorAction Stop
 
+  github-release:
+    needs: publish
+    runs-on: windows-2022
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME --generate-notes --verify-tag
+          GH_REPO: ${{ github.repository }}
+        shell: powershell
+        run: |
+          gh release create $env:GITHUB_REF_NAME --generate-notes --verify-tag
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }
