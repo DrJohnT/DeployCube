@@ -104,10 +104,12 @@ Outputs in ignored `TestResults/`:
 - `CoverageSummary.json`: analyzed/executed counts, scope, and missed commands.
 - In CI, runtime and dependency-version diagnostics.
 
-PR #17's 92.33% is historical, not the current result. The first Phase J local
-Linux run measured 377/428 commands (88.08%); Windows 5.1 CI is authoritative
-because Windows-only tests execute there. Compare runs using the same scope
-and engine. Coverage changes with module code; do not copy old reports into CI.
+PR #17's 92.33% is historical, not the current result. The verified Phase J
+[Windows 5.1 run](https://github.com/DrJohnT/DeployCube/actions/runs/41047961303)
+measured **393/428 commands (91.82%)**; Linux measured 377/428 (88.08%) because
+the OLE DB cases require Windows. Windows CI is authoritative. Compare runs
+using the same scope and engine. Coverage changes with module code; do not
+copy old reports into CI.
 
 ## Automatic CI and releases
 

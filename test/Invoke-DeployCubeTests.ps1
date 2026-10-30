@@ -44,7 +44,7 @@ if ($CodeCoverage) {
         FilesAnalyzed = $coverage.FilesAnalyzedCount
         MinimumPercent = $selection.MinimumCoverage
         Scope = $selection.CoveragePath
-        MissedCommands = @($coverage.MissedCommands | Select-Object File, Function, Line, Command)
+        MissedCommands = @($coverage.CommandsMissed | Select-Object File, Function, Line, Command)
     } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $OutputPath 'CoverageSummary.json') -Encoding UTF8
 }
 Assert-ValidationResult -Result $result -CodeCoverage:$CodeCoverage -MinimumCoverage $selection.MinimumCoverage
