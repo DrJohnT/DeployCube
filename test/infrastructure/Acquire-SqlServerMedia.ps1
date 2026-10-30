@@ -24,6 +24,7 @@ $report = [ordered]@{
 }
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $isoPath = $null
+$downloadStarted = $false
 function Write-ProvisioningLog {
     param([string]$Stage, [string]$Message)
     $line = "[$([DateTime]::UtcNow.ToString('o'))] [$Stage] $Message"
@@ -39,6 +40,7 @@ try {
     if (Test-Path -LiteralPath $isoPath) {
         throw "Media destination '$isoPath' already exists; refusing to reuse unverified media."
     }
+    $downloadStarted = $true
     $report.Stage = 'Download'
     Write-ProvisioningLog -Stage $report.Stage -Message "Downloading '$MediaUri'; inactivity limit ${InactivityTimeoutSeconds}s; total limit ${TimeoutMinutes}m."
     $curl = (Get-Command curl.exe -ErrorAction Stop).Source
@@ -89,8 +91,19 @@ catch {
     throw
 }
 finally {
-    if ($isoPath -and (Test-Path -LiteralPath $isoPath)) {
+    if ($downloadStarted -and $isoPath -and (Test-Path -LiteralPath $isoPath)) {
         $report.Bytes = (Get-Item -LiteralPath $isoPath).Length
+        if ($report.Outcome -ne 'Passed') {
+            try {
+                Remove-Item -LiteralPath $isoPath -Force -ErrorAction Stop
+                $report.PartialMediaCleanup = 'Passed'
+            }
+            catch {
+                $report.PartialMediaCleanup = 'Failed'
+                $report.PartialMediaCleanupError = $_.Exception.ToString()
+                Write-ProvisioningLog -Stage 'Cleanup' -Message $report.PartialMediaCleanupError
+            }
+        }
     }
     $report.DurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
     $report.FinishedAtUtc = [DateTime]::UtcNow.ToString('o')

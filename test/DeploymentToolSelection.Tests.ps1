@@ -134,7 +134,7 @@ Describe 'Deployment utility version selection with mocked filesystem metadata' 
         }
 
         Get-AnalysisServicesDeploymentExePath -Version 22 |
-            Should -Match 'Management Studio 18\\Common7\\IDE\\Microsoft\.AnalysisServices\.Deployment\.exe$'
+            Should -Be $expectedPaths['22']
         { Get-AnalysisServicesDeploymentExePath -Version 17 } | Should -Throw
     }
 

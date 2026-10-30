@@ -1,8 +1,54 @@
 BeforeAll {
     . (Join-Path $PSScriptRoot 'infrastructure/SqlServerMedia.ps1')
+    if (-not (Get-Command Get-AuthenticodeSignature -ErrorAction SilentlyContinue)) {
+        function global:Get-AuthenticodeSignature {
+            throw 'The Windows Authenticode cmdlet is unavailable outside Windows.'
+        }
+        $script:removeAuthenticodeTestShim = $true
+    }
 }
 
 Describe 'SQL Server installation media validation' {
+    It 'accepts a valid Microsoft Authenticode signature' {
+        $path = Join-Path $TestDrive 'microsoft-setup.exe'
+        [System.IO.File]::WriteAllText($path, 'test')
+        Mock Get-AuthenticodeSignature {
+            [pscustomobject]@{
+                Status = 'Valid'
+                SignerCertificate = [pscustomobject]@{
+                    Subject = 'CN=Microsoft Corporation, O=Microsoft Corporation'
+                    Thumbprint = '0123456789ABCDEF'
+                }
+            }
+        }
+
+        $signature = Assert-MicrosoftAuthenticodeSignature -Path $path
+        $signature.Status | Should -Be 'Valid'
+        $signature.Thumbprint | Should -Be '0123456789ABCDEF'
+    }
+
+    It 'rejects invalid or non-Microsoft Authenticode signatures' -ForEach @(
+        @{ Status = 'NotSigned'; Subject = '' }
+        @{ Status = 'Valid'; Subject = 'CN=Other Publisher, O=Other Publisher' }
+    ) {
+        $path = Join-Path $TestDrive 'untrusted-setup.exe'
+        [System.IO.File]::WriteAllText($path, 'test')
+        Mock Get-AuthenticodeSignature {
+            [pscustomobject]@{
+                Status = $Status
+                SignerCertificate = [pscustomobject]@{ Subject = $Subject; Thumbprint = '' }
+            }
+        }
+
+        AfterAll {
+            if ($script:removeAuthenticodeTestShim) {
+                Remove-Item Function:\Get-AuthenticodeSignature -ErrorAction SilentlyContinue
+            }
+        }
+
+        { Assert-MicrosoftAuthenticodeSignature -Path $path } | Should -Throw '*valid Microsoft Authenticode signature*'
+    }
+
     It 'rejects bootstrappers, mirrors, credentials, query tokens and HTTP' -ForEach @(
         @{ Uri = 'https://go.microsoft.com/fwlink/?linkid=2215158&clcid=0x409' }
         @{ Uri = 'https://example.com/sql.iso' }

@@ -7,6 +7,24 @@ function Assert-MicrosoftMediaUri {
     }
 }
 
+function Assert-MicrosoftAuthenticodeSignature {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Microsoft-signed executable was not found at '$Path'."
+    }
+    $signature = Get-AuthenticodeSignature -FilePath $Path -ErrorAction Stop
+    if ($signature.Status -ne 'Valid' -or
+        $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
+        throw "Executable '$Path' does not have a valid Microsoft Authenticode signature (status: $($signature.Status); signer: $($signature.SignerCertificate.Subject))."
+    }
+    return [pscustomobject]@{
+        Status = [string]$signature.Status
+        Subject = [string]$signature.SignerCertificate.Subject
+        Thumbprint = [string]$signature.SignerCertificate.Thumbprint
+    }
+}
+
 function Assert-SqlServerIso {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -49,10 +67,7 @@ function Assert-SqlServerMediaRoot {
         -not (Test-Path -LiteralPath (Join-Path $MediaRoot 'x64/Setup') -PathType Container)) {
         throw "Incomplete SQL Server x64 installation media at '$MediaRoot': setup.exe or x64/Setup is missing."
     }
-    $signature = Get-AuthenticodeSignature -FilePath $setupPath
-    if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
-        throw "SQL Server setup.exe does not have a valid Microsoft signature (status: $($signature.Status))."
-    }
+    $null = Assert-MicrosoftAuthenticodeSignature -Path $setupPath
     $version = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($setupPath).ProductVersion
     if ($version -notmatch ('^\s*' + $ExpectedMajor + '\.')) {
         throw "SQL Server setup version '$version' does not match expected major '$ExpectedMajor'."

@@ -2,6 +2,23 @@
 
 The SSMS workflow is a manual, experimental matrix of independent GitHub-hosted Windows Server 2022 runners. Each matrix job installs exactly one SSMS version (20, 21, or 22), uses Windows PowerShell 5.1, makes no production connections, and leaves existing CI unchanged. It inventories the actual deployment utility executable and records its file/product version and path; SSMS major numbers are never used as a substitute for the executable's metadata.
 
+## Verified compatibility evidence
+
+These results apply only to the named Developer server, Deployment Utility, model and test path. “Deployment” means real database creation and removal was verified; “Processing” additionally means the model processed real isolated SQL data and the server-side query returned the expected value. Untested tuples remain **Not tested**; an install or infrastructure failure is not a compatibility result.
+
+| SSAS server / mode | Deployment Utility | Model level | Real deployment | Full processing | Evidence |
+|---|---|---:|---|---|---|
+| 2019 Tabular | SSMS 22 / 22.1.17.0 | 1500 | Passed | Passed; DAX = 10 | [deployment run 40718431659](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659), [processing run 40911646850](https://github.com/DrJohnT/DeployCube/actions/runs/40911646850) |
+| 2022 Tabular | SSMS 20 / 20.0.3.0 | 1500 | Passed | Not tested with SSMS 20 | [run 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) |
+| 2022 Tabular | SSMS 21 / 21.0.52.0 | 1500 | Passed | Not tested with SSMS 21 | [run 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874) |
+| 2022 Tabular | SSMS 22 / 22.1.17.0 | 1500 | Passed | Passed; DAX = 10 | [deployment run 40691182874](https://github.com/DrJohnT/DeployCube/actions/runs/40691182874), [processing run 40895275965](https://github.com/DrJohnT/DeployCube/actions/runs/40895275965) |
+| 2025 Tabular | SSMS 22 / 22.1.17.0 | 1500 for deployment; 1700 for processing | Passed | Passed; DAX = 10 | [deployment run 40718431659](https://github.com/DrJohnT/DeployCube/actions/runs/40718431659), [processing run 40911646850](https://github.com/DrJohnT/DeployCube/actions/runs/40911646850) |
+| 2019 Multidimensional | SSMS 22 / 22.1.17.0 | 1100 | Passed | Passed; MDX = 10 | [deployment run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), [processing run 40856087729](https://github.com/DrJohnT/DeployCube/actions/runs/40856087729) |
+| 2022 Multidimensional | SSMS 22 / 22.1.17.0 | 1100 | Passed | Passed; MDX = 10 | [deployment run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), [processing run 40840026414](https://github.com/DrJohnT/DeployCube/actions/runs/40840026414) |
+| 2025 Multidimensional | SSMS 22 / 22.1.17.0 | 1100 | Passed | Passed; MDX = 10 | [deployment run 40732695201](https://github.com/DrJohnT/DeployCube/actions/runs/40732695201), [processing run 40856087729](https://github.com/DrJohnT/DeployCube/actions/runs/40856087729) |
+
+SSMS selection and installation checks cover SSMS 20, 21 and 22; the real deployment/processing evidence above is narrower. These are experimental GitHub-hosted runner results, not a general support guarantee for other model levels, server editions, service packs, utilities, options or environments. The manual `full-matrix` option is experimental and may require an explicit verified media URL for SQL Server 2017 because its default URL is empty.
+
 Run **Actions → SSMS compatibility → Run workflow**. The workflow is manual-only and has no phase input, push trigger, fallback job, or multi-install job. GitHub requires the workflow to exist on the repository's default branch for manual dispatch.
 
 | SSMS | Installer source | Installer family |
@@ -10,7 +27,7 @@ Run **Actions → SSMS compatibility → Run workflow**. The workflow is manual-
 | 21 | [Microsoft SSMS 21 release bootstrapper](https://aka.ms/ssms/21/release/vs_SSMS.exe) | Visual Studio Installer |
 | 22 | [Microsoft SSMS 22 release bootstrapper](https://aka.ms/ssms/22/release/vs_SSMS.exe) | Visual Studio Installer |
 
-Each runner records diagnostics, installs one SSMS release, verifies its `Ssms.exe`, inventories every installed `Microsoft.AnalysisServices.Deployment.exe`, and runs Pester tests for real discovery plus mocked multi-version selection. Installation failures also produce a machine-readable compatibility report; NUnit results are included when tests run. Installation logs, reports, and test results are uploaded as artifacts even when a step fails. A discovered executable or a passing selection test does not establish SSAS deployment compatibility.
+Each runner records diagnostics, downloads only its fixed official Microsoft SSMS bootstrapper with a 300-second request timeout, verifies the bootstrapper's Microsoft Authenticode signature before execution, installs one SSMS release, verifies its `Ssms.exe`, inventories every installed `Microsoft.AnalysisServices.Deployment.exe`, and runs Pester tests for real discovery plus mocked multi-version selection. The installer report records the signature and download duration. Installation failures also produce a machine-readable compatibility report; NUnit results are included when tests run. Installation logs, reports, and test results are uploaded as artifacts even when a step fails. A discovered executable or a passing selection test does not establish SSAS deployment compatibility.
 
 ## Deployment utility selection tests
 
@@ -48,7 +65,7 @@ This is **metadata deployment compatibility, not processing compatibility**. The
 
 Run **Actions → SSAS compatibility → Run workflow**. The default `media-only` scope downloads, validates, and mounts installation media on `windows-2022` without installing SSMS or SSAS. Run this scope first when troubleshooting downloads. After it passes, select `phase-c` for SSAS 2022 Tabular with SSMS 20. Select `phase-d` to test SSAS 2022 Tabular against SSMS **20, 21, and 22** on three independent runners, with exactly one SSMS installation per runner. It reuses Phase C's media, provisioning, verification, direct utility probe, compatibility-1500 fixture, Publish-Cube, database verification, and Unpublish-Cube stages. `full-matrix` remains a separate explicit opt-in for the 16 combinations of SSAS 2017/2019/2022/2025, Tabular/Multidimensional, and SSMS 20/22; Phase D does not start it. Each combination has an independent timeout and artifact bundle, and `fail-fast: false` preserves the other results when one job fails. The workflow is manual-only. An SSMS installer failure (including historical SSMS 22 HRESULT `0x8013153B`) blocks subsequent stages for that cell and is not classified as Deployment Utility incompatibility.
 
-The `media_urls_json` input maps versions to direct, public Microsoft installation ISO URLs, not bootstrapper URLs. Media acquisition is independent of SQL Setup and always runs before installing SSMS. `Acquire-SqlServerMedia.ps1` uses the runner's curl with a 30-second connection timeout, a 60-second inactivity limit (less than one byte/second), and a 20-minute overall download deadline. Transferred bytes are logged every 30 seconds; curl progress, HTTP status, effective URL, duration, and errors are retained. The downloader rejects images smaller than 1 GiB and files without ISO9660/UDF volume descriptors, and records the image's SHA-256. For 2019/2022 this computed hash is an audit identifier, not an independently published Microsoft SHA-256; the pinned 2025 ISO additionally has a Microsoft manifest SHA-256 check.
+The `media_urls_json` input maps versions to direct, public Microsoft installation ISO URLs, not bootstrapper URLs. Media acquisition is independent of SQL Setup and always runs before installing SSMS. `Acquire-SqlServerMedia.ps1` uses the runner's curl with a 30-second connection timeout, a 60-second inactivity limit (less than one byte/second), and a 20-minute overall download deadline. Transferred bytes are logged every 30 seconds; curl progress, HTTP status, effective URL, duration, and errors are retained. The downloader rejects images smaller than 1 GiB and files without ISO9660/UDF volume descriptors, and records the image's SHA-256. Mounted `setup.exe` is Authenticode-verified as Microsoft-signed and checked against the requested product major before SQL Setup runs. Failed downloads attempt to remove any partial ISO; successful media is dismounted and removed after setup. For 2019/2022 the computed hash is an audit identifier, not an independently published Microsoft SHA-256; the pinned 2025 ISO additionally has a Microsoft manifest SHA-256 check.
 
 ### Phase E media and fixture selection
 
@@ -164,7 +181,7 @@ Both cells ran in the focused [Phase G2 run 40856087729](https://github.com/DrJo
 
 Earlier G2 attempts were diagnostic failures, not deployment incompatibilities: [40843845999](https://github.com/DrJohnT/DeployCube/actions/runs/40843845999) exposed a null dereference on an optional XML field, and [40849983585](https://github.com/DrJohnT/DeployCube/actions/runs/40849983585) showed an empty XE buffer when queried immediately. The parser now tolerates absent optional fields and preserves raw event XML; bounded polling fixes the observation race without weakening the service-account/read assertion. Cleanup-only verification now reports cleanup independently of the preserved processing failure.
 
-**Recommended next step:** Phase H has now established the deterministic Tabular processing baseline. Extend it to SSAS 2019 and 2025 in Phase H2 as the next focused step; after those cells pass, prioritize final CI consolidation and pull-request preparation.
+Phase H established the deterministic Tabular processing baseline; Phase H2 extends that evidence to SSAS 2019 and 2025.
 
 ### Phase H: SSAS 2022 Tabular processing and DAX
 
@@ -182,7 +199,7 @@ The focused workflow also verified the requested server version/mode before depl
 
 Diagnostic reruns before the passing run exposed and fixed test-harness issues only: the initial target guard expected Multidimensional mode; one repeated schema check used `OBJECT_ID` from the wrong database context; TOM did not expose a table-level state; the XMLA rowset encoded the DAX alias and required schema content; and the always-run cleanup wrapper discarded dynamic report fields. None indicated an SSAS provisioning or DeployCube deployment failure. Each failed harness attempt ran its cleanup path; the final run is the passing evidence.
 
-**Recommended next step:** With Phase H2 verified, prioritize final CI consolidation and feature-branch pull-request preparation.
+With Phase H2 verified, prioritize final CI consolidation and feature-branch pull-request preparation.
 
 ### Phase H2: SSAS 2019 and 2025 Tabular processing and DAX
 
@@ -295,7 +312,7 @@ Each cell passed **31 infrastructure guard tests** and **3 real integration test
 
 For Phase D only, the workflow now passes a short, absolute log/TEMP path (`RUNNER_TEMP/ssms-<major>-logs`) to the unchanged shared installer, instead of the long relative artifact path. Logs are copied into each cell's artifact directory in `finally`; an additional always-eligible failure step captures .NET Runtime, Application Error, Windows Error Reporting, and MSI Application events. With this isolated change, all three installations and real deployments passed in run 40691182874. This is a verified working installer configuration; the earlier logs alone do not establish which path property caused the .NET failure or prove all intermittent installer faults are eliminated. Phase C's installation path and the separate SSMS workflow remain unchanged.
 
-The first Phase D dispatch, [40688866364](https://github.com/DrJohnT/DeployCube/actions/runs/40688866364), stopped at guard configuration before installation because Pester's typed `Run.Path` option does not support `+=`. The workflow now assembles a string array before assigning it; all subsequent Windows guard suites passed. A pre-existing Windows-path assertion in the selector tests fails on Linux, so Windows runner results, not a Linux pass claim, validate that suite.
+The first Phase D dispatch, [40688866364](https://github.com/DrJohnT/DeployCube/actions/runs/40688866364), stopped at guard configuration before installation because Pester's typed `Run.Path` option does not support `+=`. The workflow now assembles a string array before assigning it; all subsequent Windows guard suites passed. The selector unit test compares its result with the generated expected path, keeping that assertion platform-independent.
 
 ### Phase C runner attempt
 

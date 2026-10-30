@@ -12,6 +12,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'SqlServerMedia.ps1')
 $installerUrls = @{
     '18' = 'https://go.microsoft.com/fwlink/?linkid=2199013&clcid=0x409'
     '19' = 'https://go.microsoft.com/fwlink/?linkid=2257624&clcid=0x409'
@@ -29,6 +30,8 @@ $stdoutPath = Join-Path $LogDirectory "ssms-$SsmsMajor-setup.stdout.log"
 $stderrPath = Join-Path $LogDirectory "ssms-$SsmsMajor-setup.stderr.log"
 $systemDrive = $null
 $freeSpaceGB = $null
+$downloadDurationSeconds = $null
+$installerSignature = $null
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 try {
@@ -39,10 +42,17 @@ try {
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri $installerUrls[$SsmsMajor] -OutFile $installerPath -UseBasicParsing -ErrorAction Stop
+    Write-Host "Downloading official SSMS $SsmsMajor bootstrapper from $($installerUrls[$SsmsMajor])."
+    $downloadStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    Invoke-WebRequest -Uri $installerUrls[$SsmsMajor] -OutFile $installerPath `
+        -UseBasicParsing -TimeoutSec 300 -ErrorAction Stop
+    $downloadStopwatch.Stop()
+    $downloadDurationSeconds = [math]::Round($downloadStopwatch.Elapsed.TotalSeconds, 2)
     if (-not (Test-Path -LiteralPath $installerPath) -or (Get-Item -LiteralPath $installerPath).Length -eq 0) {
         throw "Microsoft's SSMS $SsmsMajor installer download was empty."
     }
+    $installerSignature = Assert-MicrosoftAuthenticodeSignature -Path $installerPath
+    Write-Host "Verified Microsoft Authenticode signature for SSMS $SsmsMajor bootstrapper ($((Get-Item -LiteralPath $installerPath).Length) bytes; $downloadDurationSeconds seconds)."
 
     if ([int]$SsmsMajor -ge 21) {
         $arguments = @(
@@ -94,12 +104,14 @@ try {
         SsmsMajor = $SsmsMajor
         InstallerUrl = $installerUrls[$SsmsMajor]
         InstallerExitCode = $process.ExitCode
+        InstallerSignature = $installerSignature
         Installation = $matchingInstance
         InstallerLogDirectory = $LogDirectory
         StandardOutputLog = $stdoutPath
         StandardErrorLog = $stderrPath
         DiskFreeBeforeGB = $freeSpaceGB
         DiskFreeAfterGB = if ($systemDrive) { [math]::Floor($systemDrive.AvailableFreeSpace / 1GB) } else { $null }
+        DownloadDurationSeconds = $downloadDurationSeconds
         InstallationDurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
         InstalledAtUtc = [DateTime]::UtcNow.ToString('o')
     } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $LogDirectory "ssms-$SsmsMajor-install.json") -Encoding UTF8
@@ -115,6 +127,7 @@ catch {
         StandardOutputLog = $stdoutPath
         StandardErrorLog = $stderrPath
         DiskFreeBeforeGB = $freeSpaceGB
+        DownloadDurationSeconds = $downloadDurationSeconds
         InstallationDurationSeconds = [math]::Round($stopwatch.Elapsed.TotalSeconds, 2)
         FailedAtUtc = [DateTime]::UtcNow.ToString('o')
     }
